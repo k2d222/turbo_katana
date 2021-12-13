@@ -1,6 +1,6 @@
 (library
   (name libcompil)
-  (libraries core)
+  (libraries core menhirLib)
   (preprocess (pps ppx_deriving.show))
   ; (preprocess (pps ppx_jane))
 )

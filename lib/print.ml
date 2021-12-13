@@ -1,4 +1,4 @@
-open Ast
+(* open Ast
 
 let printExpr e =
   Printf.printf "%s\n" (Misc.string_of_expr e)
@@ -8,4 +8,4 @@ let printDecl d =
 
 let print prog =
   List.iter printDecl prog.decls;
-  Printf.printf "\nbegin\n  %s\nend\n" (Misc.string_of_expr prog.expr)
+  Printf.printf "\nbegin\n  %s\nend\n" (Misc.string_of_expr prog.expr) *)

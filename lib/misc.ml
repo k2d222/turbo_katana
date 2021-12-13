@@ -1,4 +1,4 @@
-open Ast
+(* open Ast
 
 
 let string_of_relop (op: Ast.opComp) =
@@ -30,4 +30,4 @@ let rec string_of_expr e =
     | UMinus(e) -> "-" ^ (string_of_expr e)
     | Ite(Comp(op, e1, e2), yes, no) ->
         Printf.sprintf "if %s then %s else %s"
-        (string_of_cmp (op, e1, e2)) (string_of_expr yes) (string_of_expr no)
+        (string_of_cmp (op, e1, e2)) (string_of_expr yes) (string_of_expr no) *)

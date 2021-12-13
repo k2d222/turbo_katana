@@ -1,0 +1,7 @@
+class Point(var x, y: Integer, var name: String) is {
+  var next : Integer;
+}
+
+{
+
+}

@@ -1,4 +1,4 @@
-open Ast
+(* open Ast
 
 let _NOP = Printf.sprintf "NOP\n"
 let _ERR = Printf.sprintf "ERR %s\n"
@@ -110,4 +110,4 @@ let compile ast =
   ^ _COMMENT "expression :"
   ^ exprcode
   ^ _WRITEI
-  ^ _STOP
+  ^ _STOP *)

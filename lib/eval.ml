@@ -1,4 +1,4 @@
-open Ast
+(* open Ast
 
 let getenv env id =
   List.assoc_opt id env
@@ -53,4 +53,4 @@ let parse_decls ld =
 let run_prog ast =
   let env = parse_decls ast.decls in
   let _ = Printf.printf "env : %s\n" (Misc.string_of_env env) in
-  interprete env ast.expr
+  interprete env ast.expr *)

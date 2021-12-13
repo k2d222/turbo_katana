@@ -1,49 +1,112 @@
 %{
 open Ast
 open Print
+
+type classBodyElt =
+  | Method of Ast.methodDecl
+  | StaticAttrib of Ast.param
+  | InstAttrib of Ast.param
+
+let partition_of_body_elts l =
+
+  let rec r_partition l (lm, ls, li) =
+    match l with
+    | [] -> (lm, ls, li)
+    | e::r -> (match e with
+      | Method m -> (m::lm, ls, li)
+      | StaticAttrib s -> (lm, s::ls, li)
+      | InstAttrib i -> (lm, ls, i::li))
+
+  in r_partition l ([], [], [])
 %}
+
+(* Class Keywords *)
+%token CLASS
+%token EXTENDS
+%token SUPER
+%token NEW
+
+(* Function Keywords *)
+%token IS
+%token VAR
+%token DEF
+%token STATIC
+%token OVERRIDE
+%token RETURN
+
+(* Flow Control Keywords *)
+%token IF
+%token THEN
+%token ELSE
 
 %token <string> ID
 %token <int> CSTE
 %token <Ast.opComp> RELOP
 %token PLUS MINUS TIMES DIV
 %token LPAREN RPAREN
-%token SEMICOLON
+%token LCURLY RCURLY
+%token SEMICOLON COLON COMMA DOT
 %token ASSIGN
-%token BEGIN END
-%token IF THEN ELSE
 %token EOF
 
-%right ELSE
+// %right ELSE
 %left PLUS MINUS
 %left TIMES DIV
 
-%type <Ast.progType> prog
-%type <Ast.expType> expr
-%type <Ast.declType> decl
-%type <Ast.compType> comp
-
+%type <Ast.prog> prog
 
 %start prog
 %%
 
 prog:
- | ld = list(decl) BEGIN e = expr END EOF { { decls=ld; expr=e } }
+  ld = list(classDecl) i = instr EOF { { decls=ld; instr=i } }
 
-comp:
- | lhs = expr op = RELOP rhs = expr { Comp(op, lhs, rhs) }
+classDecl:
+  CLASS cname = ID params = paramList ext = extends IS body = classBody {
+    { name=cname; ctorParams=params; body=body; superclass=ext }
+  }
+
+classBody:
+  LCURLY l = list(classBodyElement) RCURLY {
+    let (lm, ls, li) = partition_of_body_elts l
+    in { methods=lm; staticAttrs=ls; instAttrs=li }
+  }
+
+classBodyElement:
+  | md = methodDecl { md }
+  | attr = attrDecl { attr }
+
+methodDecl:
+  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = ID IS b = instrBlock {
+     Method({ name=name; params=params; retType=retType; body=b })
+  }
+
+attrDecl:
+  | VAR static = boption(STATIC) name = ID COLON clName = ID SEMICOLON {
+    let p = { name=name; className=clName } in
+    if static then StaticAttrib(p) else InstAttrib(p)
+  }
+
+
+paramList:
+  LPAREN lp = separated_list(COMMA, param) RPAREN { List.flatten lp }
+
+param:
+  varopt = VAR? names = separated_nonempty_list(COMMA, ID) COLON clname = ID { List.map (fun name -> { name=name; className=clname }) names }
+
+extends:
+  | EXTENDS id = ID { Some(id) }
+  | { None }
+
+instrBlock:
+  LCURLY li = separated_list(SEMICOLON, instr) RCURLY { Block([]) }
+
+instr:
+  | b = instrBlock { b }
+  | e = expr SEMICOLON { Expr(e) }
+  | id = ID ASSIGN e = expr SEMICOLON { Assign(id, e) }
 
 expr:
-  | x = ID { Id x }
-  | v = CSTE { Cste v }
-  | lhs = expr PLUS rhs = expr { Plus(lhs, rhs) }
-  | lhs = expr MINUS rhs = expr { Minus(lhs, rhs) }
-  | lhs = expr TIMES rhs = expr { Times(lhs, rhs) }
-  | lhs = expr DIV rhs = expr { Div(lhs, rhs) }
-  | MINUS e = expr { UMinus(e) }
-  | PLUS e = expr { e }
-  | IF i = comp THEN t = expr ELSE e = expr { Ite(i, t, e) }
-  | e = delimited(LPAREN, expr, RPAREN) { e }
-
-decl:
-  | i = ID ASSIGN e = expr SEMICOLON { { lhs=i; rhs=e } }
+  | c = CSTE { Cste(c) }
+  | id = ID { Id(id) }
+  | e = expr DOT name = ID { Select(e, name) }
