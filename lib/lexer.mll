@@ -62,7 +62,7 @@ rule
   | ";" { SEMICOLON }
   | ":" { COLON }
   | "," { COMMA }
-  | "." { COMMA }
+  | "." { DOT }
   | "(" { LPAREN }
   | ")" { RPAREN }
   | "{" { LCURLY }

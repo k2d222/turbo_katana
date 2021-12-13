@@ -4,7 +4,7 @@ module E = MenhirLib.ErrorReports
 module L = MenhirLib.LexerUtil
 module I = Libcompil.Parser.MenhirInterpreter
 
-let fast_parse (filename: string): Ast.t option =
+let fast_parse (filename: string): Ast.prog option =
   let text, lexbuf = L.read filename in
   match Parser.prog Lexer.token lexbuf with
     | ast -> Some(ast)
@@ -51,7 +51,7 @@ let diagnostic text checkpoint =
   with
     | Not_found -> "<sorry, no diagnostics>"
 
-let on_success ast: Ast.t option =
+let on_success ast: Ast.prog option =
   printf "on success\n";
   Some(ast)
 
@@ -62,7 +62,7 @@ let on_error text buffer (checkpoint: _ I.checkpoint) =
   eprintf "%s%s%s\n" location indication message;
   None
 
-let table_parse (filename: string): Ast.t option =
+let table_parse (filename: string): Ast.prog option =
   let text, lexbuf = L.read filename in
   let supplier = I.lexer_lexbuf_to_supplier Lexer.token lexbuf in
   let buffer, supplier = E.wrap_supplier supplier in
