@@ -1,0 +1,16 @@
+(library
+  (name libcompil)
+  (libraries core)
+  (preprocess (pps ppx_deriving.show))
+  ; (preprocess (pps ppx_jane))
+)
+
+(menhir
+  (modules parser))
+
+(ocamllex lexer)
+
+(env
+ (dev
+  ; -w -33: unused-open -27: unused-var-strict -39:
+   (flags (:standard -warn-error -A))))

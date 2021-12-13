@@ -1,0 +1,8 @@
+(executable
+ (public_name compilc)
+ (libraries libcompil)
+ (name main))
+
+(env
+ (dev
+  (flags (:standard -warn-error -A))))
