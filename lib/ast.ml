@@ -4,7 +4,7 @@ type opComp = Eq | Neq | Lt | Le | Gt | Ge
 type instr =
   | Block of param list * instr list
   | Assign of expr * expr
-  | Return
+  | Return of expr
   | Ite of expr * instr * instr
   | Expr of expr
 
@@ -21,13 +21,21 @@ and expr =
   | MethodCall of expr * expr list
   | AttrOf of expr * expr
   | Comp of expr * opComp * expr
-  | String of string 
+  | String of string
   | StrCat of expr * expr
   | New of string * expr list
 
 and param = {
   name: string;
   className: string;
+}
+[@@deriving show]
+
+type ctorDecl = {
+  name: string;
+  params: param list;
+  superCall: (string * expr list) option;
+  body: instr;
 }
 [@@deriving show]
 
@@ -40,6 +48,7 @@ type methodDecl = {
 [@@deriving show]
 
 type classBody = {
+  ctor: ctorDecl;
   methods: methodDecl list;
   staticAttrs: param list;
   instAttrs: param list;

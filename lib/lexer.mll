@@ -44,7 +44,8 @@ rule
   | [' ' '\t' '\r'] { token lexbuf }
   | '\n' { Lexing.new_line lexbuf; token lexbuf }
   | "/*" { comment lexbuf }
-  | (lettre | '_') identchar* as id  {
+  | (['A'-'Z'] identchar*) as id  { CLASSNAME(id) }
+  | (['a'-'z'] identchar*) as id  {
       Hashtbl.find_opt keyword_table id
       |> get_or (ID(id))
     }
