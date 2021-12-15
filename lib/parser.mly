@@ -102,7 +102,7 @@ ctorDecl:
 
 
 attrDecl:
-  | VAR static = boption(STATIC) lname = separated_list(COMMA, ID) COLON clName = CLASSNAME SEMICOLON {
+  | VAR static = boption(STATIC) lname = separated_list(COMMA, ID) COLON clName = CLASSNAME {
     let p = List.map (fun n -> { name=n; className=clName }) lname in
     if static then StaticAttrib(p) else InstAttrib(p)
   }
@@ -126,7 +126,7 @@ param:
 
 instrBlock:
   | LCURLY li = list(instr) RCURLY { Block([], li) }
-  | LCURLY lvar = separated_nonempty_list(COMMA, param) IS li = nonempty_list(instr) RCURLY
+  | LCURLY lvar = list(param) IS li = nonempty_list(instr) RCURLY
     { Block(List.flatten lvar, li) }
 
 instr:
