@@ -40,7 +40,7 @@ let partition_of_body_elts l =
 
 %token <string> ID
 %token <int> CSTE
-%token <string> STRLIT 
+%token <string> STRLIT
 %token <Ast.opComp> RELOP
 %token PLUS MINUS TIMES DIV
 %token STRCAT
@@ -52,10 +52,10 @@ let partition_of_body_elts l =
 %token EOF
 
 // %right ELSE
-%left Comp
-%left PLUS MINUS
-%left TIMES DIV
-%left DOT
+// %left Comp
+// %left PLUS MINUS
+// %left TIMES DIV
+// %left DOT
 
 %type <Ast.prog> prog
 
@@ -94,23 +94,24 @@ attrDecl:
     if static then StaticAttrib(p) else InstAttrib(p)
   }
 
-
 paramList:
-  LPAREN lp = separated_list(COMMA, param) RPAREN { List.flatten lp }
+  LPAREN lp = separated_list(COMMA, ctorParam) RPAREN { List.flatten lp }
 
-param:
-  varopt = VAR? names = separated_nonempty_list(COMMA, ID) COLON clname = ID 
+ctorParam:
+  varopt = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON clname = ID
   { List.map (fun name -> { name=name; className=clname }) names }
 
 extends:
   | EXTENDS id = ID { Some(id) }
   | { None }
 
+param:
+  names = separated_nonempty_list(COMMA, ID) COLON clname = ID { List.map (fun name -> { name=name; className=clname }) names }
+
 instrBlock:
   | LCURLY li = list(instr) RCURLY { Block([], li) }
-  | vars = separated_nonempty_list(COMMA, param) IS li = nonempty_list(instr) 
-    { Block((List.flatten vars), li) }
-
+  | LCURLY lvar = separated_nonempty_list(COMMA, param) IS li = nonempty_list(instr) RCURLY
+    { Block(List.flatten lvar, li) }
 
 instr:
   | b = instrBlock { b }
@@ -133,9 +134,5 @@ expr:
   | UPLUS rhs = expr { rhs }
   | lhs = expr DOT rhs = expr { AttrOf(lhs, rhs) }
   | e = expr LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(e, le) } (**TODO *)
-
-
   | lhs = expr op = RELOP rhs = expr { Comp(lhs, op, rhs) }
-
   | NEW name = ID LPAREN le = separated_list(COMMA, expr) RPAREN { New(name, le) }
-

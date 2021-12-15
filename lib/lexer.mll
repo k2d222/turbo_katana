@@ -76,8 +76,8 @@ and
 comment = parse
   | "*/" { token lexbuf }
   | "\n" { Lexing.new_line lexbuf; comment lexbuf }
-  | _ { comment lexbuf } 
-and 
+  | _ { comment lexbuf }
+and
 
 read_string buf = parse
   | '"'       { STRLIT (Buffer.contents buf) }

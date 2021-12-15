@@ -34,12 +34,12 @@
           %{dep:parser.mly}
           --list-errors))))
 
-  (rule
-    (targets parser.messages.check)
-    (deps parser.messages parser.auto.messages parser.mly)
-    (action
-      (with-stdout-to parser.messages.check
-        (run menhir
-          %{dep:parser.mly}
-          --compare-errors %{dep:parser.auto.messages}
-          --compare-errors %{dep:parser.messages}))))
+  ; (rule
+  ;   (targets parser.messages.check)
+  ;   (deps parser.messages parser.auto.messages parser.mly)
+  ;   (action
+  ;     (with-stdout-to parser.messages.check
+  ;       (run menhir
+  ;         %{dep:parser.mly}
+  ;         --compare-errors %{dep:parser.auto.messages}
+  ;         --compare-errors %{dep:parser.messages}))))
