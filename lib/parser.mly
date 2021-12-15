@@ -4,8 +4,8 @@ open Print
 
 type classBodyElt =
   | Method of Ast.methodDecl
-  | StaticAttrib of Ast.param
-  | InstAttrib of Ast.param
+  | StaticAttrib of Ast.param list
+  | InstAttrib of Ast.param list
 
 let partition_of_body_elts l =
 
@@ -14,8 +14,8 @@ let partition_of_body_elts l =
     | [] -> (lm, ls, li)
     | e::r -> (match e with
       | Method m -> (m::lm, ls, li)
-      | StaticAttrib s -> (lm, s::ls, li)
-      | InstAttrib i -> (lm, ls, i::li))
+      | StaticAttrib s -> (lm, s@ls, li)
+      | InstAttrib i -> (lm, ls, i@li))
 
   in r_partition l ([], [], [])
 %}
@@ -23,7 +23,6 @@ let partition_of_body_elts l =
 (* Class Keywords *)
 %token CLASS
 %token EXTENDS
-%token SUPER
 %token NEW
 
 (* Function Keywords *)
@@ -41,8 +40,11 @@ let partition_of_body_elts l =
 
 %token <string> ID
 %token <int> CSTE
+%token <string> STRLIT 
 %token <Ast.opComp> RELOP
 %token PLUS MINUS TIMES DIV
+%token STRCAT
+%token UMINUS UPLUS
 %token LPAREN RPAREN
 %token LCURLY RCURLY
 %token SEMICOLON COLON COMMA DOT
@@ -50,8 +52,10 @@ let partition_of_body_elts l =
 %token EOF
 
 // %right ELSE
+%left Comp
 %left PLUS MINUS
 %left TIMES DIV
+%left DOT
 
 %type <Ast.prog> prog
 
@@ -77,13 +81,16 @@ classBodyElement:
   | attr = attrDecl { attr }
 
 methodDecl:
-  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = ID IS b = instrBlock {
+  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList retType = option(preceded(COLON, ID)) IS b = instrBlock {
      Method({ name=name; params=params; retType=retType; body=b })
+  }
+  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = ID ASSIGN e = expr {
+    Method({ name=name; params=params; retType=Some(retType); body=Expr(e) })
   }
 
 attrDecl:
-  | VAR static = boption(STATIC) name = ID COLON clName = ID SEMICOLON {
-    let p = { name=name; className=clName } in
+  | VAR static = boption(STATIC) lname = separated_list(COMMA, ID) COLON clName = ID SEMICOLON {
+    let p = List.map (fun n -> { name=n; className=clName }) lname in
     if static then StaticAttrib(p) else InstAttrib(p)
   }
 
@@ -92,21 +99,43 @@ paramList:
   LPAREN lp = separated_list(COMMA, param) RPAREN { List.flatten lp }
 
 param:
-  varopt = VAR? names = separated_nonempty_list(COMMA, ID) COLON clname = ID { List.map (fun name -> { name=name; className=clname }) names }
+  varopt = VAR? names = separated_nonempty_list(COMMA, ID) COLON clname = ID 
+  { List.map (fun name -> { name=name; className=clname }) names }
 
 extends:
   | EXTENDS id = ID { Some(id) }
   | { None }
 
 instrBlock:
-  LCURLY li = separated_list(SEMICOLON, instr) RCURLY { Block([]) }
+  | LCURLY li = list(instr) RCURLY { Block([], li) }
+  | vars = separated_nonempty_list(COMMA, param) IS li = nonempty_list(instr) 
+    { Block((List.flatten vars), li) }
+
 
 instr:
   | b = instrBlock { b }
   | e = expr SEMICOLON { Expr(e) }
-  | id = ID ASSIGN e = expr SEMICOLON { Assign(id, e) }
+  | id = expr ASSIGN e = expr SEMICOLON { Assign(id, e) }
+  | IF cond = expr THEN then_ = instr ELSE else_ = instr { Ite(cond, then_, else_) }
 
 expr:
   | c = CSTE { Cste(c) }
   | id = ID { Id(id) }
+  | LPAREN e = expr RPAREN { e }
+  | s = STRLIT { String(s) }
   | e = expr DOT name = ID { Select(e, name) }
+  | lhs = expr PLUS rhs = expr { Plus(lhs, rhs) }
+  | lhs = expr MINUS rhs = expr { Minus(lhs, rhs) }
+  | lhs = expr DIV rhs = expr { Div(lhs, rhs) }
+  | lhs = expr TIMES rhs = expr { Times(lhs, rhs) }
+  | lhs = expr STRCAT rhs = expr { StrCat(lhs, rhs) }
+  | UMINUS rhs = expr { UMinus (rhs) }
+  | UPLUS rhs = expr { rhs }
+  | lhs = expr DOT rhs = expr { AttrOf(lhs, rhs) }
+  | e = expr LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(e, le) } (**TODO *)
+
+
+  | lhs = expr op = RELOP rhs = expr { Comp(lhs, op, rhs) }
+
+  | NEW name = ID LPAREN le = separated_list(COMMA, expr) RPAREN { New(name, le) }
+

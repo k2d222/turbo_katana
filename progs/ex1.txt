@@ -70,7 +70,7 @@ class Point(var x, y: Integer, var name: String) is {
 
   def egal(p: Point) : Integer is {
    /* ils sont egaux s'ils ont memes coordonnees */
-       b1, b2 : Integer;
+       b1, b2 : Integer
        is
        b1 := p.x - this.x; b2 := p.y - this.y;
        if b1 then return 0; else return b2 = 0;
@@ -265,5 +265,5 @@ class Test () is {
   Test.test(p1, o, pn);
   Test.test2(o);
   Test.test2(pn);
-  "\nDone".println();
+  "nDone".println();
 }

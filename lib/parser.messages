@@ -1,0 +1,1025 @@
+prog: TIMES
+##
+## Ends in an error in state: 0.
+##
+## prog' -> . prog [ # ]
+##
+## The known suffix of the stack is as follows:
+##
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS VAR
+##
+## Ends in an error in state: 1.
+##
+## classDecl -> CLASS . ID paramList extends IS classBody [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE CLASS ]
+##
+## The known suffix of the stack is as follows:
+## CLASS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID VAR
+##
+## Ends in an error in state: 2.
+##
+## classDecl -> CLASS ID . paramList extends IS classBody [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE CLASS ]
+##
+## The known suffix of the stack is as follows:
+## CLASS ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN UPLUS
+##
+## Ends in an error in state: 3.
+##
+## paramList -> LPAREN . loption(separated_nonempty_list(COMMA,param)) RPAREN [ IS EXTENDS COLON ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COLON ID VAR
+##
+## Ends in an error in state: 6.
+##
+## separated_nonempty_list(COMMA,param) -> param . [ RPAREN IS ]
+## separated_nonempty_list(COMMA,param) -> param . COMMA separated_nonempty_list(COMMA,param) [ RPAREN IS ]
+##
+## The known suffix of the stack is as follows:
+## param
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COLON ID COMMA UPLUS
+##
+## Ends in an error in state: 7.
+##
+## separated_nonempty_list(COMMA,param) -> param COMMA . separated_nonempty_list(COMMA,param) [ RPAREN IS ]
+##
+## The known suffix of the stack is as follows:
+## param COMMA
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR VAR
+##
+## Ends in an error in state: 9.
+##
+## param -> option(VAR) . separated_nonempty_list(COMMA,ID) COLON ID [ RPAREN IS COMMA ]
+##
+## The known suffix of the stack is as follows:
+## option(VAR)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID VAR
+##
+## Ends in an error in state: 10.
+##
+## separated_nonempty_list(COMMA,ID) -> ID . [ COLON ]
+## separated_nonempty_list(COMMA,ID) -> ID . COMMA separated_nonempty_list(COMMA,ID) [ COLON ]
+##
+## The known suffix of the stack is as follows:
+## ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COMMA VAR
+##
+## Ends in an error in state: 11.
+##
+## separated_nonempty_list(COMMA,ID) -> ID COMMA . separated_nonempty_list(COMMA,ID) [ COLON ]
+##
+## The known suffix of the stack is as follows:
+## ID COMMA
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COLON VAR
+##
+## Ends in an error in state: 14.
+##
+## param -> option(VAR) separated_nonempty_list(COMMA,ID) COLON . ID [ RPAREN IS COMMA ]
+##
+## The known suffix of the stack is as follows:
+## option(VAR) separated_nonempty_list(COMMA,ID) COLON
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN ID COLON ID IS
+##
+## Ends in an error in state: 16.
+##
+## paramList -> LPAREN loption(separated_nonempty_list(COMMA,param)) . RPAREN [ IS EXTENDS COLON ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN loption(separated_nonempty_list(COMMA,param))
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 6, spurious reduction of production separated_nonempty_list(COMMA,param) -> param
+## In state 5, spurious reduction of production loption(separated_nonempty_list(COMMA,param)) -> separated_nonempty_list(COMMA,param)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN VAR
+##
+## Ends in an error in state: 18.
+##
+## classDecl -> CLASS ID paramList . extends IS classBody [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE CLASS ]
+##
+## The known suffix of the stack is as follows:
+## CLASS ID paramList
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN EXTENDS VAR
+##
+## Ends in an error in state: 19.
+##
+## extends -> EXTENDS . ID [ IS ]
+##
+## The known suffix of the stack is as follows:
+## EXTENDS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN EXTENDS ID VAR
+##
+## Ends in an error in state: 21.
+##
+## classDecl -> CLASS ID paramList extends . IS classBody [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE CLASS ]
+##
+## The known suffix of the stack is as follows:
+## CLASS ID paramList extends
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS VAR
+##
+## Ends in an error in state: 22.
+##
+## classDecl -> CLASS ID paramList extends IS . classBody [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE CLASS ]
+##
+## The known suffix of the stack is as follows:
+## CLASS ID paramList extends IS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY UPLUS
+##
+## Ends in an error in state: 23.
+##
+## classBody -> LCURLY . list(classBodyElement) RCURLY [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE CLASS ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY VAR VAR
+##
+## Ends in an error in state: 24.
+##
+## attrDecl -> VAR . boption(STATIC) loption(separated_nonempty_list(COMMA,ID)) COLON ID SEMICOLON [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## VAR
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY VAR STATIC VAR
+##
+## Ends in an error in state: 26.
+##
+## attrDecl -> VAR boption(STATIC) . loption(separated_nonempty_list(COMMA,ID)) COLON ID SEMICOLON [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## VAR boption(STATIC)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY VAR COLON VAR
+##
+## Ends in an error in state: 29.
+##
+## attrDecl -> VAR boption(STATIC) loption(separated_nonempty_list(COMMA,ID)) COLON . ID SEMICOLON [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## VAR boption(STATIC) loption(separated_nonempty_list(COMMA,ID)) COLON
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY VAR COLON ID VAR
+##
+## Ends in an error in state: 30.
+##
+## attrDecl -> VAR boption(STATIC) loption(separated_nonempty_list(COMMA,ID)) COLON ID . SEMICOLON [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## VAR boption(STATIC) loption(separated_nonempty_list(COMMA,ID)) COLON ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF VAR
+##
+## Ends in an error in state: 32.
+##
+## methodDecl -> DEF . boption(STATIC) boption(OVERRIDE) ID paramList option(preceded(COLON,ID)) IS instrBlock [ VAR RCURLY DEF ]
+## methodDecl -> DEF . boption(STATIC) boption(OVERRIDE) ID paramList COLON ID ASSIGN expr [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF STATIC VAR
+##
+## Ends in an error in state: 33.
+##
+## methodDecl -> DEF boption(STATIC) . boption(OVERRIDE) ID paramList option(preceded(COLON,ID)) IS instrBlock [ VAR RCURLY DEF ]
+## methodDecl -> DEF boption(STATIC) . boption(OVERRIDE) ID paramList COLON ID ASSIGN expr [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF OVERRIDE VAR
+##
+## Ends in an error in state: 35.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) . ID paramList option(preceded(COLON,ID)) IS instrBlock [ VAR RCURLY DEF ]
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) . ID paramList COLON ID ASSIGN expr [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID VAR
+##
+## Ends in an error in state: 36.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID . paramList option(preceded(COLON,ID)) IS instrBlock [ VAR RCURLY DEF ]
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID . paramList COLON ID ASSIGN expr [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID LPAREN RPAREN VAR
+##
+## Ends in an error in state: 37.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList . option(preceded(COLON,ID)) IS instrBlock [ VAR RCURLY DEF ]
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList . COLON ID ASSIGN expr [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID paramList
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID LPAREN RPAREN COLON VAR
+##
+## Ends in an error in state: 38.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON . ID ASSIGN expr [ VAR RCURLY DEF ]
+## option(preceded(COLON,ID)) -> COLON . ID [ IS ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID LPAREN RPAREN COLON ID VAR
+##
+## Ends in an error in state: 39.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON ID . ASSIGN expr [ VAR RCURLY DEF ]
+## option(preceded(COLON,ID)) -> COLON ID . [ IS ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID LPAREN RPAREN COLON ID ASSIGN VAR
+##
+## Ends in an error in state: 40.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON ID ASSIGN . expr [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON ID ASSIGN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: UPLUS VAR
+##
+## Ends in an error in state: 41.
+##
+## expr -> UPLUS . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## UPLUS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: UMINUS VAR
+##
+## Ends in an error in state: 42.
+##
+## expr -> UMINUS . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## UMINUS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: NEW VAR
+##
+## Ends in an error in state: 44.
+##
+## expr -> NEW . ID LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## NEW
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: NEW ID VAR
+##
+## Ends in an error in state: 45.
+##
+## expr -> NEW ID . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## NEW ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: NEW ID LPAREN VAR
+##
+## Ends in an error in state: 46.
+##
+## expr -> NEW ID LPAREN . loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## NEW ID LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LPAREN VAR
+##
+## Ends in an error in state: 47.
+##
+## expr -> LPAREN . expr RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LPAREN CSTE VAR
+##
+## Ends in an error in state: 50.
+##
+## expr -> LPAREN expr . RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT ID [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . PLUS expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . MINUS expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . DIV expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . TIMES expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . STRCAT expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . DOT expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . RELOP expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE TIMES VAR
+##
+## Ends in an error in state: 51.
+##
+## expr -> expr TIMES . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr TIMES
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE TIMES CSTE UPLUS
+##
+## Ends in an error in state: 52.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr TIMES expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr TIMES expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE STRCAT VAR
+##
+## Ends in an error in state: 53.
+##
+## expr -> expr STRCAT . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr STRCAT
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE STRCAT CSTE UPLUS
+##
+## Ends in an error in state: 54.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr STRCAT expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr STRCAT expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE RELOP VAR
+##
+## Ends in an error in state: 55.
+##
+## expr -> expr RELOP . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr RELOP
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE RELOP CSTE UPLUS
+##
+## Ends in an error in state: 56.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr RELOP expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr RELOP expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE PLUS VAR
+##
+## Ends in an error in state: 57.
+##
+## expr -> expr PLUS . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr PLUS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE PLUS CSTE UPLUS
+##
+## Ends in an error in state: 58.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr PLUS expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr PLUS expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE LPAREN VAR
+##
+## Ends in an error in state: 59.
+##
+## expr -> expr LPAREN . loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE LPAREN CSTE VAR
+##
+## Ends in an error in state: 63.
+##
+## expr -> expr . DOT ID [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . PLUS expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . MINUS expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . DIV expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . TIMES expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . STRCAT expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . DOT expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## expr -> expr . RELOP expr [ TIMES STRCAT RPAREN RELOP PLUS MINUS LPAREN DOT DIV COMMA ]
+## separated_nonempty_list(COMMA,expr) -> expr . [ RPAREN ]
+## separated_nonempty_list(COMMA,expr) -> expr . COMMA separated_nonempty_list(COMMA,expr) [ RPAREN ]
+##
+## The known suffix of the stack is as follows:
+## expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE MINUS VAR
+##
+## Ends in an error in state: 64.
+##
+## expr -> expr MINUS . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr MINUS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE MINUS CSTE UPLUS
+##
+## Ends in an error in state: 65.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr MINUS expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr MINUS expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE DOT VAR
+##
+## Ends in an error in state: 66.
+##
+## expr -> expr DOT . ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr DOT . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr DOT
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE DOT ID UPLUS
+##
+## Ends in an error in state: 68.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr DOT expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr DOT expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE DIV VAR
+##
+## Ends in an error in state: 69.
+##
+## expr -> expr DIV . expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr DIV
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE DIV CSTE UPLUS
+##
+## Ends in an error in state: 70.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr DIV expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## expr DIV expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE LPAREN CSTE COMMA VAR
+##
+## Ends in an error in state: 71.
+##
+## separated_nonempty_list(COMMA,expr) -> expr COMMA . separated_nonempty_list(COMMA,expr) [ RPAREN ]
+##
+## The known suffix of the stack is as follows:
+## expr COMMA
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: UMINUS CSTE UPLUS
+##
+## Ends in an error in state: 76.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> UMINUS expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## UMINUS expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: UPLUS CSTE UPLUS
+##
+## Ends in an error in state: 77.
+##
+## expr -> expr . DOT ID [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . PLUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . MINUS expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DIV expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . TIMES expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . STRCAT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> UPLUS expr . [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . DOT expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+## expr -> expr . RELOP expr [ VAR TIMES THEN STRCAT SEMICOLON RPAREN RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF COMMA ASSIGN ]
+##
+## The known suffix of the stack is as follows:
+## UPLUS expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID LPAREN RPAREN COLON ID ASSIGN CSTE THEN
+##
+## Ends in an error in state: 78.
+##
+## expr -> expr . DOT ID [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . PLUS expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . MINUS expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . DIV expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . TIMES expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . STRCAT expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . DOT expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## expr -> expr . RELOP expr [ VAR TIMES STRCAT RELOP RCURLY PLUS MINUS LPAREN DOT DIV DEF ]
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON ID ASSIGN expr . [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID paramList COLON ID ASSIGN expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY DEF ID LPAREN RPAREN IS UPLUS
+##
+## Ends in an error in state: 80.
+##
+## methodDecl -> DEF boption(STATIC) boption(OVERRIDE) ID paramList option(preceded(COLON,ID)) IS . instrBlock [ VAR RCURLY DEF ]
+##
+## The known suffix of the stack is as follows:
+## DEF boption(STATIC) boption(OVERRIDE) ID paramList option(preceded(COLON,ID)) IS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY TIMES
+##
+## Ends in an error in state: 81.
+##
+## instrBlock -> LCURLY . list(instr) RCURLY [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF VAR
+##
+## Ends in an error in state: 82.
+##
+## instr -> IF . expr THEN instr ELSE instr [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## IF
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF CSTE VAR
+##
+## Ends in an error in state: 83.
+##
+## expr -> expr . DOT ID [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . PLUS expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . MINUS expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . DIV expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . TIMES expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . STRCAT expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . DOT expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . RELOP expr [ TIMES THEN STRCAT RELOP PLUS MINUS LPAREN DOT DIV ]
+## instr -> IF expr . THEN instr ELSE instr [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## IF expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF CSTE THEN TIMES
+##
+## Ends in an error in state: 84.
+##
+## instr -> IF expr THEN . instr ELSE instr [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COLON ID RPAREN
+##
+## Ends in an error in state: 85.
+##
+## instrBlock -> separated_nonempty_list(COMMA,param) . IS nonempty_list(instr) [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## separated_nonempty_list(COMMA,param)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 6, spurious reduction of production separated_nonempty_list(COMMA,param) -> param
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COLON ID IS TIMES
+##
+## Ends in an error in state: 86.
+##
+## instrBlock -> separated_nonempty_list(COMMA,param) IS . nonempty_list(instr) [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## separated_nonempty_list(COMMA,param) IS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: VAR ID COLON ID IS CSTE SEMICOLON TIMES
+##
+## Ends in an error in state: 89.
+##
+## nonempty_list(instr) -> instr . [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+## nonempty_list(instr) -> instr . nonempty_list(instr) [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## instr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE VAR
+##
+## Ends in an error in state: 91.
+##
+## expr -> expr . DOT ID [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . PLUS expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . MINUS expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . DIV expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . TIMES expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . STRCAT expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . DOT expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## expr -> expr . RELOP expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ASSIGN ]
+## instr -> expr . SEMICOLON [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+## instr -> expr . ASSIGN expr SEMICOLON [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE ASSIGN VAR
+##
+## Ends in an error in state: 93.
+##
+## instr -> expr ASSIGN . expr SEMICOLON [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## expr ASSIGN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE ASSIGN CSTE VAR
+##
+## Ends in an error in state: 94.
+##
+## expr -> expr . DOT ID [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . PLUS expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . MINUS expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . DIV expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . TIMES expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . STRCAT expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . DOT expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . LPAREN loption(separated_nonempty_list(COMMA,expr)) RPAREN [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## expr -> expr . RELOP expr [ TIMES STRCAT SEMICOLON RELOP PLUS MINUS LPAREN DOT DIV ]
+## instr -> expr ASSIGN expr . SEMICOLON [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## expr ASSIGN expr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF CSTE THEN CSTE SEMICOLON VAR
+##
+## Ends in an error in state: 96.
+##
+## instr -> IF expr THEN instr . ELSE instr [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN instr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF CSTE THEN CSTE SEMICOLON ELSE TIMES
+##
+## Ends in an error in state: 97.
+##
+## instr -> IF expr THEN instr ELSE . instr [ VAR UPLUS UMINUS STRLIT RCURLY NEW LPAREN LCURLY IF ID EOF ELSE DEF CSTE ]
+##
+## The known suffix of the stack is as follows:
+## IF expr THEN instr ELSE
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY CSTE SEMICOLON TIMES
+##
+## Ends in an error in state: 101.
+##
+## list(instr) -> instr . list(instr) [ RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## instr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY VAR COLON ID SEMICOLON UPLUS
+##
+## Ends in an error in state: 107.
+##
+## list(classBodyElement) -> classBodyElement . list(classBodyElement) [ RCURLY ]
+##
+## The known suffix of the stack is as follows:
+## classBodyElement
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CSTE SEMICOLON VAR
+##
+## Ends in an error in state: 113.
+##
+## prog -> list(classDecl) instr . EOF [ # ]
+##
+## The known suffix of the stack is as follows:
+## list(classDecl) instr
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: CLASS ID LPAREN RPAREN IS LCURLY RCURLY TIMES
+##
+## Ends in an error in state: 115.
+##
+## list(classDecl) -> classDecl . list(classDecl) [ VAR UPLUS UMINUS STRLIT NEW LPAREN LCURLY IF ID CSTE ]
+##
+## The known suffix of the stack is as follows:
+## classDecl
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+

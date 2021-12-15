@@ -4,7 +4,7 @@ open Parser
 open Lexing
 open Optmanip
 
-exception Eof
+exception SyntaxError of string
 
 let keyword_table = Hashtbl.create 16
 
@@ -14,7 +14,6 @@ let _ =
         (* Class Keywords *)
         "class", CLASS;
         "extends", EXTENDS;
-        "super", SUPER;
         "new", NEW;
 
         (* Function Keywords *)
@@ -34,6 +33,8 @@ let _ =
       ]
 }
 
+
+
 let lettre = ['A'-'Z' 'a'-'z']
 let chiffre = ['0'-'9']
 let identchar = lettre | chiffre | ['_']
@@ -52,6 +53,8 @@ rule
   | "-" { MINUS }
   | "*" { TIMES }
   | "/" { DIV }
+  | "&" { STRCAT }
+  | '"' { read_string (Buffer.create 17) lexbuf }
   | ">" { RELOP(Gt) }
   | "<" { RELOP(Lt) }
   | ">=" { RELOP(Ge) }
@@ -73,4 +76,21 @@ and
 comment = parse
   | "*/" { token lexbuf }
   | "\n" { Lexing.new_line lexbuf; comment lexbuf }
-  | _ { comment lexbuf }
+  | _ { comment lexbuf } 
+and 
+
+read_string buf = parse
+  | '"'       { STRLIT (Buffer.contents buf) }
+  | '\\' '/'  { Buffer.add_char buf '/'; read_string buf lexbuf }
+  | '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
+  | '\\' 'b'  { Buffer.add_char buf '\b'; read_string buf lexbuf }
+  | '\\' 'f'  { Buffer.add_char buf '\012'; read_string buf lexbuf }
+  | '\\' 'n'  { Buffer.add_char buf '\n'; read_string buf lexbuf }
+  | '\\' 'r'  { Buffer.add_char buf '\r'; read_string buf lexbuf }
+  | '\\' 't'  { Buffer.add_char buf '\t'; read_string buf lexbuf }
+  | [^ '"' '\\']+
+    { Buffer.add_string buf (Lexing.lexeme lexbuf);
+      read_string buf lexbuf
+    }
+  | _ { raise (SyntaxError ("Illegal string character: " ^ Lexing.lexeme lexbuf)) }
+  | eof { raise (SyntaxError ("String is not terminated")) }

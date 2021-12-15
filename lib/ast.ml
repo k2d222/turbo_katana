@@ -2,8 +2,8 @@ type opComp = Eq | Neq | Lt | Le | Gt | Ge
 [@@deriving show]
 
 type instr =
-  | Block of instr list
-  | Assign of string * expr
+  | Block of param list * instr list
+  | Assign of expr * expr
   | Return
   | Ite of expr * instr * instr
   | Expr of expr
@@ -18,19 +18,14 @@ and expr =
   | Times of expr * expr
   | Div of expr * expr
   | List of expr list
-[@@deriving show]
+  | MethodCall of expr * expr list
+  | AttrOf of expr * expr
+  | Comp of expr * opComp * expr
+  | String of string 
+  | StrCat of expr * expr
+  | New of string * expr list
 
-and
-comp = Comp of opComp * expr * expr
-[@@deriving show]
-
-type varDecl = {
-  lhs: string;
-  rhs: expr;
-}
-[@@deriving show]
-
-type param = {
+and param = {
   name: string;
   className: string;
 }
@@ -39,7 +34,7 @@ type param = {
 type methodDecl = {
   name: string;
   params: param list;
-  retType: string;
+  retType: string option;
   body: instr;
 }
 [@@deriving show]
