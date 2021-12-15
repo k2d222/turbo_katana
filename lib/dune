@@ -16,23 +16,23 @@
   ; -w -33: unused-open -27: unused-var-strict -39:
    (flags (:standard -warn-error -A))))
 
- (rule
-   (targets parserMessages.ml)
-   (deps parser.messages parser.mly)
-   (action
-     (with-stdout-to parserMessages.ml
-       (run menhir
-         %{dep:parser.mly}
-         --compile-errors %{dep:parser.messages}))))
-
   (rule
     (targets parser.auto.messages)
-    (deps parser.messages parser.mly)
+    (deps parser.mly)
     (action
       (with-stdout-to parser.auto.messages
         (run menhir
           %{dep:parser.mly}
           --list-errors))))
+          
+  (rule
+    (targets parserMessages.ml)
+    (deps parser.messages parser.mly)
+    (action
+      (with-stdout-to parserMessages.ml
+        (run menhir
+          %{dep:parser.mly}
+          --compile-errors %{dep:parser.messages}))))
 
   ; (rule
   ;   (targets parser.messages.check)

@@ -8,9 +8,6 @@ let fast_parse (filename: string): Ast.prog option =
   let text, lexbuf = L.read filename in
   match Parser.prog Lexer.token lexbuf with
     | ast -> Some(ast)
-    (* | exception Lexer.Error msg ->
-      Printf.eprintf "%s\n" msg;
-      exit 1 *)
     | exception Parser.Error -> None
 
 let env_from_err checkpoint =
@@ -18,38 +15,31 @@ let env_from_err checkpoint =
     | I.HandlingError env -> env
     | _ -> assert false
 
-(* [state_from_err checkpoint] extracts the number of the current state out of a
-   checkpoint. *)
-
-let state_from_err checkpoint: int =
-  let env = env_from_err checkpoint in
-  match I.top env with
-    | Some (I.Element (s, _, _, _)) -> I.number s
-    | None -> 0 (* initial state is usually 0 *)
-
 (* [show text (pos1, pos2)] displays a range of the input text [text]
    delimited by the positions [pos1] and [pos2]. *)
 
 let show text positions =
   E.extract text positions
-    |> E.sanitize
-    |> E.compress
-    |> E.shorten 20 (* max width 43 *)
+  |> E.sanitize
+  |> E.compress
+  |> E.shorten 20 (* max width 43 *)
 
 (* [get text checkpoint i] extracts and shows the range of the input text that
    corresponds to the [i]-th stack cell. The top stack cell is numbered zero. *)
 
-let get text checkpoint i =
-  match I.get i (env_from_err checkpoint) with
+let get text env i =
+  match I.get i env with
     | Some (I.Element (_, _, pos1, pos2)) -> show text (pos1, pos2)
-    | None -> "???"
+    | None -> "<???>"
 
 let diagnostic text checkpoint =
+  let env = env_from_err checkpoint in
+  let state = I.current_state_number env in
   try
-    let message = ParserMessages.message (state_from_err checkpoint) in
-    E.expand (get text checkpoint) message
+    let message = ParserMessages.message state in
+    (E.expand (get text env) message)
   with
-    | Not_found -> "<sorry, no diagnostics>"
+    | Not_found -> "<error happened in state " ^ string_of_int state ^ ">"
 
 let on_success ast: Ast.prog option =
   printf "on success\n";
