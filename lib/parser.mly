@@ -52,10 +52,12 @@ let split_body_elts l =
 %token EOF
 
 // %right ELSE
-// %left Comp
-// %left PLUS MINUS
-// %left TIMES DIV
-// %left DOT
+%left RELOP
+%left PLUS MINUS
+%left TIMES DIV
+%left STRCAT
+%nonassoc LPAREN
+%left DOT
 
 %type <Ast.prog> prog
 
@@ -63,7 +65,7 @@ let split_body_elts l =
 %%
 
 prog:
-  ld = list(classDecl) i = instr EOF { { decls=ld; instr=i } }
+  ld = list(classDecl) i = instrBlock EOF { { decls=ld; instr=i } }
 
 classDecl:
   CLASS cname = CLASSNAME params = paramList ext = extends IS body = classBody {
@@ -137,17 +139,19 @@ instr:
 expr:
   | c = CSTE { Cste(c) }
   | id = ID | id = CLASSNAME { Id(id) }
-  | LPAREN e = expr RPAREN { e }
   | s = STRLIT { String(s) }
-  | e = expr DOT name = ID { Select(e, name) }
+
+  // those have conflicts
+  | lhs = expr op = RELOP rhs = expr { Comp(lhs, op, rhs) }
   | lhs = expr PLUS rhs = expr { Plus(lhs, rhs) }
   | lhs = expr MINUS rhs = expr { Minus(lhs, rhs) }
   | lhs = expr DIV rhs = expr { Div(lhs, rhs) }
   | lhs = expr TIMES rhs = expr { Times(lhs, rhs) }
   | lhs = expr STRCAT rhs = expr { StrCat(lhs, rhs) }
+  | e = expr LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(e, le) } (**TODO *)
+  | e = expr DOT name = ID { AttrOf(e, name) }
+
+  | LPAREN e = expr RPAREN { e }
   | MINUS rhs = expr { UMinus (rhs) }
   | PLUS rhs = expr { rhs }
-  | lhs = expr DOT rhs = expr { AttrOf(lhs, rhs) }
-  | e = expr LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(e, le) } (**TODO *)
-  | lhs = expr op = RELOP rhs = expr { Comp(lhs, op, rhs) }
   | NEW name = CLASSNAME LPAREN le = separated_list(COMMA, expr) RPAREN { New(name, le) }

@@ -11,7 +11,7 @@ type instr =
 and expr =
   | Id of string
   | Cste of int
-  | Select of expr * string
+  | AttrOf of expr * string
   | Plus of expr * expr
   | Minus of expr * expr
   | UMinus of expr
@@ -19,7 +19,6 @@ and expr =
   | Div of expr * expr
   | List of expr list
   | MethodCall of expr * expr list
-  | AttrOf of expr * expr
   | Comp of expr * opComp * expr
   | String of string
   | StrCat of expr * expr
