@@ -7,7 +7,7 @@ class Point(var x, y: Integer, var name: String) is {
 
   /* attributs supplementaires à initialiser dans le constructeur */
   var hasClone : Integer
-  var index : Integer 
+  var index : Integer
   /* la valeur du champ ci-dessous est indefinie si hasClone vaut 0.
    * Le probleme est qu'on n'a pas l'equivalent de NULL (du bon type)
    */
@@ -214,7 +214,7 @@ class Test () is {
   pn := new PointNoir(+1, -1);
   dp := new DefaultPoint();
   p1.print(0);
-  p2.print(0); 
+  p2.print(0);
   p2.move(p1.getx(), p1.gety(), 0);
   p2.print(0);
   o.print(0);
@@ -232,7 +232,7 @@ class Test () is {
   "Impression de tous les clones de p1:".println();
    p1.allClones();
   "Fin de l'impression de tous les clones".println();
-  
+
   /* Ne doit pas compiler car clone() renvoie statiquement un Point alors
    * que o est declare comme PointColore
    * o := o.clone();

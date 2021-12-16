@@ -62,6 +62,7 @@ let table_parse (filename: string): Ast.prog option =
 (* -------------------------------------------------------------------------- *)
 
 let run ast = begin
+  Contextual.check_all ast;
   Ast.show_prog ast
   |> print_endline;
 end

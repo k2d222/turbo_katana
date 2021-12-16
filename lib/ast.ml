@@ -18,7 +18,7 @@ and expr =
   | Times of expr * expr
   | Div of expr * expr
   | List of expr list
-  | MethodCall of expr * expr list
+  | MethodCall of string * expr * expr list
   | Comp of expr * opComp * expr
   | String of string
   | StrCat of expr * expr
@@ -67,7 +67,3 @@ type prog = {
   instr: instr;
 }
 [@@deriving show]
-
-exception VC_error of string (* erreur contextuelle *)
-exception Run_error of string (* erreur a l'execution pour un interprete *)
-exception Internal_error of string

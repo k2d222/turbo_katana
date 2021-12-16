@@ -56,7 +56,6 @@ let split_body_elts l =
 %left PLUS MINUS
 %left TIMES DIV
 %left STRCAT
-%nonassoc LPAREN
 %left DOT
 
 %type <Ast.prog> prog
@@ -148,7 +147,7 @@ expr:
   | lhs = expr DIV rhs = expr { Div(lhs, rhs) }
   | lhs = expr TIMES rhs = expr { Times(lhs, rhs) }
   | lhs = expr STRCAT rhs = expr { StrCat(lhs, rhs) }
-  | e = expr LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(e, le) } (**TODO *)
+  | e = expr DOT f = ID LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(f, e, le) } (**TODO *)
   | e = expr DOT name = ID { AttrOf(e, name) }
 
   | LPAREN e = expr RPAREN { e }
