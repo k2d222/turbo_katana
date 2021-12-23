@@ -18,10 +18,10 @@ let find_class name decls =
 
 let rec ancestors decl decls =
   match decl.superclass with
-    | None -> []
-    | Some(super) ->
-      let superDecl = (find_class super decls) in
-      superDecl :: (ancestors superDecl decls)
+  | None -> []
+  | Some(super) ->
+    let superDecl = (find_class super decls) in
+    superDecl :: (ancestors superDecl decls)
 
 (** Tells if a class extends a base class (recursively)
     @raise Not_found if a class name has no declaration. *)
@@ -44,35 +44,35 @@ let rec get_expr_type _env _expr =
     - Constructor parameters and class parameters are equal
     - Constructor calls the right super constructor if class is derived
     - Constructor does not call any super constructor if class is base
-    @raise Contextual_error if a check fails.
+      @raise Contextual_error if a check fails.
 *)
 
 let check_ctor decl =
   let ctor = decl.body.ctor in
 
   if decl.name <> ctor.name
-  then failwith (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
+  then raise @@ Contextual_error (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
   else ();
 
   match decl.superclass, ctor.superCall with
-    | Some(n1), Some(n2, _) when n1 <> n2 -> failwith (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
-    | Some(n1), None -> failwith (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
-    | None, Some(n2, _) -> failwith (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
-    | _ -> ();
+  | Some(n1), Some(n2, _) when n1 <> n2 -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
+  | Some(n1), None -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
+  | None, Some(n2, _) -> raise @@ Contextual_error (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
+  | _ -> ();
 
-  if ctor.params <> decl.ctorParams
-  then failwith (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
-  else ()
+    if ctor.params <> decl.ctorParams
+    then raise @@ Contextual_error (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
+    else ()
 
 (** Check that each method declaration is unique in a class declaration.
     @raise Contextual_error if a check fails. *)
 
 let check_multiple_def decl =
   Util.iter_pairs (fun ((d1: methodDecl), (d2: methodDecl)) ->
-    if d1.name = d2.name
-    then raise @@ Contextual_error (Printf.sprintf "multiple definition of method '%s' in class '%s'" d1.name decl.name)
-    else ()
-  ) decl.body.methods
+      if d1.name = d2.name
+      then raise @@ Contextual_error (Printf.sprintf "multiple definition of method '%s' in class '%s'" d1.name decl.name)
+      else ()
+    ) decl.body.methods
 
 (** Check that each class declaration extends a declared class, if any.
     @raise Contextual_error if a check fails. *)
@@ -80,10 +80,10 @@ let check_multiple_def decl =
 let check_inheritance decls =
   List.filter_map (fun d -> d.superclass |> Optmanip.map (fun super -> (d.name, super))) decls
   |> List.iter (fun (name, super) ->
-    match find_class_opt super decls with
+      match find_class_opt super decls with
       | None -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends non-existing class '%s'" name super)
       | _ -> ()
-  )
+    )
 
 (** Check that there are no cycles in the inheritance graph.
     @raise Contextual_error if a check fails. *)
@@ -103,7 +103,7 @@ let check_cycles decls =
 (** Performs the following checks:
     - Override methods have the 'override' keyword.
     - Override methods match the overriden method signature.
-    @raise Contextual_error if a check fails. *)
+      @raise Contextual_error if a check fails. *)
 
 let check_overrides decls =
   () (* TODO *)
@@ -117,7 +117,7 @@ let rec check_expr_scope env expr =
 (** Performs the following checks:
     - The method exists for the given type
     - Method call parameters are compatible with the declaration.
-    @raise Contextual_error if a check fails. *)
+      @raise Contextual_error if a check fails. *)
 
 let rec check_method_calls env expr instr =
   () (* TODO *)
@@ -128,7 +128,7 @@ let rec check_method_calls env expr instr =
       (b) (recusively) an attribute of a variable in the scope, or
       (c) A static attribute of a class.
     - Right-hand-side assign operand is compatible with the target variable
-    @raise Contextual_error if a check fails. *)
+      @raise Contextual_error if a check fails. *)
 
 let rec check_assign env (lhs, rhs) =
   () (* TODO *)
