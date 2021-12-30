@@ -42,7 +42,7 @@ let split_body_elts l =
 %token <string> ID
 %token <int> CSTE
 %token <string> STRLIT
-%token <Ast.opComp> RELOP
+%token <Ast.numBinOp> RELOP
 %token PLUS MINUS TIMES DIV
 %token STRCAT
 %token LPAREN RPAREN
@@ -140,11 +140,11 @@ expr:
   | s = STRLIT { String(s) }
 
   // those have conflicts
-  | lhs = expr op = RELOP rhs = expr { Comp(lhs, op, rhs) }
-  | lhs = expr PLUS rhs = expr { Plus(lhs, rhs) }
-  | lhs = expr MINUS rhs = expr { Minus(lhs, rhs) }
-  | lhs = expr DIV rhs = expr { Div(lhs, rhs) }
-  | lhs = expr TIMES rhs = expr { Times(lhs, rhs) }
+  | lhs = expr op = RELOP rhs = expr { BinOp(lhs, op, rhs) }
+  | lhs = expr PLUS rhs = expr { BinOp(lhs, Add, rhs) }
+  | lhs = expr MINUS rhs = expr { BinOp(lhs, Sub, rhs) }
+  | lhs = expr DIV rhs = expr { BinOp(lhs, Div, rhs) }
+  | lhs = expr TIMES rhs = expr { BinOp(lhs, Mul, rhs) }
   | lhs = expr STRCAT rhs = expr { StrCat(lhs, rhs) }
   | e = expr DOT f = ID LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(f, e, le) } (**TODO *)
   | e = expr DOT name = ID { AttrOf(e, name) }

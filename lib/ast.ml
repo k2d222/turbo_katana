@@ -1,4 +1,7 @@
-type opComp = Eq | Neq | Lt | Le | Gt | Ge
+type numBinOp =
+  | Eq | Neq
+  | Lt | Le | Gt | Ge
+  | Add | Sub | Mul | Div
 [@@deriving show]
 
 type instr =
@@ -12,14 +15,10 @@ and expr =
   | Id of string
   | Cste of int
   | AttrOf of expr * string
-  | Plus of expr * expr
-  | Minus of expr * expr
   | UMinus of expr
-  | Times of expr * expr
-  | Div of expr * expr
   | List of expr list
   | MethodCall of string * expr * expr list
-  | Comp of expr * opComp * expr
+  | BinOp of expr * numBinOp * expr
   | String of string
   | StrCat of expr * expr
   | New of string * expr list
