@@ -51,7 +51,6 @@ let split_body_elts l =
 %token ASSIGN
 %token EOF
 
-// %right ELSE
 %left RELOP
 %left PLUS MINUS
 %left TIMES DIV
@@ -88,7 +87,7 @@ methodDecl:
      Method({ name=name; params=params;  retType=retType; body=b;  })
   }
   | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
-    Method({ name=name; params=params; retType=Some(retType); body=Expr(e); })
+    Method({ name=name; params=params; retType=Some(retType); body=Return(e); })
   }
 
 ctorDecl:
