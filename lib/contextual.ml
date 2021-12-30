@@ -32,10 +32,49 @@ let is_superclass base super decls =
   |> Option.is_some
 
 
+(** Get the type of an attribute in a class declaration. *)
+
+let get_attr_type decl attrName =
+  decl.body.instAttrs
+  |> List.find_map  (fun (attr: param) ->
+      if attr.name = attrName  then Some(attr.className)  else None
+    )
+  |> Option.get
+
+(** Get the type of a method in a class declaration. *)
+
+let get_method_type decl methName =
+  decl.body.methods
+  |> List.find_map  (fun (meth: methodDecl) ->
+      if meth.name = methName then meth.retType else None
+    )
+  |> Optmanip.get_or("Void")
+
 (** Computes an expression type. *)
 
-let rec get_expr_type _env _expr =
-  () (* TODO *)
+let get_expr_type env decls expr =
+  let rec r_get expr =
+    match expr with
+    | Cste _ | BinOp _ | UMinus _ -> "Integer"
+    | String _ | StrCat _ -> "String"
+
+    | Id id -> List.assoc id env
+
+    | AttrOf(e, attrName) ->
+      let decl = find_class (r_get e) decls
+      in get_attr_type decl attrName
+
+    | List l ->
+      let last = List.hd (List.rev l)
+      in r_get last
+
+    | MethodCall(name, caller, _args) ->
+      let decl = find_class (r_get caller) decls
+      in get_method_type decl name
+
+    | New(className, _args) -> className
+
+  in r_get expr
 
 (* -------------------------------------------------------------------------- *)
 
