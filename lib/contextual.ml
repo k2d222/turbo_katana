@@ -23,6 +23,19 @@ let rec ancestors decl decls =
     let superDecl = (find_class super decls) in
     superDecl :: (ancestors superDecl decls)
 
+(** Find (recursively through ancestors) the method declaration in a class
+    with a given name. *)
+
+let rec find_method_opt decl name decls =
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.methods
+  |> Optmanip.or_else (fun () ->
+      match decl.superclass with
+      | None -> None
+      | Some(super) ->
+        let superDecl = (find_class super decls)
+        in find_method_opt superDecl name decls
+    )
+
 (** Tells if a class extends a base class (recursively)
     @raise Not_found if a class name has no declaration. *)
 
@@ -140,12 +153,41 @@ let check_cycles decls =
   in List.iter (r_check []) decls
 
 (** Performs the following checks:
+    - Base classes cannot have override methods.
     - Override methods have the 'override' keyword.
     - Override methods match the overriden method signature.
       @raise Contextual_error if a check fails. *)
 
 let check_overrides decls =
-  () (* TODO *)
+
+  let check_class decl =
+
+    let check_super_method superDecl (meth: methodDecl) =
+      let overriden = find_method_opt superDecl meth.name decls in
+      if meth.override then
+        match overriden with
+        | Some(overriden) ->
+          if meth.params <> overriden.params
+          then raise @@ Contextual_error (Printf.sprintf "signature mismatch between method '%s::%s' and overriden method" decl.name meth.name)
+          else ()
+        | None -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is marked override but no overriden method found" decl.name meth.name)
+      else
+        match overriden with
+        | Some _ -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is not marked override but shadows a super method" decl.name meth.name)
+        | None -> ()
+
+    in let check_base_method (meth: methodDecl) =
+         if meth.override
+         then raise @@ Contextual_error (Printf.sprintf "method '%s' of base class '%s' is marked override" meth.name decl.name)
+         else ()
+
+    in match decl.superclass with
+    | Some(super) ->
+      let superDecl = find_class super decls
+      in List.iter (check_super_method superDecl) decl.body.methods
+    | None -> List.iter check_base_method decl.body.methods
+
+  in List.iter check_class decls
 
 (** Checks that an expression is valid with the given scope.
     @raise Contextual_error if a check fails. *)

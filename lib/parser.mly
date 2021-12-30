@@ -63,11 +63,11 @@ let split_body_elts l =
 %%
 
 prog:
-  ld = list(classDecl) i = instrBlock EOF { { decls=ld; instr=i } }
+  decls = list(classDecl) instr = instrBlock EOF { { decls; instr } }
 
 classDecl:
-  CLASS cname = CLASSNAME params = paramList ext = extends IS body = classBody {
-    { name=cname; ctorParams=params; body=body; superclass=ext }
+  CLASS name = CLASSNAME ctorParams = paramList superclass = extends IS body = classBody {
+    { name; ctorParams; body; superclass }
   }
 
 classBody:
@@ -83,25 +83,25 @@ classBodyElement:
   | attr = attrDecl { attr }
 
 methodDecl:
-  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS b = instrBlock {
-     Method({ name=name; params=params;  retType=retType; body=b;  })
+  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS body = instrBlock {
+     Method({ name; static; override; params; retType; body;  })
   }
   | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
-    Method({ name=name; params=params; retType=Some(retType); body=Return(e); })
+    Method({ name; static; override; params; retType=Some(retType); body=Return(e); })
   }
 
 ctorDecl:
-  | DEF name = CLASSNAME params = paramList IS b = instrBlock {
-     Ctor({ name=name; params=params; superCall=None; body=b;  })
+  | DEF name = CLASSNAME params = paramList IS body = instrBlock {
+     Ctor({ name; params; superCall=None; body;  })
   }
   | DEF name = CLASSNAME params = paramList COLON super = CLASSNAME lsuper = superList IS b = instrBlock {
-    Ctor({ name=name; params=params; superCall=Some(super, lsuper); body=b; })
+    Ctor({ name; params; superCall=Some(super, lsuper); body=b; })
   }
 
 
 attrDecl:
-  | VAR static = boption(STATIC) lname = separated_list(COMMA, ID) COLON clName = CLASSNAME {
-    let p = List.map (fun n -> { name=n; className=clName }) lname in
+  | VAR static = boption(STATIC) lname = separated_list(COMMA, ID) COLON className = CLASSNAME {
+    let p = List.map (fun name -> { name; className }) lname in
     if static then StaticAttrib(p) else InstAttrib(p)
   }
 
@@ -112,15 +112,15 @@ superList:
   LPAREN le = separated_list(COMMA, expr) RPAREN { le }
 
 ctorParam:
-  varopt = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON clname = CLASSNAME
-  { List.map (fun name -> { name=name; className=clname }) names }
+  varopt = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME
+  { List.map (fun name -> { name; className }) names }
 
 extends:
   | EXTENDS id = CLASSNAME { Some(id) }
   | { None }
 
 param:
-  names = separated_nonempty_list(COMMA, ID) COLON clname = CLASSNAME { List.map (fun name -> { name=name; className=clname }) names }
+  names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME { List.map (fun name -> { name; className }) names }
 
 instrBlock:
   | LCURLY li = list(instr) RCURLY { Block([], li) }

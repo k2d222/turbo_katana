@@ -39,6 +39,8 @@ type ctorDecl = {
 
 type methodDecl = {
   name: string;
+  static: bool;
+  override: bool;
   params: param list;
   retType: string option;
   body: instr;
