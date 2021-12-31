@@ -2,6 +2,32 @@ open Ast
 
 exception Contextual_error of string
 
+(** Add a variable to the environment, shadowing any pre-existing variable. *)
+
+let env_add env (var: param) =
+  let env = List.remove_assoc var.name env
+  in (var.name, var.className) :: env
+
+(** Add all variables to the environment, shadowing any pre-existing variable. *)
+
+let env_add_all env vars =
+  vars |> List.fold_left env_add env
+
+(** Get a variable from the environment.
+    @raise Not_found if the variable is not in the environment. *)
+
+let env_get env varName =
+  List.assoc_opt varName env
+  |> Optmanip.get_or_else (fun () ->
+      Printf.eprintf "[ERR] env_get '%s' failed\n" varName;
+      raise Not_found
+    )
+
+let print_env env =
+  env |> List.iter (fun (name, type_) ->
+      Printf.printf "%s : %s\n" name type_
+    )
+
 (** Find the class declaration with a given name. *)
 
 let find_class_opt decls name =
@@ -11,7 +37,11 @@ let find_class_opt decls name =
     @raise Not_found if no such declaration is found. *)
 
 let find_class decls name =
-  List.find (fun decl -> decl.name = name) decls
+  find_class_opt decls name
+  |> Optmanip.get_or_else (fun () ->
+      Printf.eprintf "[ERR] find_class '%s' failed\n" name;
+      raise Not_found
+    )
 
 (** List of all ancestor class declarations in bottom-to-top order.
     @raise Not_found if an ancestor has no declaration. *)
@@ -36,15 +66,31 @@ let rec find_method_opt decls name decl =
         in find_method_opt decls name superDecl
     )
 
+(** Get the type of an attribute in a class declaration. *)
+
+let rec get_attr_opt attrName decl =
+  let pred (attr: param) =
+    if attr.name = attrName then Some(attr.className) else None
+  in let pred2 (attr: ctorParam) =
+       if attr.name = attrName then Some(attr.className) else None
+  in
+  List.find_map pred decl.body.instAttrs
+  |> Optmanip.or_else (fun () ->
+      List.find_map pred decl.body.staticAttrs
+    )
+  |> Optmanip.or_else (fun () ->
+      List.find_map pred2 decl.ctorParams
+    )
+
 (** Get the type of an attribute in a class declaration.
     @raise Not_found if the class has no such attribute. *)
 
-let get_attr_type attrName decl =
-  decl.body.instAttrs
-  |> List.find_map  (fun (attr: param) ->
-      if attr.name = attrName  then Some(attr.className)  else None
+let get_attr attrName decl =
+  get_attr_opt attrName decl
+  |> Optmanip.get_or_else (fun () ->
+      Printf.eprintf "[ERR] get_attr '%s' failed\n" attrName;
+      raise Not_found
     )
-  |> Optmanip.get_or_else (fun () -> raise Not_found)
 
 (** Get the type of a method in a class declaration.
     Note: procedures have the special type 'Void' *)
@@ -64,15 +110,15 @@ let get_expr_type decls env expr =
     | Cste _ | BinOp _ | UMinus _ -> "Integer"
     | String _ | StrCat _ -> "String"
 
-    | Id id -> List.assoc id env
+    | Id id -> env_get env id
 
     | Attr(e, attrName) ->
       let decl = find_class decls (r_get e)
-      in get_attr_type attrName decl
+      in get_attr attrName decl
 
     | StaticAttr(className, attrName) ->
       let decl = find_class decls className
-      in get_attr_type attrName decl
+      in get_attr attrName decl
 
     | List l ->
       let last = List.hd (List.rev l)
@@ -99,14 +145,6 @@ let is_base decls derived base =
     in let base = find_class decls base
     in List.exists ((=) base) (ancestors decls derived)
 
-(** Add a variable to the environment, shadowing any pre-existing variable. *)
-
-let add_to_env env vars =
-  vars |> List.fold_left (fun env (var: param) ->
-      let env = List.remove_assoc var.name env
-      in (var.name, var.className) :: env
-    ) env
-
 (** Make an environment with 'super' and 'this'. *)
 
 let make_class_env decl =
@@ -119,7 +157,7 @@ let make_class_env decl =
 (** Make an environment with method params and optionally 'result'. *)
 
 let make_method_env env meth =
-  let env = add_to_env env meth.params
+  let env = env_add_all env meth.params
   in let env = match meth.retType with
       | Some(ret) -> ("result", ret) :: env
       | None -> env
@@ -166,8 +204,10 @@ let check_multiple_def decl =
     @raise Contextual_error if a check fails. *)
 
 let check_inheritance decls =
-  List.filter_map (fun d -> d.superclass |> Optmanip.map (fun super -> (d.name, super))) decls
-  |> List.iter (fun (name, super) ->
+  let decls_with_super = decls |> List.filter_map (fun d ->
+      d.superclass |> Optmanip.map (fun super -> (d.name, super))
+    )
+  in decls_with_super |> List.iter (fun (name, super) ->
       match find_class_opt decls super with
       | None -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends non-existing class '%s'" name super)
       | _ -> ()
@@ -225,44 +265,12 @@ let check_overrides decls =
 
   in List.iter check_class decls
 
-(** Checks that all identifiers in an expression are in scope.
+(** Checks that id is in scope.
     @raise Contextual_error if a check fails. *)
 
-let check_expr_ident_scope env expr =
-  let rec r_check expr =
-    match expr with
-    | Id id ->
-      if Option.is_none @@ List.assoc_opt id env
-      then raise @@ Contextual_error (Printf.sprintf "use of undeclared identifier '%s'" id)
-      else ()
-    | Attr(e, _) | UMinus e | Call(e, _, _) -> r_check e
-    | List le | New(_, le) -> List.iter r_check le
-    | BinOp(e1, _, e2) | StrCat(e1, e2) -> r_check e1; r_check e2
-    | Cste _ | StaticAttr _ | StaticCall _ | String _ -> ()
-
-  in r_check expr
-
-(** Checks that all identifiers in an instruction are in scope.
-    @raise Contextual_error if a check fails. *)
-
-let rec check_instr_ident_scope env instr =
-  let rec r_check instr =
-    match instr with
-    | Block(vars, li) ->
-      let env = add_to_env env vars
-      in List.iter (check_instr_ident_scope env) li
-
-    | Assign(to_, from_) ->
-      check_expr_ident_scope env to_;
-      check_expr_ident_scope env from_;
-
-    | Return e | Expr e -> check_expr_ident_scope env e
-
-    | Ite(e, then_, else_) ->
-      check_expr_ident_scope env e;
-      r_check then_; r_check else_
-
-  in r_check instr
+let check_in_scope env id =
+  if Option.is_none @@ List.assoc_opt id env
+  then raise @@ Contextual_error (Printf.sprintf "use of undeclared identifier '%s'" id)
 
 (** Performs the following checks:
     - The method exists for the given type
@@ -272,25 +280,6 @@ let rec check_instr_ident_scope env instr =
 let rec check_method_calls _env _expr _instr =
   () (* TODO *)
 
-(** Performs the following checks:
-    - Left-hand-side assign operand refers to either:
-      (a) An ident,
-      (b) (recusively) an attribute of a variable, or
-      (c) A static attribute of a class.
-    - Right-hand-side assign operand is compatible with the target variable
-      @raise Contextual_error if a check fails. *)
-
-let rec check_assign decls env (lhs, rhs) =
-  let t1 = get_expr_type decls env lhs
-  in let t2 = get_expr_type decls env rhs
-  in let () = match lhs with
-      | Id _ | Attr _ | StaticAttr _ -> ()
-      | _ -> raise @@ Contextual_error (Printf.sprintf "cannot assign to an expression of type '%s'" t1)
-  in let () =
-       if is_base decls t1 t2
-       then ()
-       else raise @@ Contextual_error (Printf.sprintf "cannot assign '%s' to '%s'" t2 t1);
-  in ()
 
 (** Performs the following checks:
     - All code paths lead to either:
@@ -299,7 +288,7 @@ let rec check_assign decls env (lhs, rhs) =
     - All return instructions have a type compatible with the return type
     - All assigns to result have a type compatible with the return type *)
 
-let check_returns decls retType instr =
+let check_returns decls env retType instr =
 
   let assert_type env e =
     let t = get_expr_type decls env e
@@ -312,7 +301,7 @@ let check_returns decls retType instr =
        | Return e -> assert_type env e
 
        | Block(vars, li) ->
-         let env = add_to_env env vars
+         let env = env_add_all env vars
          in List.iter (check_ret_type env) li
 
        | Ite(_, then_, else_) ->
@@ -329,10 +318,9 @@ let check_returns decls retType instr =
        | Ite(_, then_, else_) -> has_return then_ && has_return else_
        | _ -> false
 
-  in let () = check_ret_type [] instr
-  in let () = if not (has_return instr)
-       then raise @@ Contextual_error (Printf.sprintf "some code paths lead to no return statement or assign to 'result' when method expects return type '%s'" retType);
-  in ()
+  in check_ret_type env instr;
+  if not (has_return instr)
+  then raise @@ Contextual_error (Printf.sprintf "some code paths lead to no return statement or assign to 'result' when method expects return type '%s'" retType)
 
 (** Checks that there are no return instruction.
     @raise Contextual_error if a check fails. *)
@@ -343,26 +331,6 @@ let rec check_no_return instr =
   | Block(_, li) -> List.iter check_no_return li
   | Ite(_, then_, else_) -> check_no_return then_; check_no_return else_
   | Expr _ | Assign _ -> ()
-
-(** Checks that if/then/else instructions are valid.
-    @raise Contextual_error if a check fails. *)
-
-let rec check_instr_ite decls env instr =
-  let rec r_check instr =
-    match instr with
-    | Block(vars, li) ->
-      let env = add_to_env env vars
-      in List.iter (check_instr_ite decls env) li
-
-    | Ite(e, then_, else_) ->
-      let t = get_expr_type decls env e
-      in if t <> "Integer"
-      then raise @@ Contextual_error (Printf.sprintf "'if' condition must be of type 'Integer'")
-      else r_check then_; r_check else_
-
-    | Assign _ | Return _ | Expr _ -> ()
-
-  in r_check instr
 
 (** Checks that there are no declarations of reserved keywords in vars.
     Note: reserved keywords are: 'this', 'super', 'result'.
@@ -380,30 +348,97 @@ let check_no_reserved vars =
 (** Checks that Block instructions are valid.
     @raise Contextual_error if a check fails. *)
 
-let rec check_instr_block instr =
+let rec check_instr_block decls env (vars, li) =
+  check_no_reserved vars;
+  let env = env_add_all env vars
+  in List.iter (check_instr decls env) li
+
+(** Performs the following checks:
+    - Left-hand-side assign operand refers to either:
+      (a) An ident,
+      (b) (recusively) an attribute of a variable, or
+      (c) A static attribute of a class.
+    - Right-hand-side assign operand is compatible with the target variable
+      @raise Contextual_error if a check fails. *)
+
+and check_instr_assign decls env (lhs, rhs) =
+  check_expr decls env lhs;
+  check_expr decls env rhs;
+  let t1 = get_expr_type decls env lhs
+  in let t2 = get_expr_type decls env rhs
+  in let () = match lhs with
+      | Id _ | Attr _ | StaticAttr _ -> ()
+      | _ -> raise @@ Contextual_error (Printf.sprintf "cannot assign to an expression of type '%s'" t1)
+  in let () =
+       if is_base decls t2 t1
+       then ()
+       else raise @@ Contextual_error (Printf.sprintf "cannot assign '%s' to '%s'" t2 t1)
+  in ()
+
+(** Checks that a return instruction is valid.
+    @raise Contextual_error if a check fails. *)
+
+and check_instr_return decls env e =
+  check_expr decls env e
+
+(** Checks that if/then/else instructions are valid.
+    @raise Contextual_error if a check fails. *)
+
+and check_instr_ite decls env (e, then_, else_) =
+  check_expr decls env e;
+  let t = get_expr_type decls env e
+  in if t <> "Integer"
+  then raise @@ Contextual_error (Printf.sprintf "'if' condition must be of type 'Integer'");
+  check_instr decls env then_;
+  check_instr decls env else_
+
+(** Checks an instruction.
+    @raise Contextual_error if a check fails. *)
+
+and check_instr decls env instr =
   match instr with
-  | Block(vars, li) ->
-    check_no_reserved vars;
-    List.iter check_instr_block li
+  | Block (vars, li) -> check_instr_block decls env (vars, li)
+  | Assign (to_, from_) -> check_instr_assign decls env (to_, from_)
+  | Return e -> check_instr_return decls env e
+  | Ite (e, then_, else_) -> check_instr_ite decls env (e, then_, else_)
+  | Expr e -> check_expr decls env e
 
-  | Ite(_, then_, else_) ->
-    check_instr_block then_;
-    check_instr_block else_;
+and check_expr_attr decls env (e, name) =
+  check_expr decls env e;
+  let t = get_expr_type decls env e
+  in let decl = find_class decls t
+  in let attr = get_attr_opt name decl
+  in if Option.is_none attr
+  then raise @@ Contextual_error (Printf.sprintf "no attribute named '%s' in class '%s'" name t)
 
-  | Assign _ | Return _ | Expr _ -> ()
+and check_expr_static_attr decls (t, name) =
+  let decl = find_class decls t
+  in let attr = get_attr_opt name decl
+  in if Option.is_none attr
+  then raise @@ Contextual_error (Printf.sprintf "no static attribute named '%s' in class '%s'" name t)
+
+(** Checks an expression.
+    @raise Contextual_error if a check fails. *)
+
+and check_expr decls env expr =
+  match expr with
+  | Id id -> check_in_scope env id
+  | Attr(e, name) -> check_expr_attr decls env (e, name)
+  | StaticAttr(className, name) -> check_expr_static_attr decls (className, name)
+  | UMinus e | Call(e, _, _) -> check_expr decls env e
+  | List le | New(_, le) -> List.iter (check_expr decls env) le
+  | BinOp(e1, _, e2) | StrCat(e1, e2) -> check_expr decls env e1; check_expr decls env e2
+  | Cste _ | StaticCall _ | String _ -> ()
 
 (* -------------------------------------------------------------------------- *)
-
-let check_instr decls env instr =
-  check_instr_ident_scope env instr;
-  check_instr_ite decls env instr;
-  check_instr_block instr;
-  () (* TODO *)
 
 let check_method decls env meth =
   let env = make_method_env env meth
   in check_instr decls env meth.body;
-  () (* TODO *)
+  match meth.retType with
+  | Some(ret) -> check_returns decls env ret meth.body
+  | None -> check_no_return meth.body;
+    () (* TODO *)
 
 let check_main_instr decls instr =
   check_no_return instr;
@@ -411,10 +446,10 @@ let check_main_instr decls instr =
   () (* TODO *)
 
 let check_decl decls decl =
-  let env = make_class_env decl in
   check_ctor decl;
   check_multiple_def decl;
-  List.iter (check_method decls env) decl.body.methods;
+  let env = make_class_env decl
+  in List.iter (check_method decls env) decl.body.methods;
   () (* TODO *)
 
 let check_decls decls =
