@@ -47,8 +47,8 @@
 
 ## Expressions
 
-* (**Missing**) Called method exists
-* (**Missing**) Called method params are compatible with declaration
+* (Called method exists
+* Called method params are compatible with declaration
 * (**Missing**) Called static method exists in static class
 * (**Missing**) Called static method params are compatible with declaration
 * (**Missing**) Call to New exists

@@ -120,8 +120,12 @@ let get_expr_type decls env expr =
       in r_get last
 
     | Call(caller, name, _args) ->
-      let decl = find_class decls (r_get caller)
-      in get_inst_method_type name decl
+      let t = r_get caller
+      in if t = "String" then "Void" (* String methods return Void (print and println) *)
+      else if t = "Integer" then "String" (* String methods return String (toString) *)
+      else
+        let decl = find_class decls (r_get caller)
+        in get_inst_method_type name decl
 
     | StaticCall(className, name, _args) ->
       let decl = find_class decls className

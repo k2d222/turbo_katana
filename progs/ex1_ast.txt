@@ -1,4 +1,86 @@
-hello
+(Ast.Attr ((Ast.Id "this"), "clone"))
+(Ast.Attr ((Ast.Id "this"), "clone"))
+(Ast.String "Inside Point::print")
+(Ast.Attr ((Ast.Id "this"), "name"))
+(Ast.Attr ((Ast.Id "this"), "x"))
+(Ast.Attr ((Ast.Id "this"), "y"))
+(Ast.StrCat (
+   (Ast.StrCat (
+      (Ast.StrCat (
+         (Ast.StrCat ((Ast.String "= ("),
+            (Ast.Call ((Ast.Attr ((Ast.Id "this"), "x")), "toString", [])))),
+         (Ast.String ", "))),
+      (Ast.Call ((Ast.Attr ((Ast.Id "this"), "y")), "toString", [])))),
+   (Ast.String ")")))
+(Ast.Id "this")
+(Ast.String "Inside Couleur::estGris")
+(Ast.String "Inside Couleur::couleur")
+(Ast.String "Inside PointColore::print")
+(Ast.Id "super")
+(Ast.Id "this")
+(Ast.Call ((Ast.Id "this"), "couleur", []))
+(Ast.Call ((Ast.Call ((Ast.Id "this"), "couleur", [])), "name",
+   [(Ast.Cste 1)]))
+(Ast.Attr ((Ast.Id "this"), "coul"))
+(Ast.Attr ((Ast.Id "this"), "coul"))
+(Ast.Id "p")
+(Ast.Call ((Ast.Id "p"), "couleur", []))
+(Ast.Call ((Ast.Call ((Ast.Id "p"), "couleur", [])), "name", [(Ast.Cste 1)]))
+(Ast.Id "p")
+(Ast.Id "p2")
+(Ast.String "Appel 1: ")
+(Ast.Id "p2")
+(Ast.String "Appel 2: ")
+(Ast.Id "p3")
+(Ast.String "Appel 3: ")
+(Ast.Id "p3")
+(Ast.String "Resultats de test: ")
+(Ast.Id "c")
+(Ast.String " ")
+(Ast.Id "c2")
+(Ast.String " ")
+(Ast.Id "c3")
+(Ast.String "")
+(Ast.String "Debut du programme")
+(Ast.Id "p1")
+(Ast.Id "p2")
+(Ast.Id "p2")
+(Ast.Id "p1")
+(Ast.Id "p1")
+(Ast.Id "p2")
+(Ast.Id "o")
+(Ast.Id "o")
+(Ast.Id "o")
+(Ast.Id "p2")
+(Ast.Id "p1")
+(Ast.Id "p1")
+(Ast.Id "p2")
+(Ast.String "On va essayer le clonage:")
+(Ast.Id "p1")
+(Ast.Id "clone1")
+(Ast.String "p1 isCloned: ")
+(Ast.Id "p1")
+(Ast.String "OK")
+(Ast.String "KO")
+(Ast.Id "clone1")
+(Ast.Id "clone2")
+(Ast.Call ((Ast.Id "clone2"), "move",
+   [(Ast.Cste 54); (Ast.Cste 36); (Ast.Cste 0)]))
+(Ast.String "Impression de tous les clones de p1:")
+(Ast.Id "p1")
+(Ast.String "Fin de l'impression de tous les clones")
+(Ast.String "Valeur du compteur de nombre de points: ")
+(Ast.StaticCall ("Point", "howMany", []))
+(Ast.Call ((Ast.StaticCall ("Point", "howMany", [])), "toString", []))
+(Ast.Id "p1")
+(Ast.Call ((Ast.Id "p1"), "clone", []))
+(Ast.Id "p1")
+(Ast.Id "o")
+(Ast.Call ((Ast.Id "o"), "clone", []))
+(Ast.String "test(Point, PointColore, PointNoir)")
+(Ast.String "test(PointNoir, PointNoir, PointNoir)")
+(Ast.String "test(PointNoir, PointNoir, PointNoir)")
+(Ast.String "\nDone")
 { Ast.decls =
   [{ Ast.name = "Point";
      ctorParams =
@@ -22,8 +104,33 @@ hello
               ]
             ))
          };
-       methods =
-       [{ Ast.name = "egal"; static = false; override = false;
+       staticMethods =
+       [{ Ast.name = "init"; override = false; params = []; retType = None;
+          body =
+          (Ast.Block ([],
+             [(Ast.Assign ((Ast.StaticAttr ("Point", "next")), (Ast.Cste 0)))
+               ]
+             ))
+          };
+         { Ast.name = "howMany"; override = false; params = [];
+           retType = (Some "Integer");
+           body = (Ast.Return (Ast.StaticAttr ("Point", "next"))) };
+         { Ast.name = "incr"; override = false; params = [];
+           retType = (Some "Integer");
+           body =
+           (Ast.Block ([],
+              [(Ast.Assign ((Ast.StaticAttr ("Point", "next")),
+                  (Ast.BinOp ((Ast.StaticAttr ("Point", "next")), Ast.Add,
+                     (Ast.Cste 1)))
+                  ));
+                (Ast.Assign ((Ast.Id "result"),
+                   (Ast.StaticAttr ("Point", "next"))))
+                ]
+              ))
+           }
+         ];
+       instMethods =
+       [{ Ast.name = "egal"; override = false;
           params = [{ Ast.name = "p"; className = "Point" }];
           retType = (Some "Integer");
           body =
@@ -49,8 +156,8 @@ hello
                ]
              ))
           };
-         { Ast.name = "allClones"; static = false; override = false;
-           params = []; retType = None;
+         { Ast.name = "allClones"; override = false; params = [];
+           retType = None;
            body =
            (Ast.Block ([],
               [(Ast.Ite (
@@ -69,7 +176,7 @@ hello
                 ]
               ))
            };
-         { Ast.name = "clone"; static = false; override = false; params = [];
+         { Ast.name = "clone"; override = false; params = [];
            retType = (Some "Point");
            body =
            (Ast.Block ([],
@@ -90,7 +197,7 @@ hello
                 ]
               ))
            };
-         { Ast.name = "print"; static = false; override = false;
+         { Ast.name = "print"; override = false;
            params = [{ Ast.name = "verbose"; className = "Integer" }];
            retType = None;
            body =
@@ -122,7 +229,7 @@ hello
                 ]
               ))
            };
-         { Ast.name = "move"; static = false; override = false;
+         { Ast.name = "move"; override = false;
            params =
            [{ Ast.name = "dx"; className = "Integer" };
              { Ast.name = "dy"; className = "Integer" };
@@ -149,14 +256,14 @@ hello
                 (Ast.Assign ((Ast.Id "result"), (Ast.Id "this")))]
               ))
            };
-         { Ast.name = "isCloned"; static = false; override = false;
-           params = []; retType = (Some "Integer");
+         { Ast.name = "isCloned"; override = false; params = [];
+           retType = (Some "Integer");
            body =
            (Ast.Return
               (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "hasClone")), Ast.Neq,
                  (Ast.Cste 0))))
            };
-         { Ast.name = "setName"; static = false; override = false;
+         { Ast.name = "setName"; override = false;
            params = [{ Ast.name = "s"; className = "String" }];
            retType = None;
            body =
@@ -166,37 +273,12 @@ hello
                 ]
               ))
            };
-         { Ast.name = "gety"; static = false; override = false; params = [];
+         { Ast.name = "gety"; override = false; params = [];
            retType = (Some "Integer");
            body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "y"))) };
-         { Ast.name = "getx"; static = false; override = false; params = [];
+         { Ast.name = "getx"; override = false; params = [];
            retType = (Some "Integer");
-           body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "x"))) };
-         { Ast.name = "init"; static = true; override = false; params = [];
-           retType = None;
-           body =
-           (Ast.Block ([],
-              [(Ast.Assign ((Ast.StaticAttr ("Point", "next")), (Ast.Cste 0)
-                  ))
-                ]
-              ))
-           };
-         { Ast.name = "howMany"; static = true; override = false;
-           params = []; retType = (Some "Integer");
-           body = (Ast.Return (Ast.StaticAttr ("Point", "next"))) };
-         { Ast.name = "incr"; static = true; override = false; params = [];
-           retType = (Some "Integer");
-           body =
-           (Ast.Block ([],
-              [(Ast.Assign ((Ast.StaticAttr ("Point", "next")),
-                  (Ast.BinOp ((Ast.StaticAttr ("Point", "next")), Ast.Add,
-                     (Ast.Cste 1)))
-                  ));
-                (Ast.Assign ((Ast.Id "result"),
-                   (Ast.StaticAttr ("Point", "next"))))
-                ]
-              ))
-           }
+           body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "x"))) }
          ];
        staticAttrs = [{ Ast.name = "next"; className = "Integer" }];
        instAttrs =
@@ -231,9 +313,10 @@ hello
                ]
              ))
           };
-        methods =
-        [{ Ast.name = "estGris"; static = false; override = false;
-           params = []; retType = (Some "Integer");
+        staticMethods = [];
+        instMethods =
+        [{ Ast.name = "estGris"; override = false; params = [];
+           retType = (Some "Integer");
            body =
            (Ast.Block ([],
               [(Ast.Expr
@@ -246,7 +329,7 @@ hello
                 ]
               ))
            };
-          { Ast.name = "name"; static = false; override = false;
+          { Ast.name = "name"; override = false;
             params = [{ Ast.name = "verbose"; className = "Integer" }];
             retType = (Some "String");
             body =
@@ -283,21 +366,20 @@ hello
       { Ast.ctor =
         { Ast.name = "CouleurFactory"; params = []; superCall = None;
           body = (Ast.Block ([], [])) };
-        methods =
-        [{ Ast.name = "gris"; static = false; override = false; params = [];
+        staticMethods =
+        [{ Ast.name = "gris"; override = false; params = [];
            retType = (Some "Couleur");
            body = (Ast.Return (Ast.StaticAttr ("CouleurFactory", "theGris")))
            };
-          { Ast.name = "noir"; static = false; override = false; params = [];
+          { Ast.name = "noir"; override = false; params = [];
             retType = (Some "Couleur");
             body =
             (Ast.Return (Ast.StaticAttr ("CouleurFactory", "theNoir"))) };
-          { Ast.name = "blanc"; static = false; override = false;
-            params = []; retType = (Some "Couleur");
+          { Ast.name = "blanc"; override = false; params = [];
+            retType = (Some "Couleur");
             body =
             (Ast.Return (Ast.StaticAttr ("CouleurFactory", "theBlanc"))) };
-          { Ast.name = "init"; static = true; override = false; params = [];
-            retType = None;
+          { Ast.name = "init"; override = false; params = []; retType = None;
             body =
             (Ast.Block ([],
                [(Ast.Assign ((Ast.StaticAttr ("CouleurFactory", "theBlanc")),
@@ -310,6 +392,7 @@ hello
                ))
             }
           ];
+        instMethods = [];
         staticAttrs =
         [{ Ast.name = "theBlanc"; className = "Couleur" };
           { Ast.name = "theNoir"; className = "Couleur" };
@@ -337,8 +420,9 @@ hello
                       ))
                    ]));
           body = (Ast.Block ([], [])) };
-        methods =
-        [{ Ast.name = "print"; static = false; override = true;
+        staticMethods = [];
+        instMethods =
+        [{ Ast.name = "print"; override = true;
            params = [{ Ast.name = "verbose"; className = "Integer" }];
            retType = None;
            body =
@@ -359,14 +443,14 @@ hello
                 ]
               ))
            };
-          { Ast.name = "estGris"; static = false; override = false;
-            params = []; retType = (Some "Integer");
+          { Ast.name = "estGris"; override = false; params = [];
+            retType = (Some "Integer");
             body =
             (Ast.Return
                (Ast.Call ((Ast.Attr ((Ast.Id "this"), "coul")), "estGris", 
                   [])))
             };
-          { Ast.name = "clone"; static = false; override = true; params = [];
+          { Ast.name = "clone"; override = true; params = [];
             retType = (Some "Point");
             body =
             (Ast.Return
@@ -376,8 +460,8 @@ hello
                     (Ast.Attr ((Ast.Id "this"), "coul"))]
                   )))
             };
-          { Ast.name = "colore"; static = false; override = false;
-            params = []; retType = (Some "Integer");
+          { Ast.name = "colore"; override = false; params = [];
+            retType = (Some "Integer");
             body =
             (Ast.Return
                (Ast.BinOp (
@@ -385,8 +469,8 @@ hello
                      [])),
                   Ast.Neq, (Ast.Cste 0))))
             };
-          { Ast.name = "couleur"; static = false; override = false;
-            params = []; retType = (Some "Couleur");
+          { Ast.name = "couleur"; override = false; params = [];
+            retType = (Some "Couleur");
             body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "coul"))) }
           ];
         staticAttrs = []; instAttrs = [] };
@@ -406,17 +490,16 @@ hello
                  [(Ast.Id "xc"); (Ast.Id "yc");
                    (Ast.StaticCall ("CouleurFactory", "noir", []))]));
           body = (Ast.Block ([], [])) };
-        methods =
-        [{ Ast.name = "couleur"; static = false; override = true;
-           params = []; retType = (Some "Couleur");
+        staticMethods = [];
+        instMethods =
+        [{ Ast.name = "couleur"; override = true; params = [];
+           retType = (Some "Couleur");
            body =
            (Ast.Return (Ast.StaticCall ("CouleurFactory", "noir", []))) };
-          { Ast.name = "colore"; static = false; override = true;
-            params = []; retType = (Some "Integer");
-            body = (Ast.Return (Ast.Cste 1)) };
-          { Ast.name = "estGris"; static = false; override = true;
-            params = []; retType = (Some "Integer");
-            body = (Ast.Return (Ast.Cste 0)) }
+          { Ast.name = "colore"; override = true; params = [];
+            retType = (Some "Integer"); body = (Ast.Return (Ast.Cste 1)) };
+          { Ast.name = "estGris"; override = true; params = [];
+            retType = (Some "Integer"); body = (Ast.Return (Ast.Cste 0)) }
           ];
         staticAttrs = []; instAttrs = [] };
       superclass = (Some "PointColore") };
@@ -429,14 +512,14 @@ hello
                  [(Ast.Cste 0); (Ast.Cste 0);
                    (Ast.StaticCall ("CouleurFactory", "blanc", []))]));
           body = (Ast.Block ([], [])) };
-        methods =
-        [{ Ast.name = "couleur"; static = false; override = true;
-           params = []; retType = (Some "Couleur");
+        staticMethods = [];
+        instMethods =
+        [{ Ast.name = "couleur"; override = true; params = [];
+           retType = (Some "Couleur");
            body =
            (Ast.Return (Ast.StaticCall ("CouleurFactory", "blanc", []))) };
-          { Ast.name = "estGris"; static = false; override = true;
-            params = []; retType = (Some "Integer");
-            body = (Ast.Return (Ast.Cste 0)) }
+          { Ast.name = "estGris"; override = true; params = [];
+            retType = (Some "Integer"); body = (Ast.Return (Ast.Cste 0)) }
           ];
         staticAttrs = []; instAttrs = [] };
       superclass = (Some "PointColore") };
@@ -445,8 +528,8 @@ hello
       { Ast.ctor =
         { Ast.name = "Test"; params = []; superCall = None;
           body = (Ast.Block ([], [])) };
-        methods =
-        [{ Ast.name = "test2"; static = true; override = false;
+        staticMethods =
+        [{ Ast.name = "test2"; override = false;
            params = [{ Ast.name = "p"; className = "PointColore" }];
            retType = None;
            body =
@@ -459,7 +542,7 @@ hello
                 ]
               ))
            };
-          { Ast.name = "test"; static = true; override = false;
+          { Ast.name = "test"; override = false;
             params =
             [{ Ast.name = "p"; className = "Point" };
               { Ast.name = "p2"; className = "PointColore" };
@@ -509,7 +592,7 @@ hello
                ))
             }
           ];
-        staticAttrs = []; instAttrs = [] };
+        instMethods = []; staticAttrs = []; instAttrs = [] };
       superclass = None }
     ];
   instr =
