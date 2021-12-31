@@ -73,16 +73,24 @@ let get_expr_type env decls expr =
 
     | Id id -> List.assoc id env
 
-    | AttrOf(e, attrName) ->
+    | Attr(e, attrName) ->
       let decl = find_class (r_get e) decls
+      in get_attr_type decl attrName
+
+    | StaticAttr(className, attrName) ->
+      let decl = find_class className decls
       in get_attr_type decl attrName
 
     | List l ->
       let last = List.hd (List.rev l)
       in r_get last
 
-    | MethodCall(name, caller, _args) ->
+    | Call(caller, name, _args) ->
       let decl = find_class (r_get caller) decls
+      in get_method_type decl name
+
+    | StaticCall(className, name, _args) ->
+      let decl = find_class className decls
       in get_method_type decl name
 
     | New(className, _args) -> className

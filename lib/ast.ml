@@ -14,10 +14,12 @@ type instr =
 and expr =
   | Id of string
   | Cste of int
-  | AttrOf of expr * string
+  | Attr of expr * string
+  | StaticAttr of string * string
   | UMinus of expr
   | List of expr list
-  | MethodCall of string * expr * expr list
+  | Call of expr * string * expr list
+  | StaticCall of string * string * expr list
   | BinOp of expr * numBinOp * expr
   | String of string
   | StrCat of expr * expr

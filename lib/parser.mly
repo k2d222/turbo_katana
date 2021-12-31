@@ -136,7 +136,7 @@ instr:
 
 expr:
   | c = CSTE { Cste(c) }
-  | id = ID | id = CLASSNAME { Id(id) }
+  | id = ID  { Id(id) }
   | s = STRLIT { String(s) }
 
   // those have conflicts
@@ -146,8 +146,10 @@ expr:
   | lhs = expr DIV rhs = expr { BinOp(lhs, Div, rhs) }
   | lhs = expr TIMES rhs = expr { BinOp(lhs, Mul, rhs) }
   | lhs = expr STRCAT rhs = expr { StrCat(lhs, rhs) }
-  | e = expr DOT f = ID LPAREN le = separated_list(COMMA, expr) RPAREN { MethodCall(f, e, le) } (**TODO *)
-  | e = expr DOT name = ID { AttrOf(e, name) }
+  | e = expr DOT f = ID LPAREN le = separated_list(COMMA, expr) RPAREN { Call(e, f, le) }
+  | c = CLASSNAME DOT f = ID LPAREN le = separated_list(COMMA, expr) RPAREN { StaticCall(c, f, le) }
+  | e = expr DOT name = ID { Attr(e, name) }
+  | c = CLASSNAME DOT name = ID { StaticAttr(c, name) }
 
   | LPAREN e = expr RPAREN { e }
   | MINUS rhs = expr { UMinus (rhs) }

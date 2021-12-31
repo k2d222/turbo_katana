@@ -14,9 +14,9 @@
          superCall = None;
          body =
          (Ast.Block ([],
-            [(Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "index")),
-                (Ast.MethodCall ("incr", (Ast.Id "Point"), []))));
-              (Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "hasClone")),
+            [(Ast.Assign ((Ast.Attr ((Ast.Id "this"), "index")),
+                (Ast.StaticCall ("Point", "incr", []))));
+              (Ast.Assign ((Ast.Attr ((Ast.Id "this"), "hasClone")),
                  (Ast.Cste 0)))
               ]
             ))
@@ -30,12 +30,12 @@
              [{ Ast.name = "b1"; className = "Integer" };
                { Ast.name = "b2"; className = "Integer" }],
              [(Ast.Assign ((Ast.Id "b1"),
-                 (Ast.BinOp ((Ast.AttrOf ((Ast.Id "p"), "x")), Ast.Sub,
-                    (Ast.AttrOf ((Ast.Id "this"), "x"))))
+                 (Ast.BinOp ((Ast.Attr ((Ast.Id "p"), "x")), Ast.Sub,
+                    (Ast.Attr ((Ast.Id "this"), "x"))))
                  ));
                (Ast.Assign ((Ast.Id "b2"),
-                  (Ast.BinOp ((Ast.AttrOf ((Ast.Id "p"), "y")), Ast.Sub,
-                     (Ast.AttrOf ((Ast.Id "this"), "y"))))
+                  (Ast.BinOp ((Ast.Attr ((Ast.Id "p"), "y")), Ast.Sub,
+                     (Ast.Attr ((Ast.Id "this"), "y"))))
                   ));
                (Ast.Assign ((Ast.Id "result"), (Ast.Cste 0)));
                (Ast.Ite ((Ast.Id "b1"), (Ast.Block ([], [])),
@@ -53,17 +53,15 @@
            body =
            (Ast.Block ([],
               [(Ast.Ite (
-                  (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "hasClone")),
+                  (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "hasClone")),
                      Ast.Neq, (Ast.Cste 0))),
                   (Ast.Block ([],
                      [(Ast.Expr
-                         (Ast.MethodCall ("print",
-                            (Ast.AttrOf ((Ast.Id "this"), "clone")),
-                            [(Ast.Cste 1)])));
+                         (Ast.Call ((Ast.Attr ((Ast.Id "this"), "clone")),
+                            "print", [(Ast.Cste 1)])));
                        (Ast.Expr
-                          (Ast.MethodCall ("allClones",
-                             (Ast.AttrOf ((Ast.Id "this"), "clone")), 
-                             [])))
+                          (Ast.Call ((Ast.Attr ((Ast.Id "this"), "clone")),
+                             "allClones", [])))
                        ]
                      )),
                   (Ast.Block ([], []))))
@@ -75,19 +73,19 @@
            body =
            (Ast.Block ([],
               [(Ast.Expr
-                  (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "hasClone")),
+                  (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "hasClone")),
                      Ast.Eq, (Ast.Cste 1))));
-                (Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "clone")),
+                (Ast.Assign ((Ast.Attr ((Ast.Id "this"), "clone")),
                    (Ast.New ("Point",
-                      [(Ast.AttrOf ((Ast.Id "this"), "x"));
-                        (Ast.AttrOf ((Ast.Id "this"), "y"));
-                        (Ast.StrCat ((Ast.AttrOf ((Ast.Id "this"), "name")),
+                      [(Ast.Attr ((Ast.Id "this"), "x"));
+                        (Ast.Attr ((Ast.Id "this"), "y"));
+                        (Ast.StrCat ((Ast.Attr ((Ast.Id "this"), "name")),
                            (Ast.String "'")))
                         ]
                       ))
                    ));
                 (Ast.Assign ((Ast.Id "result"),
-                   (Ast.AttrOf ((Ast.Id "this"), "clone"))))
+                   (Ast.Attr ((Ast.Id "this"), "clone"))))
                 ]
               ))
            };
@@ -98,28 +96,28 @@
            (Ast.Block ([],
               [(Ast.Ite ((Ast.Id "verbose"),
                   (Ast.Expr
-                     (Ast.MethodCall ("println",
-                        (Ast.String "Inside Point::print"), []))),
+                     (Ast.Call ((Ast.String "Inside Point::print"),
+                        "println", []))),
                   (Ast.Block ([], []))));
                 (Ast.Expr
-                   (Ast.MethodCall ("print",
-                      (Ast.AttrOf ((Ast.Id "this"), "name")), [])));
+                   (Ast.Call ((Ast.Attr ((Ast.Id "this"), "name")), "print",
+                      [])));
                 (Ast.Expr
-                   (Ast.MethodCall ("println",
+                   (Ast.Call (
                       (Ast.StrCat (
                          (Ast.StrCat (
                             (Ast.StrCat (
                                (Ast.StrCat ((Ast.String "= ("),
-                                  (Ast.MethodCall ("toString",
-                                     (Ast.AttrOf ((Ast.Id "this"), "x")), 
-                                     []))
+                                  (Ast.Call (
+                                     (Ast.Attr ((Ast.Id "this"), "x")),
+                                     "toString", []))
                                   )),
                                (Ast.String ", "))),
-                            (Ast.MethodCall ("toString",
-                               (Ast.AttrOf ((Ast.Id "this"), "y")), []))
+                            (Ast.Call ((Ast.Attr ((Ast.Id "this"), "y")),
+                               "toString", []))
                             )),
                          (Ast.String ")"))),
-                      [])))
+                      "println", [])))
                 ]
               ))
            };
@@ -131,18 +129,18 @@
            retType = (Some "Point");
            body =
            (Ast.Block ([],
-              [(Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "x")),
-                  (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "x")), Ast.Add,
+              [(Ast.Assign ((Ast.Attr ((Ast.Id "this"), "x")),
+                  (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "x")), Ast.Add,
                      (Ast.Id "dx")))
                   ));
-                (Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "y")),
-                   (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "y")), Ast.Add,
+                (Ast.Assign ((Ast.Attr ((Ast.Id "this"), "y")),
+                   (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "y")), Ast.Add,
                       (Ast.Id "dy")))
                    ));
                 (Ast.Ite ((Ast.Id "verbose"),
                    (Ast.Block ([],
                       [(Ast.Expr
-                          (Ast.MethodCall ("print", (Ast.Id "this"),
+                          (Ast.Call ((Ast.Id "this"), "print",
                              [(Ast.Id "verbose")])))
                         ]
                       )),
@@ -154,47 +152,47 @@
            params = []; retType = (Some "Integer");
            body =
            (Ast.Return
-              (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "hasClone")),
-                 Ast.Neq, (Ast.Cste 0))))
+              (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "hasClone")), Ast.Neq,
+                 (Ast.Cste 0))))
            };
          { Ast.name = "setName"; static = false; override = false;
            params = [{ Ast.name = "s"; className = "String" }];
            retType = None;
            body =
            (Ast.Block ([],
-              [(Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "name")),
+              [(Ast.Assign ((Ast.Attr ((Ast.Id "this"), "name")),
                   (Ast.Id "s")))
                 ]
               ))
            };
          { Ast.name = "gety"; static = false; override = false; params = [];
            retType = (Some "Integer");
-           body = (Ast.Return (Ast.AttrOf ((Ast.Id "this"), "y"))) };
+           body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "y"))) };
          { Ast.name = "getx"; static = false; override = false; params = [];
            retType = (Some "Integer");
-           body = (Ast.Return (Ast.AttrOf ((Ast.Id "this"), "x"))) };
+           body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "x"))) };
          { Ast.name = "init"; static = true; override = false; params = [];
            retType = None;
            body =
            (Ast.Block ([],
-              [(Ast.Assign ((Ast.AttrOf ((Ast.Id "Point"), "next")),
-                  (Ast.Cste 0)))
+              [(Ast.Assign ((Ast.StaticAttr ("Point", "next")), (Ast.Cste 0)
+                  ))
                 ]
               ))
            };
          { Ast.name = "howMany"; static = true; override = false;
            params = []; retType = (Some "Integer");
-           body = (Ast.Return (Ast.AttrOf ((Ast.Id "Point"), "next"))) };
+           body = (Ast.Return (Ast.StaticAttr ("Point", "next"))) };
          { Ast.name = "incr"; static = true; override = false; params = [];
            retType = (Some "Integer");
            body =
            (Ast.Block ([],
-              [(Ast.Assign ((Ast.AttrOf ((Ast.Id "Point"), "next")),
-                  (Ast.BinOp ((Ast.AttrOf ((Ast.Id "Point"), "next")),
-                     Ast.Add, (Ast.Cste 1)))
+              [(Ast.Assign ((Ast.StaticAttr ("Point", "next")),
+                  (Ast.BinOp ((Ast.StaticAttr ("Point", "next")), Ast.Add,
+                     (Ast.Cste 1)))
                   ));
                 (Ast.Assign ((Ast.Id "result"),
-                   (Ast.AttrOf ((Ast.Id "Point"), "next"))))
+                   (Ast.StaticAttr ("Point", "next"))))
                 ]
               ))
            }
@@ -216,14 +214,14 @@
           body =
           (Ast.Block ([],
              [(Ast.Ite (
-                 (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "coul")), Ast.Lt,
+                 (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "coul")), Ast.Lt,
                     (Ast.Cste 0))),
-                 (Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "coul")),
+                 (Ast.Assign ((Ast.Attr ((Ast.Id "this"), "coul")),
                     (Ast.Cste 0))),
                  (Ast.Ite (
-                    (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "coul")),
-                       Ast.Gt, (Ast.Cste 2))),
-                    (Ast.Assign ((Ast.AttrOf ((Ast.Id "this"), "coul")),
+                    (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "coul")), Ast.Gt,
+                       (Ast.Cste 2))),
+                    (Ast.Assign ((Ast.Attr ((Ast.Id "this"), "coul")),
                        (Ast.Cste 0))),
                     (Ast.Block ([], []))))
                  ))
@@ -236,11 +234,11 @@
            body =
            (Ast.Block ([],
               [(Ast.Expr
-                  (Ast.MethodCall ("println",
-                     (Ast.String "Inside Couleur::estGris"), [])));
+                  (Ast.Call ((Ast.String "Inside Couleur::estGris"),
+                     "println", [])));
                 (Ast.Assign ((Ast.Id "result"),
-                   (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "coul")),
-                      Ast.Eq, (Ast.Cste 2)))
+                   (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "coul")), Ast.Eq,
+                      (Ast.Cste 2)))
                    ))
                 ]
               ))
@@ -252,20 +250,19 @@
             (Ast.Block ([{ Ast.name = "aux"; className = "String" }],
                [(Ast.Ite ((Ast.Id "verbose"),
                    (Ast.Expr
-                      (Ast.MethodCall ("println",
-                         (Ast.String "Inside Couleur::couleur"), []))),
+                      (Ast.Call ((Ast.String "Inside Couleur::couleur"),
+                         "println", []))),
                    (Ast.Block ([], []))));
                  (Ast.Ite (
-                    (Ast.BinOp ((Ast.AttrOf ((Ast.Id "this"), "coul")),
-                       Ast.Eq, (Ast.Cste 0))),
+                    (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "coul")), Ast.Eq,
+                       (Ast.Cste 0))),
                     (Ast.Assign ((Ast.Id "result"), (Ast.String "Blanc"))),
                     (Ast.Block (
                        [{ Ast.name = "dummy"; className = "String" }],
                        [(Ast.Assign ((Ast.Id "dummy"), (Ast.String "Noir")));
                          (Ast.Assign ((Ast.Id "aux"), (Ast.String "Gris")));
                          (Ast.Ite (
-                            (Ast.BinOp (
-                               (Ast.AttrOf ((Ast.Id "this"), "coul")),
+                            (Ast.BinOp ((Ast.Attr ((Ast.Id "this"), "coul")),
                                Ast.Eq, (Ast.Cste 1))),
                             (Ast.Assign ((Ast.Id "aux"), (Ast.Id "dummy"))),
                             (Ast.Block ([], []))));
@@ -286,30 +283,25 @@
         methods =
         [{ Ast.name = "gris"; static = false; override = false; params = [];
            retType = (Some "Couleur");
-           body =
-           (Ast.Return (Ast.AttrOf ((Ast.Id "CouleurFactory"), "theGris"))) };
+           body = (Ast.Return (Ast.StaticAttr ("CouleurFactory", "theGris")))
+           };
           { Ast.name = "noir"; static = false; override = false; params = [];
             retType = (Some "Couleur");
             body =
-            (Ast.Return (Ast.AttrOf ((Ast.Id "CouleurFactory"), "theNoir")))
-            };
+            (Ast.Return (Ast.StaticAttr ("CouleurFactory", "theNoir"))) };
           { Ast.name = "blanc"; static = false; override = false;
             params = []; retType = (Some "Couleur");
             body =
-            (Ast.Return (Ast.AttrOf ((Ast.Id "CouleurFactory"), "theBlanc")))
-            };
+            (Ast.Return (Ast.StaticAttr ("CouleurFactory", "theBlanc"))) };
           { Ast.name = "init"; static = true; override = false; params = [];
             retType = None;
             body =
             (Ast.Block ([],
-               [(Ast.Assign (
-                   (Ast.AttrOf ((Ast.Id "CouleurFactory"), "theBlanc")),
+               [(Ast.Assign ((Ast.StaticAttr ("CouleurFactory", "theBlanc")),
                    (Ast.New ("Couleur", [(Ast.Cste 0)]))));
-                 (Ast.Assign (
-                    (Ast.AttrOf ((Ast.Id "CouleurFactory"), "theNoir")),
+                 (Ast.Assign ((Ast.StaticAttr ("CouleurFactory", "theNoir")),
                     (Ast.New ("Couleur", [(Ast.Cste 1)]))));
-                 (Ast.Assign (
-                    (Ast.AttrOf ((Ast.Id "CouleurFactory"), "theGris")),
+                 (Ast.Assign ((Ast.StaticAttr ("CouleurFactory", "theGris")),
                     (Ast.New ("Couleur", [(Ast.Cste 2)]))))
                  ]
                ))
@@ -337,9 +329,8 @@
           (Some ("Point",
                  [(Ast.Id "x"); (Ast.Id "y");
                    (Ast.StrCat ((Ast.String "P-"),
-                      (Ast.MethodCall ("toString",
-                         (Ast.MethodCall ("howMany", (Ast.Id "Point"), [])),
-                         []))
+                      (Ast.Call ((Ast.StaticCall ("Point", "howMany", [])),
+                         "toString", []))
                       ))
                    ]));
           body = (Ast.Block ([], [])) };
@@ -351,18 +342,17 @@
            (Ast.Block ([],
               [(Ast.Ite ((Ast.Id "verbose"),
                   (Ast.Expr
-                     (Ast.MethodCall ("println",
-                        (Ast.String "Inside PointColore::print"), []))),
+                     (Ast.Call ((Ast.String "Inside PointColore::print"),
+                        "println", []))),
                   (Ast.Block ([], []))));
                 (Ast.Expr
-                   (Ast.MethodCall ("print", (Ast.Id "super"),
-                      [(Ast.Id "verbose")])));
+                   (Ast.Call ((Ast.Id "super"), "print", [(Ast.Id "verbose")]
+                      )));
                 (Ast.Expr
-                   (Ast.MethodCall ("println",
-                      (Ast.MethodCall ("name",
-                         (Ast.MethodCall ("couleur", (Ast.Id "this"), [])),
-                         [(Ast.Cste 1)])),
-                      [])))
+                   (Ast.Call (
+                      (Ast.Call ((Ast.Call ((Ast.Id "this"), "couleur", [])),
+                         "name", [(Ast.Cste 1)])),
+                      "println", [])))
                 ]
               ))
            };
@@ -370,17 +360,17 @@
             params = []; retType = (Some "Integer");
             body =
             (Ast.Return
-               (Ast.MethodCall ("estGris",
-                  (Ast.AttrOf ((Ast.Id "this"), "coul")), [])))
+               (Ast.Call ((Ast.Attr ((Ast.Id "this"), "coul")), "estGris", 
+                  [])))
             };
           { Ast.name = "clone"; static = false; override = true; params = [];
             retType = (Some "Point");
             body =
             (Ast.Return
                (Ast.New ("PointColore",
-                  [(Ast.AttrOf ((Ast.Id "this"), "x"));
-                    (Ast.AttrOf ((Ast.Id "this"), "y"));
-                    (Ast.AttrOf ((Ast.Id "this"), "coul"))]
+                  [(Ast.Attr ((Ast.Id "this"), "x"));
+                    (Ast.Attr ((Ast.Id "this"), "y"));
+                    (Ast.Attr ((Ast.Id "this"), "coul"))]
                   )))
             };
           { Ast.name = "colore"; static = false; override = false;
@@ -388,13 +378,13 @@
             body =
             (Ast.Return
                (Ast.BinOp (
-                  (Ast.MethodCall ("estGris",
-                     (Ast.AttrOf ((Ast.Id "this"), "coul")), [])),
+                  (Ast.Call ((Ast.Attr ((Ast.Id "this"), "coul")), "estGris",
+                     [])),
                   Ast.Neq, (Ast.Cste 0))))
             };
           { Ast.name = "couleur"; static = false; override = false;
             params = []; retType = (Some "Couleur");
-            body = (Ast.Return (Ast.AttrOf ((Ast.Id "this"), "coul"))) }
+            body = (Ast.Return (Ast.Attr ((Ast.Id "this"), "coul"))) }
           ];
         staticAttrs = []; instAttrs = [] };
       superclass = (Some "Point") };
@@ -411,15 +401,13 @@
           superCall =
           (Some ("PointColore",
                  [(Ast.Id "xc"); (Ast.Id "yc");
-                   (Ast.MethodCall ("noir", (Ast.Id "CouleurFactory"), []))]));
+                   (Ast.StaticCall ("CouleurFactory", "noir", []))]));
           body = (Ast.Block ([], [])) };
         methods =
         [{ Ast.name = "couleur"; static = false; override = true;
            params = []; retType = (Some "Couleur");
            body =
-           (Ast.Return
-              (Ast.MethodCall ("noir", (Ast.Id "CouleurFactory"), [])))
-           };
+           (Ast.Return (Ast.StaticCall ("CouleurFactory", "noir", []))) };
           { Ast.name = "colore"; static = false; override = true;
             params = []; retType = (Some "Integer");
             body = (Ast.Return (Ast.Cste 1)) };
@@ -436,15 +424,13 @@
           superCall =
           (Some ("PointColore",
                  [(Ast.Cste 0); (Ast.Cste 0);
-                   (Ast.MethodCall ("blanc", (Ast.Id "CouleurFactory"), []))]));
+                   (Ast.StaticCall ("CouleurFactory", "blanc", []))]));
           body = (Ast.Block ([], [])) };
         methods =
         [{ Ast.name = "couleur"; static = false; override = true;
            params = []; retType = (Some "Couleur");
            body =
-           (Ast.Return
-              (Ast.MethodCall ("blanc", (Ast.Id "CouleurFactory"), [])))
-           };
+           (Ast.Return (Ast.StaticCall ("CouleurFactory", "blanc", []))) };
           { Ast.name = "estGris"; static = false; override = true;
             params = []; retType = (Some "Integer");
             body = (Ast.Return (Ast.Cste 0)) }
@@ -463,11 +449,10 @@
            body =
            (Ast.Block ([],
               [(Ast.Expr
-                  (Ast.MethodCall ("print",
-                     (Ast.MethodCall ("name",
-                        (Ast.MethodCall ("couleur", (Ast.Id "p"), [])),
-                        [(Ast.Cste 1)])),
-                     [])))
+                  (Ast.Call (
+                     (Ast.Call ((Ast.Call ((Ast.Id "p"), "couleur", [])),
+                        "name", [(Ast.Cste 1)])),
+                     "print", [])))
                 ]
               ))
            };
@@ -485,48 +470,39 @@
                  { Ast.name = "true"; className = "Integer" }],
                [(Ast.Assign ((Ast.Id "true"), (Ast.Cste 1)));
                  (Ast.Expr
-                    (Ast.MethodCall ("print", (Ast.Id "p"), [(Ast.Id "true")]
-                       )));
+                    (Ast.Call ((Ast.Id "p"), "print", [(Ast.Id "true")])));
                  (Ast.Expr
-                    (Ast.MethodCall ("print", (Ast.Id "p2"),
-                       [(Ast.Id "true")])));
+                    (Ast.Call ((Ast.Id "p2"), "print", [(Ast.Id "true")])));
                  (Ast.Expr
-                    (Ast.MethodCall ("println", (Ast.String "Appel 1: "), 
-                       [])));
+                    (Ast.Call ((Ast.String "Appel 1: "), "println", [])));
                  (Ast.Ite (
-                    (Ast.BinOp (
-                       (Ast.MethodCall ("colore", (Ast.Id "p2"), [])),
+                    (Ast.BinOp ((Ast.Call ((Ast.Id "p2"), "colore", [])),
                        Ast.Neq, (Ast.Cste 0))),
                     (Ast.Assign ((Ast.Id "c"), (Ast.String "colore"))),
                     (Ast.Assign ((Ast.Id "c"), (Ast.String "gris")))));
                  (Ast.Expr
-                    (Ast.MethodCall ("println", (Ast.String "Appel 2: "), 
-                       [])));
+                    (Ast.Call ((Ast.String "Appel 2: "), "println", [])));
                  (Ast.Ite (
-                    (Ast.BinOp (
-                       (Ast.MethodCall ("colore", (Ast.Id "p3"), [])),
+                    (Ast.BinOp ((Ast.Call ((Ast.Id "p3"), "colore", [])),
                        Ast.Neq, (Ast.Cste 0))),
                     (Ast.Assign ((Ast.Id "c2"), (Ast.String "colore"))),
                     (Ast.Assign ((Ast.Id "c2"), (Ast.String "gris")))));
                  (Ast.Expr
-                    (Ast.MethodCall ("println", (Ast.String "Appel 3: "), 
-                       [])));
+                    (Ast.Call ((Ast.String "Appel 3: "), "println", [])));
                  (Ast.Ite (
-                    (Ast.BinOp (
-                       (Ast.MethodCall ("colore", (Ast.Id "p3"), [])),
+                    (Ast.BinOp ((Ast.Call ((Ast.Id "p3"), "colore", [])),
                        Ast.Neq, (Ast.Cste 0))),
                     (Ast.Assign ((Ast.Id "c3"), (Ast.String "colore"))),
                     (Ast.Assign ((Ast.Id "c3"), (Ast.String "gris")))));
                  (Ast.Expr
-                    (Ast.MethodCall ("println",
-                       (Ast.String "Resultats de test: "), [])));
-                 (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "c"), [])));
-                 (Ast.Expr (Ast.MethodCall ("print", (Ast.String " "), [])));
-                 (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "c2"), [])));
-                 (Ast.Expr (Ast.MethodCall ("print", (Ast.String " "), [])));
-                 (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "c3"), [])));
-                 (Ast.Expr (Ast.MethodCall ("println", (Ast.String ""), [])))
-                 ]
+                    (Ast.Call ((Ast.String "Resultats de test: "), "println",
+                       [])));
+                 (Ast.Expr (Ast.Call ((Ast.Id "c"), "print", [])));
+                 (Ast.Expr (Ast.Call ((Ast.String " "), "print", [])));
+                 (Ast.Expr (Ast.Call ((Ast.Id "c2"), "print", [])));
+                 (Ast.Expr (Ast.Call ((Ast.String " "), "print", [])));
+                 (Ast.Expr (Ast.Call ((Ast.Id "c3"), "print", [])));
+                 (Ast.Expr (Ast.Call ((Ast.String ""), "println", [])))]
                ))
             }
           ];
@@ -546,10 +522,9 @@
        { Ast.name = "o"; className = "PointColore" };
        { Ast.name = "pn"; className = "PointNoir" };
        { Ast.name = "dp"; className = "DefaultPoint" }],
-     [(Ast.Expr
-         (Ast.MethodCall ("println", (Ast.String "Debut du programme"), [])));
-       (Ast.Expr (Ast.MethodCall ("init", (Ast.Id "Point"), [])));
-       (Ast.Expr (Ast.MethodCall ("init", (Ast.Id "CouleurFactory"), [])));
+     [(Ast.Expr (Ast.Call ((Ast.String "Debut du programme"), "println", [])));
+       (Ast.Expr (Ast.StaticCall ("Point", "init", [])));
+       (Ast.Expr (Ast.StaticCall ("CouleurFactory", "init", [])));
        (Ast.Assign ((Ast.Id "true"), (Ast.Cste 1)));
        (Ast.Assign ((Ast.Id "false"), (Ast.Cste 0)));
        (Ast.Assign ((Ast.Id "p1"),
@@ -568,104 +543,98 @@
        (Ast.Assign ((Ast.Id "o"),
           (Ast.New ("PointColore",
              [(Ast.Cste 0); (Ast.Cste 0);
-               (Ast.MethodCall ("blanc", (Ast.Id "CouleurFactory"), []))]
+               (Ast.StaticCall ("CouleurFactory", "blanc", []))]
              ))
           ));
        (Ast.Assign ((Ast.Id "pn"),
           (Ast.New ("PointNoir", [(Ast.Cste 1); (Ast.UMinus (Ast.Cste 1))]))
           ));
        (Ast.Assign ((Ast.Id "dp"), (Ast.New ("DefaultPoint", []))));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "p1"), [(Ast.Cste 0)])));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "p2"), [(Ast.Cste 0)])));
+       (Ast.Expr (Ast.Call ((Ast.Id "p1"), "print", [(Ast.Cste 0)])));
+       (Ast.Expr (Ast.Call ((Ast.Id "p2"), "print", [(Ast.Cste 0)])));
        (Ast.Expr
-          (Ast.MethodCall ("move", (Ast.Id "p2"),
-             [(Ast.MethodCall ("getx", (Ast.Id "p1"), []));
-               (Ast.MethodCall ("gety", (Ast.Id "p1"), [])); (Ast.Cste 0)]
+          (Ast.Call ((Ast.Id "p2"), "move",
+             [(Ast.Call ((Ast.Id "p1"), "getx", []));
+               (Ast.Call ((Ast.Id "p1"), "gety", [])); (Ast.Cste 0)]
              )));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "p2"), [(Ast.Cste 0)])));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "o"), [(Ast.Cste 0)])));
+       (Ast.Expr (Ast.Call ((Ast.Id "p2"), "print", [(Ast.Cste 0)])));
+       (Ast.Expr (Ast.Call ((Ast.Id "o"), "print", [(Ast.Cste 0)])));
        (Ast.Expr
-          (Ast.MethodCall ("setName", (Ast.Id "o"), [(Ast.String "origine")]
-             )));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "o"), [(Ast.Id "true")])));
+          (Ast.Call ((Ast.Id "o"), "setName", [(Ast.String "origine")])));
+       (Ast.Expr (Ast.Call ((Ast.Id "o"), "print", [(Ast.Id "true")])));
        (Ast.Expr
-          (Ast.MethodCall ("move", (Ast.Id "p2"),
+          (Ast.Call ((Ast.Id "p2"), "move",
              [(Ast.BinOp (
-                 (Ast.BinOp ((Ast.MethodCall ("getx", (Ast.Id "p1"), [])),
-                    Ast.Sub,
+                 (Ast.BinOp ((Ast.Call ((Ast.Id "p1"), "getx", [])), Ast.Sub,
                     (Ast.BinOp ((Ast.Cste 2), Ast.Mul, (Ast.Cste 5))))),
                  Ast.Sub, (Ast.Cste 3)));
-               (Ast.MethodCall ("gety", (Ast.Id "p1"), [])); (Ast.Cste 0)]
+               (Ast.Call ((Ast.Id "p1"), "gety", [])); (Ast.Cste 0)]
              )));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "p2"), [(Ast.Id "true")])));
+       (Ast.Expr (Ast.Call ((Ast.Id "p2"), "print", [(Ast.Id "true")])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "On va essayer le clonage:"), [])));
+          (Ast.Call ((Ast.String "On va essayer le clonage:"), "println", 
+             [])));
        (Ast.Assign ((Ast.Id "clone1"),
-          (Ast.MethodCall ("clone", (Ast.Id "p1"), []))));
-       (Ast.Expr
-          (Ast.MethodCall ("print", (Ast.Id "clone1"), [(Ast.Id "false")])));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.String "p1 isCloned: "), [])));
-       (Ast.Ite ((Ast.MethodCall ("isCloned", (Ast.Id "p1"), [])),
-          (Ast.Expr (Ast.MethodCall ("println", (Ast.String "OK"), []))),
-          (Ast.Expr (Ast.MethodCall ("println", (Ast.String "KO"), [])))));
+          (Ast.Call ((Ast.Id "p1"), "clone", []))));
+       (Ast.Expr (Ast.Call ((Ast.Id "clone1"), "print", [(Ast.Id "false")])));
+       (Ast.Expr (Ast.Call ((Ast.String "p1 isCloned: "), "print", [])));
+       (Ast.Ite ((Ast.Call ((Ast.Id "p1"), "isCloned", [])),
+          (Ast.Expr (Ast.Call ((Ast.String "OK"), "println", []))),
+          (Ast.Expr (Ast.Call ((Ast.String "KO"), "println", [])))));
        (Ast.Assign ((Ast.Id "clone2"),
-          (Ast.MethodCall ("clone", (Ast.Id "clone1"), []))));
+          (Ast.Call ((Ast.Id "clone1"), "clone", []))));
        (Ast.Expr
-          (Ast.MethodCall ("print",
-             (Ast.MethodCall ("move", (Ast.Id "clone2"),
+          (Ast.Call (
+             (Ast.Call ((Ast.Id "clone2"), "move",
                 [(Ast.Cste 54); (Ast.Cste 36); (Ast.Cste 0)])),
-             [(Ast.Id "false")])));
+             "print", [(Ast.Id "false")])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "Impression de tous les clones de p1:"), [])));
-       (Ast.Expr (Ast.MethodCall ("allClones", (Ast.Id "p1"), [])));
+          (Ast.Call ((Ast.String "Impression de tous les clones de p1:"),
+             "println", [])));
+       (Ast.Expr (Ast.Call ((Ast.Id "p1"), "allClones", [])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "Fin de l'impression de tous les clones"), [])));
+          (Ast.Call ((Ast.String "Fin de l'impression de tous les clones"),
+             "println", [])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "Valeur du compteur de nombre de points: "), 
-             [])));
+          (Ast.Call ((Ast.String "Valeur du compteur de nombre de points: "),
+             "println", [])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.MethodCall ("toString",
-                (Ast.MethodCall ("howMany", (Ast.Id "Point"), [])), [])),
-             [])));
+          (Ast.Call (
+             (Ast.Call ((Ast.StaticCall ("Point", "howMany", [])),
+                "toString", [])),
+             "println", [])));
        (Ast.Assign ((Ast.Id "p1"),
-          (Ast.MethodCall ("move",
-             (Ast.MethodCall ("clone", (Ast.Id "p1"), [])),
+          (Ast.Call ((Ast.Call ((Ast.Id "p1"), "clone", [])), "move",
              [(Ast.Cste 2); (Ast.UMinus (Ast.Cste 3)); (Ast.Cste 0)]))
           ));
-       (Ast.Expr (Ast.MethodCall ("print", (Ast.Id "p1"), [(Ast.Id "true")])));
+       (Ast.Expr (Ast.Call ((Ast.Id "p1"), "print", [(Ast.Id "true")])));
        (Ast.Expr
-          (Ast.MethodCall ("print",
-             (Ast.MethodCall ("clone", (Ast.Id "o"), [])), [(Ast.Id "true")]
-             )));
+          (Ast.Call ((Ast.Call ((Ast.Id "o"), "clone", [])), "print",
+             [(Ast.Id "true")])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "test(Point, PointColore, PointNoir)"), [])));
+          (Ast.Call ((Ast.String "test(Point, PointColore, PointNoir)"),
+             "println", [])));
        (Ast.Expr
-          (Ast.MethodCall ("test", (Ast.Id "Test"),
+          (Ast.StaticCall ("Test", "test",
              [(Ast.Id "p1"); (Ast.Id "o"); (Ast.Id "pn")])));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "test(PointNoir, PointNoir, PointNoir)"), [])));
+          (Ast.Call ((Ast.String "test(PointNoir, PointNoir, PointNoir)"),
+             "println", [])));
        (Ast.Expr
-          (Ast.MethodCall ("test", (Ast.Id "Test"),
+          (Ast.StaticCall ("Test", "test",
              [(Ast.Id "pn"); (Ast.Id "pn"); (Ast.Id "pn")])));
        (Ast.Assign ((Ast.Id "p1"), (Ast.Id "pn")));
-       (Ast.Expr (Ast.MethodCall ("test2", (Ast.Id "Test"), [(Ast.Id "o")])));
-       (Ast.Expr (Ast.MethodCall ("test2", (Ast.Id "Test"), [(Ast.Id "pn")])));
+       (Ast.Expr (Ast.StaticCall ("Test", "test2", [(Ast.Id "o")])));
+       (Ast.Expr (Ast.StaticCall ("Test", "test2", [(Ast.Id "pn")])));
        (Ast.Assign ((Ast.Id "o"), (Ast.Id "pn")));
        (Ast.Expr
-          (Ast.MethodCall ("println",
-             (Ast.String "test(PointNoir, PointNoir, PointNoir)"), [])));
+          (Ast.Call ((Ast.String "test(PointNoir, PointNoir, PointNoir)"),
+             "println", [])));
        (Ast.Expr
-          (Ast.MethodCall ("test", (Ast.Id "Test"),
+          (Ast.StaticCall ("Test", "test",
              [(Ast.Id "p1"); (Ast.Id "o"); (Ast.Id "pn")])));
-       (Ast.Expr (Ast.MethodCall ("test2", (Ast.Id "Test"), [(Ast.Id "o")])));
-       (Ast.Expr (Ast.MethodCall ("test2", (Ast.Id "Test"), [(Ast.Id "pn")])));
-       (Ast.Expr (Ast.MethodCall ("println", (Ast.String "\nDone"), [])))]
+       (Ast.Expr (Ast.StaticCall ("Test", "test2", [(Ast.Id "o")])));
+       (Ast.Expr (Ast.StaticCall ("Test", "test2", [(Ast.Id "pn")])));
+       (Ast.Expr (Ast.Call ((Ast.String "\nDone"), "println", [])))]
      ))
   }
