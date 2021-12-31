@@ -238,8 +238,12 @@ let check_returns retType instr =
 (** Checks that there are no return instruction.
     @raise Contextual_error if a check fails. *)
 
-let rec check_no_return _instr =
-  () (* TODO *)
+let rec check_no_return instr =
+  match instr with
+  | Return _ -> raise @@ Contextual_error (Printf.sprintf "no return instruction are allowed here");
+  | Block(_, li) -> List.iter check_no_return li
+  | Ite(_, then_, else_) -> check_no_return then_; check_no_return else_
+  | Expr _ | Assign _ -> ()
 
 (** Checks that an if/then/else instruction is valid.
     @raise Contextual_error if a check fails. *)
