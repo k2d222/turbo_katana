@@ -51,8 +51,8 @@
 * Called method params are compatible with declaration
 * Called static method exists in static class
 * Called static method params are compatible with declaration
-* (**Missing**) Call to New exists
-* (**Missing**) Params in New call are compatible with ctor
+* Call to New exists
+* Params in New call are compatible with ctor
 * (**Missing**) Numeric operators are used on Integer types
 * (**Missing**) StrCat is used on Strings
 * Identifiers are in scope

@@ -368,6 +368,30 @@ and check_expr_static_call decls env (className, methName, args) =
     | Some(meth) -> check_call_args decls args meth
     | None -> err (Printf.sprintf "call to unknown static method '%s::%s'" className methName)
 
+(** Checks a New expression.
+    @raise Contextual_error if a check fails. *)
+
+and check_expr_new decls env (className, args) =
+  let decl = find_class_opt decls className
+  in match decl with
+  | None -> err (Printf.sprintf "instantiation of unknown class '%s'" className)
+  | Some(decl) ->
+    let args = args |> List.map (fun e ->
+        check_expr decls env e;
+        get_expr_type decls env e
+      )
+
+    in let check_arg arg param =
+         if not (is_base decls arg param)
+         then err (Printf.sprintf "invalid call argument: type '%s' is incompatible with '%s'" arg param)
+
+    in if List.length args <> List.length decl.ctorParams
+    then err (Printf.sprintf "invalid number of arguments in instantiation of '%s'" className);
+
+    List.iter2 (fun arg (param: ctorParam) ->
+        check_arg arg param.className
+      ) args decl.ctorParams
+
 (** Checks an expression.
     @raise Contextual_error if a check fails. *)
 
@@ -377,10 +401,11 @@ and check_expr decls env expr =
   | Attr(e, name) -> check_expr_attr decls env (e, name)
   | StaticAttr(className, name) -> check_expr_static_attr decls (className, name)
   | UMinus e -> check_expr decls env e
-  | List le | New(_, le) -> List.iter (check_expr decls env) le
+  | List le -> List.iter (check_expr decls env) le
   | Call(e, methName, args) -> check_expr_call decls env (e, methName, args)
   | StaticCall(className, methName, args) -> check_expr_static_call decls env (className, methName, args)
   | BinOp(e1, _, e2) | StrCat(e1, e2) -> check_expr decls env e1; check_expr decls env e2
+  | New(className, args) -> check_expr_new decls env (className, args)
   | Cste _ | String _ -> ()
 
 (* -------------------------------------------------------------------------- *)
