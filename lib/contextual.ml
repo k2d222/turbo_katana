@@ -1,169 +1,8 @@
 open Ast
+open Astmanip
+open Util
 
 exception Contextual_error of string
-
-(** Add a variable to the environment, shadowing any pre-existing variable. *)
-
-let env_add env (var: param) =
-  let env = List.remove_assoc var.name env
-  in (var.name, var.className) :: env
-
-(** Add all variables to the environment, shadowing any pre-existing variable. *)
-
-let env_add_all env vars =
-  vars |> List.fold_left env_add env
-
-(** Get a variable from the environment.
-    @raise Not_found if the variable is not in the environment. *)
-
-let env_get env varName =
-  List.assoc_opt varName env
-  |> Optmanip.get_or_else (fun () ->
-      Printf.eprintf "[ERR] env_get '%s' failed\n" varName;
-      raise Not_found
-    )
-
-let print_env env =
-  env |> List.iter (fun (name, type_) ->
-      Printf.printf "%s : %s\n" name type_
-    )
-
-(** Find the class declaration with a given name. *)
-
-let find_class_opt decls name =
-  List.find_opt (fun decl -> decl.name = name) decls
-
-(** Find the class declaration with a given name.
-    @raise Not_found if no such declaration is found. *)
-
-let find_class decls name =
-  find_class_opt decls name
-  |> Optmanip.get_or_else (fun () ->
-      Printf.eprintf "[ERR] find_class '%s' failed\n" name;
-      raise Not_found
-    )
-
-(** List of all ancestor class declarations in bottom-to-top order.
-    @raise Not_found if an ancestor has no declaration. *)
-
-let rec ancestors decls decl =
-  match decl.superclass with
-  | None -> []
-  | Some(super) ->
-    let superDecl = (find_class decls super) in
-    superDecl :: (ancestors decls superDecl)
-
-(** Find (recursively through ancestors) the method declaration in a class
-    with a given name. *)
-
-let rec find_method_opt decls name decl =
-  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.methods
-  |> Optmanip.or_else (fun () ->
-      match decl.superclass with
-      | None -> None
-      | Some(super) ->
-        let superDecl = (find_class decls super)
-        in find_method_opt decls name superDecl
-    )
-
-(** Get the type of an attribute in a class declaration. *)
-
-let rec get_attr_opt attrName decl =
-  let pred (attr: param) =
-    if attr.name = attrName then Some(attr.className) else None
-  in let pred2 (attr: ctorParam) =
-       if attr.name = attrName then Some(attr.className) else None
-  in
-  List.find_map pred decl.body.instAttrs
-  |> Optmanip.or_else (fun () ->
-      List.find_map pred decl.body.staticAttrs
-    )
-  |> Optmanip.or_else (fun () ->
-      List.find_map pred2 decl.ctorParams
-    )
-
-(** Get the type of an attribute in a class declaration.
-    @raise Not_found if the class has no such attribute. *)
-
-let get_attr attrName decl =
-  get_attr_opt attrName decl
-  |> Optmanip.get_or_else (fun () ->
-      Printf.eprintf "[ERR] get_attr '%s' failed\n" attrName;
-      raise Not_found
-    )
-
-(** Get the type of a method in a class declaration.
-    Note: procedures have the special type 'Void' *)
-
-let get_method_type methName decl =
-  decl.body.methods
-  |> List.find_map  (fun (meth: methodDecl) ->
-      if meth.name = methName then meth.retType else None
-    )
-  |> Optmanip.get_or("Void")
-
-(** Computes an expression type. *)
-
-let get_expr_type decls env expr =
-  let rec r_get expr =
-    match expr with
-    | Cste _ | BinOp _ | UMinus _ -> "Integer"
-    | String _ | StrCat _ -> "String"
-
-    | Id id -> env_get env id
-
-    | Attr(e, attrName) ->
-      let decl = find_class decls (r_get e)
-      in get_attr attrName decl
-
-    | StaticAttr(className, attrName) ->
-      let decl = find_class decls className
-      in get_attr attrName decl
-
-    | List l ->
-      let last = List.hd (List.rev l)
-      in r_get last
-
-    | Call(caller, name, _args) ->
-      let decl = find_class decls (r_get caller)
-      in get_method_type name decl
-
-    | StaticCall(className, name, _args) ->
-      let decl = find_class decls className
-      in get_method_type name decl
-
-    | New(className, _args) -> className
-
-  in r_get expr
-
-(** Wether derived is convertible to base. *)
-
-let is_base decls derived base =
-  if derived = base then true
-  else
-    let derived = find_class decls derived
-    in let base = find_class decls base
-    in List.exists ((=) base) (ancestors decls derived)
-
-(** Make an environment with 'super' and 'this'. *)
-
-let make_class_env decl =
-  let env = ("this", decl.name) :: []
-  in let env = match decl.superclass with
-      | Some(super) -> ("super", super) :: env
-      | None -> env
-  in env
-
-(** Make an environment with method params and optionally 'result'. *)
-
-let make_method_env env meth =
-  let env = env_add_all env meth.params
-  in let env = match meth.retType with
-      | Some(ret) -> ("result", ret) :: env
-      | None -> env
-  in env
-
-(* -------------------------------------------------------------------------- *)
 
 (** Check constructor declaration validity. Performs following checks:
     - Constructor name and class name are equal
@@ -194,7 +33,7 @@ let check_ctor decl =
     @raise Contextual_error if a check fails. *)
 
 let check_multiple_def decl =
-  Util.iter_pairs (fun ((d1: methodDecl), (d2: methodDecl)) ->
+  iter_pairs (fun ((d1: methodDecl), (d2: methodDecl)) ->
       if d1.name = d2.name
       then raise @@ Contextual_error (Printf.sprintf "multiple definition of method '%s' in class '%s'" d1.name decl.name)
       else ()
@@ -297,7 +136,7 @@ let check_returns decls env retType instr =
        | Return e -> assert_type env e
 
        | Block(vars, li) ->
-         let env = env_add_all env vars
+         let env = Env.add_all env vars
          in List.iter (check_ret_type env) li
 
        | Ite(_, then_, else_) ->
@@ -346,7 +185,7 @@ let check_no_reserved vars =
 
 let rec check_instr_block decls env (vars, li) =
   check_no_reserved vars;
-  let env = env_add_all env vars
+  let env = Env.add_all env vars
   in List.iter (check_instr decls env) li
 
 (** Performs the following checks:

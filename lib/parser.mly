@@ -1,6 +1,5 @@
 %{
 open Ast
-open Print
 
 type classBodyElt =
   | Method of Ast.methodDecl
