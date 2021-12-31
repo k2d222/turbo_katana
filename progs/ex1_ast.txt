@@ -1,16 +1,17 @@
+hello
 { Ast.decls =
   [{ Ast.name = "Point";
      ctorParams =
-     [{ Ast.name = "x"; className = "Integer" };
-       { Ast.name = "y"; className = "Integer" };
-       { Ast.name = "name"; className = "String" }];
+     [{ Ast.isMember = true; name = "x"; className = "Integer" };
+       { Ast.isMember = true; name = "y"; className = "Integer" };
+       { Ast.isMember = true; name = "name"; className = "String" }];
      body =
      { Ast.ctor =
        { Ast.name = "Point";
          params =
-         [{ Ast.name = "x"; className = "Integer" };
-           { Ast.name = "y"; className = "Integer" };
-           { Ast.name = "name"; className = "String" }];
+         [{ Ast.isMember = true; name = "x"; className = "Integer" };
+           { Ast.isMember = true; name = "y"; className = "Integer" };
+           { Ast.isMember = true; name = "name"; className = "String" }];
          superCall = None;
          body =
          (Ast.Block ([],
@@ -205,11 +206,13 @@
        };
      superclass = None };
     { Ast.name = "Couleur";
-      ctorParams = [{ Ast.name = "coul"; className = "Integer" }];
+      ctorParams =
+      [{ Ast.isMember = true; name = "coul"; className = "Integer" }];
       body =
       { Ast.ctor =
         { Ast.name = "Couleur";
-          params = [{ Ast.name = "coul"; className = "Integer" }];
+          params =
+          [{ Ast.isMember = true; name = "coul"; className = "Integer" }];
           superCall = None;
           body =
           (Ast.Block ([],
@@ -315,16 +318,16 @@
       superclass = None };
     { Ast.name = "PointColore";
       ctorParams =
-      [{ Ast.name = "x"; className = "Integer" };
-        { Ast.name = "y"; className = "Integer" };
-        { Ast.name = "coul"; className = "Couleur" }];
+      [{ Ast.isMember = false; name = "x"; className = "Integer" };
+        { Ast.isMember = false; name = "y"; className = "Integer" };
+        { Ast.isMember = true; name = "coul"; className = "Couleur" }];
       body =
       { Ast.ctor =
         { Ast.name = "PointColore";
           params =
-          [{ Ast.name = "x"; className = "Integer" };
-            { Ast.name = "y"; className = "Integer" };
-            { Ast.name = "coul"; className = "Couleur" }];
+          [{ Ast.isMember = false; name = "x"; className = "Integer" };
+            { Ast.isMember = false; name = "y"; className = "Integer" };
+            { Ast.isMember = true; name = "coul"; className = "Couleur" }];
           superCall =
           (Some ("Point",
                  [(Ast.Id "x"); (Ast.Id "y");
@@ -390,14 +393,14 @@
       superclass = (Some "Point") };
     { Ast.name = "PointNoir";
       ctorParams =
-      [{ Ast.name = "xc"; className = "Integer" };
-        { Ast.name = "yc"; className = "Integer" }];
+      [{ Ast.isMember = false; name = "xc"; className = "Integer" };
+        { Ast.isMember = false; name = "yc"; className = "Integer" }];
       body =
       { Ast.ctor =
         { Ast.name = "PointNoir";
           params =
-          [{ Ast.name = "xc"; className = "Integer" };
-            { Ast.name = "yc"; className = "Integer" }];
+          [{ Ast.isMember = false; name = "xc"; className = "Integer" };
+            { Ast.isMember = false; name = "yc"; className = "Integer" }];
           superCall =
           (Some ("PointColore",
                  [(Ast.Id "xc"); (Ast.Id "yc");

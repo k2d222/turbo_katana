@@ -234,36 +234,32 @@ let check_cycles decls =
     - Override methods match the overriden method signature.
       @raise Contextual_error if a check fails. *)
 
-let check_overrides decls =
+let check_overrides decls decl =
 
-  let check_class decl =
+  let check_super_method superDecl (meth: methodDecl) =
+    let overriden = find_method_opt decls meth.name superDecl in
+    if meth.override then
+      match overriden with
+      | Some(overriden) ->
+        if meth.params <> overriden.params
+        then raise @@ Contextual_error (Printf.sprintf "signature mismatch between method '%s::%s' and overriden method" decl.name meth.name)
+        else ()
+      | None -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is marked override but no overriden method found" decl.name meth.name)
+    else
+      match overriden with
+      | Some _ -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is not marked override but shadows a super method" decl.name meth.name)
+      | None -> ()
 
-    let check_super_method superDecl (meth: methodDecl) =
-      let overriden = find_method_opt decls meth.name superDecl in
-      if meth.override then
-        match overriden with
-        | Some(overriden) ->
-          if meth.params <> overriden.params
-          then raise @@ Contextual_error (Printf.sprintf "signature mismatch between method '%s::%s' and overriden method" decl.name meth.name)
-          else ()
-        | None -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is marked override but no overriden method found" decl.name meth.name)
-      else
-        match overriden with
-        | Some _ -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is not marked override but shadows a super method" decl.name meth.name)
-        | None -> ()
+  in let check_base_method (meth: methodDecl) =
+       if meth.override
+       then raise @@ Contextual_error (Printf.sprintf "method '%s' of base class '%s' is marked override" meth.name decl.name)
+       else ()
 
-    in let check_base_method (meth: methodDecl) =
-         if meth.override
-         then raise @@ Contextual_error (Printf.sprintf "method '%s' of base class '%s' is marked override" meth.name decl.name)
-         else ()
-
-    in match decl.superclass with
-    | Some(super) ->
-      let superDecl = find_class decls super
-      in List.iter (check_super_method superDecl) decl.body.methods
-    | None -> List.iter check_base_method decl.body.methods
-
-  in List.iter check_class decls
+  in match decl.superclass with
+  | Some(super) ->
+    let superDecl = find_class decls super
+    in List.iter (check_super_method superDecl) decl.body.methods
+  | None -> List.iter check_base_method decl.body.methods
 
 (** Checks that id is in scope.
     @raise Contextual_error if a check fails. *)
@@ -447,6 +443,7 @@ let check_main_instr decls instr =
 
 let check_decl decls decl =
   check_ctor decl;
+  check_overrides decls decl;
   check_multiple_def decl;
   let env = make_class_env decl
   in List.iter (check_method decls env) decl.body.methods;
@@ -455,7 +452,6 @@ let check_decl decls decl =
 let check_decls decls =
   check_inheritance decls;
   check_cycles decls;
-  check_overrides decls;
   List.iter (check_decl decls) decls;
   () (* TODO *)
 
