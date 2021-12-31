@@ -36,7 +36,7 @@ let check_inheritance decls =
     )
   in decls_with_super |> List.iter (fun (name, super) ->
       match find_class_opt decls super with
-      | None -> err (Printf.sprintf "class '%s' extends non-existing class '%s'" name super)
+      | None -> err (Printf.sprintf "class '%s' extends unknown class '%s'" name super)
       | _ -> ()
     )
 
@@ -322,6 +322,9 @@ and check_expr_static_attr decls (t, name) =
   in if Option.is_none attr
   then err (Printf.sprintf "no static attribute named '%s' in class '%s'" name t)
 
+(** Checks a function call expression.
+    @raise Contextual_error if a check fails. *)
+
 and check_expr_call decls env (e, methName, args) =
   check_expr decls env e;
   let t = get_expr_type decls env e
@@ -335,7 +338,7 @@ and check_expr_call decls env (e, methName, args) =
   | "String", _, _::_ -> err (Printf.sprintf "'%S::%s' expects no arguments" t methName)
 
   | "String", _, _
-  | "Integer", _, _ -> err (Printf.sprintf "call to non-existing method '%s::%s'" t methName)
+  | "Integer", _, _ -> err (Printf.sprintf "call to unknown method '%s::%s'" t methName)
 
   | _ ->
     let decl = find_class decls t
@@ -346,7 +349,24 @@ and check_expr_call decls env (e, methName, args) =
       )
     in match meth with
     | Some(meth) -> check_call_args decls args meth
-    | None -> err (Printf.sprintf "call to non-existing method '%s::%s'" t methName)
+    | None -> err (Printf.sprintf "call to unknown method '%s::%s'" t methName)
+
+(** Checks a function call expression.
+    @raise Contextual_error if a check fails. *)
+
+and check_expr_static_call decls env (className, methName, args) =
+  let decl = find_class_opt decls className
+  in match decl with
+  | None -> err (Printf.sprintf "call to static method '%s' of unknown class '%s'" methName className)
+  | Some(decl) ->
+    let meth = get_static_method_opt methName decl
+    in let args = args |> List.map (fun e ->
+        check_expr decls env e;
+        get_expr_type decls env e
+      )
+    in match meth with
+    | Some(meth) -> check_call_args decls args meth
+    | None -> err (Printf.sprintf "call to unknown static method '%s::%s'" className methName)
 
 (** Checks an expression.
     @raise Contextual_error if a check fails. *)
@@ -357,10 +377,11 @@ and check_expr decls env expr =
   | Attr(e, name) -> check_expr_attr decls env (e, name)
   | StaticAttr(className, name) -> check_expr_static_attr decls (className, name)
   | UMinus e -> check_expr decls env e
-  | Call(e, methName, args) -> check_expr_call decls env (e, methName, args)
   | List le | New(_, le) -> List.iter (check_expr decls env) le
+  | Call(e, methName, args) -> check_expr_call decls env (e, methName, args)
+  | StaticCall(className, methName, args) -> check_expr_static_call decls env (className, methName, args)
   | BinOp(e1, _, e2) | StrCat(e1, e2) -> check_expr decls env e1; check_expr decls env e2
-  | Cste _ | StaticCall _ | String _ -> ()
+  | Cste _ | String _ -> ()
 
 (* -------------------------------------------------------------------------- *)
 

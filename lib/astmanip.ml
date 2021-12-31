@@ -38,6 +38,22 @@ let rec find_method_opt decls name decl =
         in find_method_opt decls name superDecl
     )
 
+(** Get a static method declaration in a class with a given name. *)
+
+let get_static_method_opt name decl =
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.staticMethods
+
+(** Get a static method declaration in a class with a given name.
+    @raise Not_found if the class has no such static method. *)
+
+let get_static_method name decl =
+  get_static_method_opt name decl
+  |> Optmanip.get_or_else (fun () ->
+      (* Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name; *)
+      raise Not_found
+    )
+
+
 (** Get the type of an attribute in a class declaration. *)
 
 let rec get_inst_attr_opt attrName decl =
