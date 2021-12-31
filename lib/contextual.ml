@@ -4,31 +4,6 @@ open Util
 
 exception Contextual_error of string
 
-(** Check constructor declaration validity. Performs following checks:
-    - Constructor name and class name are equal
-    - Constructor parameters and class parameters are equal
-    - Constructor calls the right super constructor if class is derived
-    - Constructor does not call any super constructor if class is base
-      @raise Contextual_error if a check fails.
-*)
-
-let check_ctor decl =
-  let ctor = decl.body.ctor in
-
-  if decl.name <> ctor.name
-  then raise @@ Contextual_error (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
-  else ();
-
-  match decl.superclass, ctor.superCall with
-  | Some(n1), Some(n2, _) when n1 <> n2 -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
-  | Some(n1), None -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
-  | None, Some(n2, _) -> raise @@ Contextual_error (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
-  | _ -> ();
-
-    if ctor.params <> decl.ctorParams
-    then raise @@ Contextual_error (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
-    else ()
-
 (** Check that each method declaration is unique in a class declaration.
     @raise Contextual_error if a check fails. *)
 
@@ -188,6 +163,39 @@ let check_no_reserved vars =
 
   in List.iter check vars
 
+
+(** Check constructor declaration validity. Performs following checks:
+    - Constructor name and class name are equal
+    - Constructor parameters and class parameters are equal
+    - Constructor parameters have no reserved keywords
+    - Constructor calls the right super constructor if class is derived
+    - Constructor does not call any super constructor if class is base
+    - No return instruction in body
+      @raise Contextual_error if a check fails.
+*)
+
+let check_ctor decl =
+  let ctor = decl.body.ctor
+  in let params = ctor.params |> List.map (fun { name; className; _ } -> { name; className })
+  in begin
+    check_no_reserved params;
+    check_no_return ctor.body;
+
+    if decl.name <> ctor.name
+    then raise @@ Contextual_error (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
+    else ();
+
+    (match decl.superclass, ctor.superCall with
+     | Some(n1), Some(n2, _) when n1 <> n2 -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
+     | Some(n1), None -> raise @@ Contextual_error (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
+     | None, Some(n2, _) -> raise @@ Contextual_error (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
+     | _ -> ());
+
+    if ctor.params <> decl.ctorParams
+    then raise @@ Contextual_error (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
+    else ()
+  end
+
 (** Checks that Block instructions are valid.
     @raise Contextual_error if a check fails. *)
 
@@ -282,36 +290,32 @@ and check_expr decls env expr =
 (* -------------------------------------------------------------------------- *)
 
 let check_method decls env meth =
+  check_no_reserved meth.params;
   let env = make_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
   | Some(ret) -> check_returns decls env ret meth.body
-  | None -> check_no_return meth.body;
-    () (* TODO *)
+  | None -> check_no_return meth.body
 
 let check_main_instr decls instr =
   check_no_return instr;
-  check_instr decls [] instr;
-  () (* TODO *)
+  check_instr decls [] instr
 
 let check_decl decls decl =
   check_ctor decl;
   check_overrides decls decl;
   check_multiple_def decl;
   let env = make_class_env decl
-  in List.iter (check_method decls env) decl.body.methods;
-  () (* TODO *)
+  in List.iter (check_method decls env) decl.body.methods
 
 let check_decls decls =
   check_inheritance decls;
   check_cycles decls;
-  List.iter (check_decl decls) decls;
-  () (* TODO *)
+  List.iter (check_decl decls) decls
 
 (** Perform all checks on ast.
     @raise Contextual_error if a check fails. *)
 
 let check_all ast =
   check_decls ast.decls;
-  check_main_instr ast.decls ast.instr;
-  ()
+  check_main_instr ast.decls ast.instr

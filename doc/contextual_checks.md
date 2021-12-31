@@ -17,7 +17,7 @@
 
 * Perform *Instruction* checks on method body
 * --
-* (**Missing**) No reserved keyword in params
+* No reserved keyword in params
 * No method with *override* keyword in a base class
 * Override methods have the *override* keyword
 * Override methods match the overriden method signature
@@ -28,7 +28,7 @@
 ## Constructor
 
 * (**Missing**) No Return instruction
-* (**Missing**) No reserved keyword in params
+* No reserved keyword in params
 * Constructor name and class name are equal
 * Constructor parameters and class parameters are equal (**TODO: match types, not names**)
 * Constructor calls the right super constructor if class is derived
