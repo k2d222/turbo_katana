@@ -5,11 +5,13 @@
 * Perform Constructor checks
 * Perform Methods checks
 * --
-* (**Missing**) No class derived from Integer or String
-* (**Missing**) No duplicate class declaration
-* (**Missing**) No reserved class name (Integer, String)
-* (**Missing**) No duplicate attribute declaration (static or not, ctor or not)
-* No duplicate method declaration
+* No class derived from Integer or String
+* No duplicate class declaration
+* No reserved class name (Integer, String)
+* No duplicate static attribute declaration
+* No duplicate instance attribute declaration
+* No duplicate instance method declaration
+* (**Missing**) No duplicate static method declaration
 * Herited class exists
 * No cycle in inheritance graph
 
@@ -27,7 +29,7 @@
 
 ## Constructor
 
-* (**Missing**) No Return instruction
+* No Return instruction
 * No reserved keyword in params
 * Constructor name and class name are equal
 * Constructor parameters and class parameters are equal (**TODO: match types, not names**)

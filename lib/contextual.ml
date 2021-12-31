@@ -4,15 +4,24 @@ open Util
 
 exception Contextual_error of string
 
-(** Check that each method declaration is unique in a class declaration.
+(** Check that methods, instance attributes and static attributes unique in a class declaration.
     @raise Contextual_error if a check fails. *)
 
-let check_multiple_def decl =
-  iter_pairs (fun ((d1: methodDecl), (d2: methodDecl)) ->
-      if d1.name = d2.name
-      then raise @@ Contextual_error (Printf.sprintf "multiple definition of method '%s' in class '%s'" d1.name decl.name)
-      else ()
-    ) decl.body.methods
+let check_no_dup decl =
+  let methods = decl.body.methods |> List.map (fun (m: methodDecl) -> m.name)
+  in let staticAttrs = decl.body.staticAttrs |> List.map (fun (a: param) -> a.name)
+  in let instAttrs = decl.body.instAttrs |> List.map (fun (a: param) -> a.name)
+
+  in let rec check t = function
+      | [] -> ()
+      | e::r ->
+        if List.exists ((=) e) r
+        then raise @@ Contextual_error (Printf.sprintf "multiple definition %s of '%s' in class '%s'" t e decl.name)
+        else check t r
+
+  in check "method" methods;
+  check "static attribute" staticAttrs;
+  check "instance attribute" instAttrs
 
 (** Check that each class declaration extends a declared class, if any.
     @raise Contextual_error if a check fails. *)
@@ -154,7 +163,7 @@ let rec check_no_return instr =
     Note: reserved keywords are: 'this', 'super', 'result'.
     @raise Contextual_error if a check fails. *)
 
-let check_no_reserved vars =
+let check_no_reserved_var vars =
   let reserved = ["this"; "super"; "result"]
 
   in let check (var: param) =
@@ -162,6 +171,28 @@ let check_no_reserved vars =
        then raise @@ Contextual_error (Printf.sprintf "use of reserved keyword '%s'" var.name)
 
   in List.iter check vars
+
+(** Checks that there are no class declarations with reserved name (String or Integer).
+    @raise Contextual_error if a check fails. *)
+
+let check_no_reserved_class decls =
+  let reserved = ["String"; "Integer"]
+
+  in let check decl =
+       if List.exists (fun r -> decl.name = r || decl.superclass = Some(r)) reserved
+       then raise @@ Contextual_error (Printf.sprintf "use of reserved class name '%s'" decl.name)
+
+  in List.iter check decls
+
+(** Checks that there are no duplicate class declarations.
+    @raise Contextual_error if a check fails. *)
+
+let rec check_no_dup_class = function
+  | [] -> ()
+  | decl :: decls ->
+    if List.exists (fun other -> decl.name = other.name) decls
+    then raise @@ Contextual_error (Printf.sprintf "duplicate class declaration: '%s'" decl.name)
+    else check_no_dup_class decls
 
 
 (** Check constructor declaration validity. Performs following checks:
@@ -178,7 +209,7 @@ let check_ctor decl =
   let ctor = decl.body.ctor
   in let params = ctor.params |> List.map (fun { name; className; _ } -> { name; className })
   in begin
-    check_no_reserved params;
+    check_no_reserved_var params;
     check_no_return ctor.body;
 
     if decl.name <> ctor.name
@@ -200,7 +231,7 @@ let check_ctor decl =
     @raise Contextual_error if a check fails. *)
 
 let rec check_instr_block decls env (vars, li) =
-  check_no_reserved vars;
+  check_no_reserved_var vars;
   let env = Env.add_all env vars
   in List.iter (check_instr decls env) li
 
@@ -290,7 +321,7 @@ and check_expr decls env expr =
 (* -------------------------------------------------------------------------- *)
 
 let check_method decls env meth =
-  check_no_reserved meth.params;
+  check_no_reserved_var meth.params;
   let env = make_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
@@ -302,13 +333,17 @@ let check_main_instr decls instr =
   check_instr decls [] instr
 
 let check_decl decls decl =
-  check_ctor decl;
-  check_overrides decls decl;
-  check_multiple_def decl;
-  let env = make_class_env decl
-  in List.iter (check_method decls env) decl.body.methods
+  begin
+    check_ctor decl;
+    check_overrides decls decl;
+    check_no_dup decl;
+    let env = make_class_env decl
+    in List.iter (check_method decls env) decl.body.methods
+  end
 
 let check_decls decls =
+  check_no_reserved_class decls;
+  check_no_dup_class decls;
   check_inheritance decls;
   check_cycles decls;
   List.iter (check_decl decls) decls
