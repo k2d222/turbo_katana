@@ -66,7 +66,7 @@ prog:
   decls = list(classDecl) instr = instrBlock EOF { { decls; instr } }
 
 classDecl:
-  CLASS name = CLASSNAME ctorParams = paramList superclass = extends IS body = classBody {
+  CLASS name = CLASSNAME ctorParams = ctorParamList superclass = extends IS body = classBody {
     { name; ctorParams; body; superclass }
   }
 
@@ -91,10 +91,10 @@ methodDecl:
   }
 
 ctorDecl:
-  | DEF name = CLASSNAME params = paramList IS body = instrBlock {
+  | DEF name = CLASSNAME params = ctorParamList IS body = instrBlock {
      Ctor({ name; params; superCall=None; body;  })
   }
-  | DEF name = CLASSNAME params = paramList COLON super = CLASSNAME lsuper = superList IS b = instrBlock {
+  | DEF name = CLASSNAME params = ctorParamList COLON super = CLASSNAME lsuper = superList IS b = instrBlock {
     Ctor({ name; params; superCall=Some(super, lsuper); body=b; })
   }
 
@@ -105,15 +105,18 @@ attrDecl:
     if static then StaticAttrib(p) else InstAttrib(p)
   }
 
-paramList:
-  LPAREN lp = separated_list(COMMA, ctorParam) RPAREN { List.flatten lp }
-
 superList:
   LPAREN le = separated_list(COMMA, expr) RPAREN { le }
 
+paramList:
+  LPAREN lp = separated_list(COMMA, param) RPAREN { List.flatten lp }
+
+ctorParamList:
+  LPAREN lp = separated_list(COMMA, ctorParam) RPAREN { List.flatten lp }
+
 ctorParam:
-  varopt = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME
-  { List.map (fun name -> { name; className }) names }
+  isMember = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME
+  { List.map (fun name -> { isMember; name; className }) names }
 
 extends:
   | EXTENDS id = CLASSNAME { Some(id) }

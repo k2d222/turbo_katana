@@ -4,6 +4,19 @@ type numBinOp =
   | Add | Sub | Mul | Div
 [@@deriving show]
 
+type param = {
+  name: string;
+  className: string;
+}
+[@@deriving show]
+
+type ctorParam = {
+  isMember: bool;
+  name: string;
+  className: string;
+}
+[@@deriving show]
+
 type instr =
   | Block of param list * instr list
   | Assign of expr * expr
@@ -24,16 +37,11 @@ and expr =
   | String of string
   | StrCat of expr * expr
   | New of string * expr list
-
-and param = {
-  name: string;
-  className: string;
-}
 [@@deriving show]
 
 type ctorDecl = {
   name: string;
-  params: param list;
+  params: ctorParam list;
   superCall: (string * expr list) option;
   body: instr;
 }
@@ -59,7 +67,7 @@ type classBody = {
 
 type classDecl = {
   name: string;
-  ctorParams: param list;
+  ctorParams: ctorParam list;
   body: classBody;
   superclass: string option;
 }
