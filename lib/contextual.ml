@@ -36,17 +36,18 @@ let rec find_method_opt decls name decl =
         in find_method_opt decls name superDecl
     )
 
-
-(** Get the type of an attribute in a class declaration. *)
+(** Get the type of an attribute in a class declaration.
+    @raise Not_found if the class has no such attribute. *)
 
 let get_attr_type attrName decl =
   decl.body.instAttrs
   |> List.find_map  (fun (attr: param) ->
       if attr.name = attrName  then Some(attr.className)  else None
     )
-  |> Option.get
+  |> Optmanip.get_or_else (fun () -> raise Not_found)
 
-(** Get the type of a method in a class declaration. *)
+(** Get the type of a method in a class declaration.
+    Note: procedures have the special type 'Void' *)
 
 let get_method_type methName decl =
   decl.body.methods
@@ -98,11 +99,31 @@ let is_base decls derived base =
     in let base = find_class decls base
     in List.exists ((=) base) (ancestors decls derived)
 
+(** Add a variable to the environment, shadowing any pre-existing variable. *)
+
 let add_to_env env vars =
   vars |> List.fold_left (fun env (var: param) ->
       let env = List.remove_assoc var.name env
       in (var.name, var.className) :: env
     ) env
+
+(** Make an environment with 'super' and 'this'. *)
+
+let make_class_env decl =
+  let env = ("this", decl.name) :: []
+  in let env = match decl.superclass with
+      | Some(super) -> ("super", super) :: env
+      | None -> env
+  in env
+
+(** Make an environment with method params and optionally 'result'. *)
+
+let make_method_env env meth =
+  let env = add_to_env env meth.params
+  in let env = match meth.retType with
+      | Some(ret) -> ("result", ret) :: env
+      | None -> env
+  in env
 
 (* -------------------------------------------------------------------------- *)
 
@@ -323,28 +344,84 @@ let rec check_no_return instr =
   | Ite(_, then_, else_) -> check_no_return then_; check_no_return else_
   | Expr _ | Assign _ -> ()
 
-(** Checks that an if/then/else instruction is valid.
+(** Checks that if/then/else instructions are valid.
     @raise Contextual_error if a check fails. *)
 
-let check_ite_instr (_if_, _then_, _else_) =
-  () (* TODO *)
+let rec check_instr_ite decls env instr =
+  let rec r_check instr =
+    match instr with
+    | Block(vars, li) ->
+      let env = add_to_env env vars
+      in List.iter (check_instr_ite decls env) li
+
+    | Ite(e, then_, else_) ->
+      let t = get_expr_type decls env e
+      in if t <> "Integer"
+      then raise @@ Contextual_error (Printf.sprintf "'if' condition must be of type 'Integer'")
+      else r_check then_; r_check else_
+
+    | Assign _ | Return _ | Expr _ -> ()
+
+  in r_check instr
+
+(** Checks that there are no declarations of reserved keywords in vars.
+    Note: reserved keywords are: 'this', 'super', 'result'.
+    @raise Contextual_error if a check fails. *)
+
+let check_no_reserved vars =
+  let reserved = ["this"; "super"; "result"]
+
+  in let check (var: param) =
+       if List.exists ((=) var.name) reserved
+       then raise @@ Contextual_error (Printf.sprintf "use of reserved keyword '%s'" var.name)
+
+  in List.iter check vars
+
+(** Checks that Block instructions are valid.
+    @raise Contextual_error if a check fails. *)
+
+let rec check_instr_block instr =
+  match instr with
+  | Block(vars, li) ->
+    check_no_reserved vars;
+    List.iter check_instr_block li
+
+  | Ite(_, then_, else_) ->
+    check_instr_block then_;
+    check_instr_block else_;
+
+  | Assign _ | Return _ | Expr _ -> ()
 
 (* -------------------------------------------------------------------------- *)
 
-let check_main_instr _decls instr =
-  check_no_return instr;
+let check_instr decls env instr =
+  check_instr_ident_scope env instr;
+  check_instr_ite decls env instr;
+  check_instr_block instr;
   () (* TODO *)
 
-let check_decl decl =
+let check_method decls env meth =
+  let env = make_method_env env meth
+  in check_instr decls env meth.body;
+  () (* TODO *)
+
+let check_main_instr decls instr =
+  check_no_return instr;
+  check_instr decls [] instr;
+  () (* TODO *)
+
+let check_decl decls decl =
+  let env = make_class_env decl in
   check_ctor decl;
   check_multiple_def decl;
+  List.iter (check_method decls env) decl.body.methods;
   () (* TODO *)
 
 let check_decls decls =
   check_inheritance decls;
   check_cycles decls;
   check_overrides decls;
-  List.iter check_decl decls;
+  List.iter (check_decl decls) decls;
   () (* TODO *)
 
 (** Perform all checks on ast.
@@ -352,4 +429,5 @@ let check_decls decls =
 
 let check_all ast =
   check_decls ast.decls;
-  check_main_instr ast.decls ast.instr
+  check_main_instr ast.decls ast.instr;
+  ()
