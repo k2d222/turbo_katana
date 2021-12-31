@@ -20,7 +20,7 @@
 * (**Missing**) No reserved keyword in params
 * No method with *override* keyword in a base class
 * Override methods have the *override* keyword
-* Override methods match the overriden method signature (**TODO: match types, not names**)
+* Override methods match the overriden method signature
 * If method returns something, all code paths lead to a return or assign to *result*
 * If methods returns something, all Return instructions are compatible with return type
 * If method returns nothing, no Return instruction

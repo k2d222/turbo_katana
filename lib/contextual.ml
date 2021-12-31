@@ -75,19 +75,28 @@ let check_cycles decls =
 
 let check_overrides decls decl =
 
-  let check_super_method superDecl (meth: methodDecl) =
-    let overriden = find_method_opt decls meth.name superDecl in
-    if meth.override then
-      match overriden with
-      | Some(overriden) ->
-        if meth.params <> overriden.params
-        then raise @@ Contextual_error (Printf.sprintf "signature mismatch between method '%s::%s' and overriden method" decl.name meth.name)
-        else ()
-      | None -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is marked override but no overriden method found" decl.name meth.name)
-    else
-      match overriden with
-      | Some _ -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is not marked override but shadows a super method" decl.name meth.name)
-      | None -> ()
+  let check_params derived base =
+    if List.length derived.params <> List.length base.params
+    then raise @@ Contextual_error (Printf.sprintf "parameters of override method '%s::%s' do not correspond with overriden method" decl.name derived.name)
+    else List.iter2 (fun (p1: param) (p2: param) ->
+        if not (p1.className = p2.className)
+        then raise @@ Contextual_error (Printf.sprintf "parameter '%s' in method '%s::%s' must be of type '%s' to match overriden method" p1.name decl.name derived.name p2.className)
+      ) derived.params base.params
+
+  in let check_super_method superDecl (meth: methodDecl) =
+       let overriden = find_method_opt decls meth.name superDecl in
+       if meth.override then
+         match overriden with
+         | Some(overriden) ->
+           check_params meth overriden;
+           if meth.params <> overriden.params
+           then raise @@ Contextual_error (Printf.sprintf "signature mismatch between method '%s::%s' and overriden method" decl.name meth.name)
+           else ()
+         | None -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is marked override but no overriden method found" decl.name meth.name)
+       else
+         match overriden with
+         | Some _ -> raise @@ Contextual_error (Printf.sprintf "method '%s::%s' is not marked override but shadows a super method" decl.name meth.name)
+         | None -> ()
 
   in let check_base_method (meth: methodDecl) =
        if meth.override
@@ -114,7 +123,6 @@ let check_in_scope env id =
 
 let rec check_method_calls _env _expr _instr =
   () (* TODO *)
-
 
 (** Performs the following checks:
     - All code paths lead to either:
@@ -238,6 +246,9 @@ and check_instr decls env instr =
   | Ite (e, then_, else_) -> check_instr_ite decls env (e, then_, else_)
   | Expr e -> check_expr decls env e
 
+(** Checks an Attr expression.
+    @raise Contextual_error if a check fails. *)
+
 and check_expr_attr decls env (e, name) =
   check_expr decls env e;
   let t = get_expr_type decls env e
@@ -245,6 +256,9 @@ and check_expr_attr decls env (e, name) =
   in let attr = get_attr_opt name decl
   in if Option.is_none attr
   then raise @@ Contextual_error (Printf.sprintf "no attribute named '%s' in class '%s'" name t)
+
+(** Checks an StaticAttr expression.
+    @raise Contextual_error if a check fails. *)
 
 and check_expr_static_attr decls (t, name) =
   let decl = find_class decls t
