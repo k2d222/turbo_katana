@@ -179,7 +179,7 @@ let check_no_reserved_var vars =
     @raise Contextual_error if a check fails. *)
 
 let check_no_reserved_class decls =
-  let reserved = ["String"; "Integer"]
+  let reserved = ["String"; "Integer"; "Void"]
 
   in let check decl =
        if List.exists (fun r -> decl.name = r || decl.superclass = Some(r)) reserved
@@ -336,6 +336,8 @@ and check_expr_call decls env (e, methName, args) =
 
   | "Integer", _, _::_
   | "String", _, _::_ -> err (Printf.sprintf "'%S::%s' expects no arguments" t methName)
+
+  | "Void", _, _ -> err (Printf.sprintf "call to method '%s' of void expression" t)
 
   | "String", _, _
   | "Integer", _, _ -> err (Printf.sprintf "call to unknown method '%s::%s'" t methName)
