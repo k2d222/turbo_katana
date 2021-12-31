@@ -98,6 +98,12 @@ let is_base decls derived base =
     in let base = find_class decls base
     in List.exists ((=) base) (ancestors decls derived)
 
+let add_to_env env vars =
+  vars |> List.fold_left (fun env (var: param) ->
+      let env = List.remove_assoc var.name env
+      in (var.name, var.className) :: env
+    ) env
+
 (* -------------------------------------------------------------------------- *)
 
 (** Check constructor declaration validity. Performs following checks:
@@ -230,10 +236,40 @@ let rec check_assign env (lhs, rhs) =
     - All return instructions have a type compatible with the return type
     - All assigns to result have a type compatible with the return type *)
 
-let check_returns retType instr =
-  let rec r_check _env _instr =
-    () (* TODO *)
-  in r_check [("result", retType)] instr
+let check_returns decls retType instr =
+
+  let assert_type env e =
+    let t = get_expr_type decls env e
+    in if is_base decls t retType
+    then ()
+    else raise @@ Contextual_error (Printf.sprintf "invalid return type '%s', expected type compatible with '%s'" t retType);
+
+  in let rec check_ret_type env instr =
+       match instr with
+       | Return e -> assert_type env e
+
+       | Block(vars, li) ->
+         let env = add_to_env env vars
+         in List.iter (check_ret_type env) li
+
+       | Ite(_, then_, else_) ->
+         check_ret_type env then_;
+         check_ret_type env else_
+
+       | Expr _ | Assign _ -> () (* assigns are already tested in check_assign *)
+
+  in let rec has_return instr =
+       match instr with
+       | Block(_, li) -> List.exists has_return li
+       | Return _ -> true
+       | Assign(to_, _) when to_ = Id("result") -> true
+       | Ite(_, then_, else_) -> has_return then_ && has_return else_
+       | _ -> false
+
+  in let () = check_ret_type [] instr
+  in let () = if not (has_return instr)
+       then raise @@ Contextual_error (Printf.sprintf "some code paths lead to no return statement or assign to 'result' when method expects return type '%s'" retType);
+  in ()
 
 (** Checks that there are no return instruction.
     @raise Contextual_error if a check fails. *)
