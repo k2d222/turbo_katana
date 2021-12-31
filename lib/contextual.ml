@@ -392,8 +392,24 @@ and check_expr_new decls env (className, args) =
         check_arg arg param.className
       ) args decl.ctorParams
 
-(** Checks an expression.
-    @raise Contextual_error if a check fails. *)
+and check_expr_op decls env (e1, e2) =
+  check_expr decls env e1;
+  check_expr decls env e2;
+  let t1 = get_expr_type decls env e1
+  in let t2 = get_expr_type decls env e2
+  in if t1 <> "Integer" ||  t2 <> "Integer"
+  then err (Printf.sprintf "numeric infix operators expect Integer expressions on both side, got '%s' op '%s'" t1 t2);
+
+and check_expr_strcat decls env (e1, e2) =
+  check_expr decls env e1;
+  check_expr decls env e2;
+  let t1 = get_expr_type decls env e1
+  in let t2 = get_expr_type decls env e2
+  in if t1 <> "String" ||  t2 <> "String"
+  then err (Printf.sprintf "string concatenation operator expects String expressions, got '%s' ^ '%s'" t1 t2);
+
+  (** Checks an expression.
+      @raise Contextual_error if a check fails. *)
 
 and check_expr decls env expr =
   match expr with
@@ -404,7 +420,8 @@ and check_expr decls env expr =
   | List le -> List.iter (check_expr decls env) le
   | Call(e, methName, args) -> check_expr_call decls env (e, methName, args)
   | StaticCall(className, methName, args) -> check_expr_static_call decls env (className, methName, args)
-  | BinOp(e1, _, e2) | StrCat(e1, e2) -> check_expr decls env e1; check_expr decls env e2
+  | BinOp(e1, _, e2) -> check_expr_op decls env (e1, e2)
+  | StrCat(e1, e2) -> check_expr_strcat decls env (e1, e2)
   | New(className, args) -> check_expr_new decls env (className, args)
   | Cste _ | String _ -> ()
 

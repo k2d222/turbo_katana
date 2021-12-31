@@ -32,7 +32,7 @@
 * No Return instruction
 * No reserved keyword in params
 * Constructor name and class name are equal
-* Constructor parameters and class parameters are equal (**TODO: match types, not names**)
+* Constructor parameters and class parameters are equal
 * Constructor calls the right super constructor if class is derived
 * Constructor does not call any super constructor if class is base
 
@@ -47,14 +47,14 @@
 
 ## Expressions
 
-* (Called method exists
+* Called method exists
 * Called method params are compatible with declaration
 * Called static method exists in static class
 * Called static method params are compatible with declaration
 * Call to New exists
 * Params in New call are compatible with ctor
-* (**Missing**) Numeric operators are used on Integer types
-* (**Missing**) StrCat is used on Strings
+* Numeric operators are used on Integer types
+* StrCat is used on Strings
 * Identifiers are in scope
 * Attributes exist
 * Static Attributes exist
