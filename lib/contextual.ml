@@ -207,8 +207,41 @@ let check_overrides decls =
 (** Checks that all identifiers in an expression are in scope.
     @raise Contextual_error if a check fails. *)
 
-let rec check_expr_scope env expr =
-  () (* TODO *)
+let check_expr_ident_scope env expr =
+  let rec r_check expr =
+    match expr with
+    | Id id ->
+      if Option.is_none @@ List.assoc_opt id env
+      then raise @@ Contextual_error (Printf.sprintf "use of undeclared identifier '%s'" id)
+      else ()
+    | Attr(e, _) | UMinus e | Call(e, _, _) -> r_check e
+    | List le | New(_, le) -> List.iter r_check le
+    | BinOp(e1, _, e2) | StrCat(e1, e2) -> r_check e1; r_check e2
+    | Cste _ | StaticAttr _ | StaticCall _ | String _ -> ()
+
+  in r_check expr
+
+(** Checks that all identifiers in an instruction are in scope.
+    @raise Contextual_error if a check fails. *)
+
+let rec check_instr_ident_scope env instr =
+  let rec r_check instr =
+    match instr with
+    | Block(vars, li) ->
+      let env = add_to_env env vars
+      in List.iter (check_instr_ident_scope env) li
+
+    | Assign(to_, from_) ->
+      check_expr_ident_scope env to_;
+      check_expr_ident_scope env from_;
+
+    | Return e | Expr e -> check_expr_ident_scope env e
+
+    | Ite(e, then_, else_) ->
+      check_expr_ident_scope env e;
+      r_check then_; r_check else_
+
+  in r_check instr
 
 (** Performs the following checks:
     - The method exists for the given type
