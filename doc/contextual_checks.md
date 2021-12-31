@@ -11,7 +11,7 @@
 * No duplicate static attribute declaration
 * No duplicate instance attribute declaration
 * No duplicate instance method declaration
-* (**Missing**) No duplicate static method declaration
+* No duplicate static method declaration
 * Herited class exists
 * No cycle in inheritance graph
 

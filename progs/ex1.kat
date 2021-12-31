@@ -117,9 +117,9 @@ class CouleurFactory() is {
       CouleurFactory.theNoir  := new Couleur(1);
       CouleurFactory.theGris  := new Couleur(2);
    }
-   def blanc() : Couleur := CouleurFactory.theBlanc
-   def noir()  : Couleur := CouleurFactory.theNoir
-   def gris()  : Couleur := CouleurFactory.theGris
+   def static blanc() : Couleur := CouleurFactory.theBlanc
+   def static noir()  : Couleur := CouleurFactory.theNoir
+   def static gris()  : Couleur := CouleurFactory.theGris
 }
 
 /* ci-dessous on ne met pas var devant x et y sinon ca definirait deux

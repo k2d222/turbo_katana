@@ -49,7 +49,6 @@ type ctorDecl = {
 
 type methodDecl = {
   name: string;
-  static: bool;
   override: bool;
   params: param list;
   retType: string option;
@@ -59,7 +58,8 @@ type methodDecl = {
 
 type classBody = {
   ctor: ctorDecl;
-  methods: methodDecl list;
+  staticMethods: methodDecl list;
+  instMethods: methodDecl list;
   staticAttrs: param list;
   instAttrs: param list;
 }

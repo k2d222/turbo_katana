@@ -29,7 +29,7 @@ let rec ancestors decls decl =
     with a given name. *)
 
 let rec find_method_opt decls name decl =
-  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.methods
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.instMethods
   |> Optmanip.or_else (fun () ->
       match decl.superclass with
       | None -> None
@@ -40,35 +40,58 @@ let rec find_method_opt decls name decl =
 
 (** Get the type of an attribute in a class declaration. *)
 
-let rec get_attr_opt attrName decl =
+let rec get_inst_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
   in let pred2 (attr: ctorParam) =
        if attr.name = attrName then Some(attr.className) else None
-  in
-  List.find_map pred decl.body.instAttrs
-  |> Optmanip.or_else (fun () ->
-      List.find_map pred decl.body.staticAttrs
-    )
-  |> Optmanip.or_else (fun () ->
-      List.find_map pred2 decl.ctorParams
-    )
+  in List.find_map pred decl.body.instAttrs
+     |> Optmanip.or_else (fun () ->
+         List.find_map pred2 decl.ctorParams
+       )
 
 (** Get the type of an attribute in a class declaration.
     @raise Not_found if the class has no such attribute. *)
 
-let get_attr attrName decl =
-  get_attr_opt attrName decl
+let get_inst_attr attrName decl =
+  get_inst_attr_opt attrName decl
   |> Optmanip.get_or_else (fun () ->
-      Printf.eprintf "[ERR] get_attr '%s' failed\n" attrName;
+      Printf.eprintf "[ERR] get_inst_attr '%s' failed\n" attrName;
+      raise Not_found
+    )
+
+(** Get the type of a static attribute in a class declaration. *)
+
+let rec get_static_attr_opt attrName decl =
+  let pred (attr: param) =
+    if attr.name = attrName then Some(attr.className) else None
+  in List.find_map pred decl.body.staticAttrs
+
+(** Get the type of a static attribute in a class declaration.
+    @raise Not_found if the class has no such attribute. *)
+
+let get_static_attr attrName decl =
+  get_static_attr_opt attrName decl
+  |> Optmanip.get_or_else (fun () ->
+      Printf.eprintf "[ERR] get_static_attr '%s' failed\n" attrName;
       raise Not_found
     )
 
 (** Get the type of a method in a class declaration.
     Note: procedures have the special type 'Void' *)
 
-let get_method_type methName decl =
-  decl.body.methods
+let get_inst_method_type methName decl =
+  decl.body.instMethods
+  |> List.find_map  (fun (meth: methodDecl) ->
+      if meth.name = methName then meth.retType else None
+    )
+  |> Optmanip.get_or("Void")
+
+(** Get the type of a static method in a class declaration.
+    Note: procedures have the special type 'Void' *)
+
+let get_static_method_type methName decl =
+  decl.body.staticMethods
   |> List.find_map  (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType else None
     )
@@ -86,11 +109,11 @@ let get_expr_type decls env expr =
 
     | Attr(e, attrName) ->
       let decl = find_class decls (r_get e)
-      in get_attr attrName decl
+      in get_inst_attr attrName decl
 
     | StaticAttr(className, attrName) ->
       let decl = find_class decls className
-      in get_attr attrName decl
+      in get_static_attr attrName decl
 
     | List l ->
       let last = List.hd (List.rev l)
@@ -98,11 +121,11 @@ let get_expr_type decls env expr =
 
     | Call(caller, name, _args) ->
       let decl = find_class decls (r_get caller)
-      in get_method_type name decl
+      in get_inst_method_type name decl
 
     | StaticCall(className, name, _args) ->
       let decl = find_class decls className
-      in get_method_type name decl
+      in get_static_method_type name decl
 
     | New(className, _args) -> className
 

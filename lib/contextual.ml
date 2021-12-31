@@ -8,7 +8,8 @@ exception Contextual_error of string
     @raise Contextual_error if a check fails. *)
 
 let check_no_dup decl =
-  let methods = decl.body.methods |> List.map (fun (m: methodDecl) -> m.name)
+  let instMethods = decl.body.instMethods |> List.map (fun (m: methodDecl) -> m.name)
+  in let staticMethods = decl.body.staticMethods |> List.map (fun (m: methodDecl) -> m.name)
   in let staticAttrs = decl.body.staticAttrs |> List.map (fun (a: param) -> a.name)
   in let instAttrs = decl.body.instAttrs |> List.map (fun (a: param) -> a.name)
 
@@ -19,9 +20,10 @@ let check_no_dup decl =
         then raise @@ Contextual_error (Printf.sprintf "multiple definition %s of '%s' in class '%s'" t e decl.name)
         else check t r
 
-  in check "method" methods;
-  check "static attribute" staticAttrs;
-  check "instance attribute" instAttrs
+  in check "method" instMethods;
+  check "static method" staticMethods;
+  check "attribute" instAttrs;
+  check "static attribute" staticAttrs
 
 (** Check that each class declaration extends a declared class, if any.
     @raise Contextual_error if a check fails. *)
@@ -90,8 +92,8 @@ let check_overrides decls decl =
   in match decl.superclass with
   | Some(super) ->
     let superDecl = find_class decls super
-    in List.iter (check_super_method superDecl) decl.body.methods
-  | None -> List.iter check_base_method decl.body.methods
+    in List.iter (check_super_method superDecl) decl.body.instMethods
+  | None -> List.iter check_base_method decl.body.instMethods
 
 (** Checks that id is in scope.
     @raise Contextual_error if a check fails. *)
@@ -110,10 +112,9 @@ let rec check_method_calls _env _expr _instr =
 
 (** Performs the following checks:
     - All code paths lead to either:
-      (a) A return, or
+      (a) A return instruction, or
       (b) an assign to the implicit 'result' variable.
-    - All return instructions have a type compatible with the return type
-    - All assigns to result have a type compatible with the return type *)
+    - All return instructions have a type compatible with the return type *)
 
 let check_returns decls env retType instr =
 
@@ -292,7 +293,7 @@ and check_expr_attr decls env (e, name) =
   check_expr decls env e;
   let t = get_expr_type decls env e
   in let decl = find_class decls t
-  in let attr = get_attr_opt name decl
+  in let attr = get_inst_attr_opt name decl
   in if Option.is_none attr
   then raise @@ Contextual_error (Printf.sprintf "no attribute named '%s' in class '%s'" name t)
 
@@ -301,7 +302,7 @@ and check_expr_attr decls env (e, name) =
 
 and check_expr_static_attr decls (t, name) =
   let decl = find_class decls t
-  in let attr = get_attr_opt name decl
+  in let attr = get_static_attr_opt name decl
   in if Option.is_none attr
   then raise @@ Contextual_error (Printf.sprintf "no static attribute named '%s' in class '%s'" name t)
 
@@ -320,7 +321,15 @@ and check_expr decls env expr =
 
 (* -------------------------------------------------------------------------- *)
 
-let check_method decls env meth =
+let check_static_method decls env meth =
+  check_no_reserved_var meth.params;
+  let env = make_method_env env meth
+  in check_instr decls env meth.body;
+  match meth.retType with
+  | Some(ret) -> check_returns decls env ret meth.body
+  | None -> check_no_return meth.body
+
+let check_instance_method decls env meth =
   check_no_reserved_var meth.params;
   let env = make_method_env env meth
   in check_instr decls env meth.body;
@@ -338,7 +347,8 @@ let check_decl decls decl =
     check_overrides decls decl;
     check_no_dup decl;
     let env = make_class_env decl
-    in List.iter (check_method decls env) decl.body.methods
+    in List.iter (check_instance_method decls env) decl.body.instMethods;
+    List.iter (check_static_method decls []) decl.body.staticMethods
   end
 
 let check_decls decls =

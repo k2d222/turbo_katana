@@ -2,25 +2,27 @@
 open Ast
 
 type classBodyElt =
-  | Method of Ast.methodDecl
+  | StaticMethod of Ast.methodDecl
+  | InstMethod of Ast.methodDecl
   | Ctor of Ast.ctorDecl
   | StaticAttrib of Ast.param list
   | InstAttrib of Ast.param list
 
 let split_body_elts l =
 
-  let rec r_partition l (lm, lc, ls, li) =
+  let rec r_partition l (lsm, lim, lc, lsa, lia) =
     match l with
-    | [] -> (lm, lc, ls, li)
+    | [] -> (lsm, lim, lc, lsa, lia)
     | e::r ->
       let res =  (match e with
-        | Method m -> (m::lm, lc, ls, li)
-        | Ctor c -> (lm, c::lc, ls, li)
-        | StaticAttrib s -> (lm, lc, s@ls, li)
-        | InstAttrib i -> (lm, lc, ls, i@li))
+        | StaticMethod m -> (m::lsm, lim, lc, lsa, lia)
+        | InstMethod m -> (lsm, m::lim, lc, lsa, lia)
+        | Ctor c -> (lsm, lim, c::lc, lsa, lia)
+        | StaticAttrib s -> (lsm, lim, lc, s@lsa, lia)
+        | InstAttrib i -> (lsm, lim, lc, lsa, i@lia))
       in r_partition r res
 
-  in r_partition l ([], [], [], [])
+  in r_partition l ([], [], [], [], [])
 %}
 
 (* Class Keywords *)
@@ -71,9 +73,9 @@ classDecl:
 
 classBody:
   LCURLY l = list(classBodyElement) RCURLY {
-    let (lm, lc, ls, li) = split_body_elts l
+    let (lsm, lim, lc, lsa, lia) = split_body_elts l
     in let ctor = List.hd lc (* TODO: make sure there is only one ctor *)
-    in { methods=lm; ctor; staticAttrs=ls; instAttrs=li }
+    in { staticMethods=lsm; instMethods=lim; ctor; staticAttrs=lsa; instAttrs=lia }
   }
 
 classBodyElement:
@@ -83,10 +85,12 @@ classBodyElement:
 
 methodDecl:
   | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS body = instrBlock {
-     Method({ name; static; override; params; retType; body;  })
+    let ctor args = if static then StaticMethod args else InstMethod args
+    in ctor({ name; override; params; retType; body;  })
   }
   | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
-    Method({ name; static; override; params; retType=Some(retType); body=Return(e); })
+    let ctor args = if static then StaticMethod args else InstMethod args
+    in ctor({ name; override; params; retType=Some(retType); body=Return(e); })
   }
 
 ctorDecl:
