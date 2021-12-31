@@ -259,8 +259,17 @@ let rec check_method_calls _env _expr _instr =
     - Right-hand-side assign operand is compatible with the target variable
       @raise Contextual_error if a check fails. *)
 
-let rec check_assign env (lhs, rhs) =
-  () (* TODO *)
+let rec check_assign decls env (lhs, rhs) =
+  let t1 = get_expr_type decls env lhs
+  in let t2 = get_expr_type decls env rhs
+  in let () = match lhs with
+      | Id _ | Attr _ | StaticAttr _ -> ()
+      | _ -> raise @@ Contextual_error (Printf.sprintf "cannot assign to an expression of type '%s'" t1)
+  in let () =
+       if is_base decls t1 t2
+       then ()
+       else raise @@ Contextual_error (Printf.sprintf "cannot assign '%s' to '%s'" t2 t1);
+  in ()
 
 (** Performs the following checks:
     - All code paths lead to either:
