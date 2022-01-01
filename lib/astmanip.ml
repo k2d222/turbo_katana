@@ -56,7 +56,7 @@ let get_static_method name decl =
 
 (** Get the type of an attribute in a class declaration. *)
 
-let rec get_inst_attr_opt attrName decl =
+let get_inst_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
   in let pred2 (attr: ctorParam) =
@@ -78,7 +78,7 @@ let get_inst_attr attrName decl =
 
 (** Get the type of a static attribute in a class declaration. *)
 
-let rec get_static_attr_opt attrName decl =
+let get_static_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
   in List.find_map pred decl.body.staticAttrs

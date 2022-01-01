@@ -5,15 +5,15 @@ module L = MenhirLib.LexerUtil
 module I = Libcompil.Parser.MenhirInterpreter
 
 let fast_parse (filename: string): Ast.prog option =
-  let text, lexbuf = L.read filename in
+  let _text, lexbuf = L.read filename in
   match Parser.prog Lexer.token lexbuf with
-    | ast -> Some(ast)
-    | exception Parser.Error -> None
+  | ast -> Some(ast)
+  | exception Parser.Error -> None
 
 let env_from_err checkpoint =
   match checkpoint with
-    | I.HandlingError env -> env
-    | _ -> assert false
+  | I.HandlingError env -> env
+  | _ -> assert false
 
 (* [show text (pos1, pos2)] displays a range of the input text [text]
    delimited by the positions [pos1] and [pos2]. *)
@@ -29,8 +29,8 @@ let show text positions =
 
 let get text env i =
   match I.get i env with
-    | Some (I.Element (_, _, pos1, pos2)) -> show text (pos1, pos2)
-    | None -> "<???>"
+  | Some (I.Element (_, _, pos1, pos2)) -> show text (pos1, pos2)
+  | None -> "<???>"
 
 let diagnostic text checkpoint =
   let env = env_from_err checkpoint in
@@ -39,7 +39,7 @@ let diagnostic text checkpoint =
     let message = ParserMessages.message state in
     (E.expand (get text env) message)
   with
-    | Not_found -> "<error happened in state " ^ string_of_int state ^ ">"
+  | Not_found -> "<error happened in state " ^ string_of_int state ^ ">"
 
 let on_success ast: Ast.prog option =
   printf "on success\n";
@@ -71,7 +71,7 @@ let () =
   let filename = Sys.argv.(1) in
   let res = fast_parse filename in
   match res with
-    | Some(ast) -> run ast
-    | None ->
-      printf "Syntax error occured, running diagnostics...\n";
-      let _ = table_parse filename in exit(1)
+  | Some(ast) -> run ast
+  | None ->
+    printf "Syntax error occured, running diagnostics...\n";
+    let _ast = table_parse filename in exit(1)

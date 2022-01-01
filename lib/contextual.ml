@@ -109,7 +109,7 @@ let check_in_scope env id =
     - Method call parameters are compatible with the declaration.
       @raise Contextual_error if a check fails. *)
 
-let rec check_method_calls _env _expr _instr =
+let check_method_calls _env _expr _instr =
   () (* TODO *)
 
 (** Performs the following checks:

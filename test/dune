@@ -1,3 +1,5 @@
-(test
- (libraries libcompil)
- (name testLex))
+(library
+ (libraries libcompil core)
+ (name test)
+ (inline_tests)
+ (preprocess (pps ppx_jane ppx_expect ppx_inline_test)))

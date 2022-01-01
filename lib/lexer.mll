@@ -1,14 +1,13 @@
 {
 open Ast
 open Parser
-open Lexing
 open Optmanip
 
 exception SyntaxError of string
 
 let keyword_table = Hashtbl.create 16
 
-let _ =
+let () =
     List.iter (fun (kwd, tok) -> Hashtbl.add keyword_table kwd tok)
       [
         (* Class Keywords *)

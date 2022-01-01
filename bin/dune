@@ -1,8 +1,9 @@
 (executable
- (public_name compilc)
- (libraries libcompil)
+  (public_name compilc)
+  (libraries libcompil core)
+  (preprocess (pps ppx_jane ppx_deriving.show))
  (name main))
 
 (env
- (dev
-  (flags (:standard -warn-error -A))))
+  (dev
+    (flags (:standard -warn-error -A))))

@@ -1,8 +1,7 @@
 (library
   (name libcompil)
   (libraries core menhirLib)
-  (preprocess (pps ppx_deriving.show))
-  ; (preprocess (pps ppx_jane))
+  (preprocess (pps ppx_jane ppx_deriving.show))
 )
 
 (menhir
@@ -24,7 +23,7 @@
         (run menhir
           %{dep:parser.mly}
           --list-errors))))
-          
+
   (rule
     (targets parserMessages.ml)
     (deps parser.messages parser.mly)
