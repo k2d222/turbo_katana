@@ -1,3 +1,3 @@
-open Utils
+(* open Utils *)
 
 (* ---------- Compilation tests ---------- *)
