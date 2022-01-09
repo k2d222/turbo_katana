@@ -3,3 +3,6 @@
  (name test)
  (inline_tests)
  (preprocess (pps ppx_jane ppx_expect ppx_inline_test)))
+
+(copy_files
+ (files ../progs/ex1.kat))
