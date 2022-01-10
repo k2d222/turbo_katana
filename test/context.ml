@@ -134,7 +134,7 @@ let%test "no-duplicate-instance-method-declaration" =
 let%test "herited-class-exists" =
   expects_ctx_err {|
       class Point1() extends Point2 is {
-        def Point1() is {}
+        def Point1() : Point2() is {}
       }
       {}
     |}
@@ -142,10 +142,10 @@ let%test "herited-class-exists" =
 let%test "no-cycle-in-inheritance-graph" =
   expects_ctx_err {|
       class Point1() extends Point2 is {
-        def Point1() is {}
+        def Point1() : Point2() is {}
       }
       class Point2() extends Point1 is {
-        def Point2() is {}
+        def Point2() : Point1() is {}
       }
       {}
     |}
@@ -166,7 +166,7 @@ let%test "override-methods-have-the-override-keyword" =
         def test() is {}
       }
       class Point2() extends Point1 is {
-        def Point2() is {}
+        def Point2() : Point1() is {}
         def test() is {}
       }
       {}
@@ -179,7 +179,7 @@ let%test "override-methods-match-the-overriden-method-signature" =
         def test(i : Integer) is {}
       }
       class Point2() extends Point1 is {
-        def Point2() is {}
+        def Point2() : Point1() is {}
         def override test(i1, i2 : Integer) is {}
       }
       {}
@@ -205,3 +205,60 @@ let%test "no-reserved-keyword-in-constructor-params" =
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r r))
 
+let%test "constructor-name-and-class-name-are-equal" =
+  expects_ctx_err {|
+      class Point1() is {
+        def Point2() is {}
+      }
+      {}
+    |}
+
+let%test "constructor-parameters-and-class-parameters-are-equal" =
+  expects_ctx_err {|
+      class Point1(i : Integer) is {
+        def Point1(i : String) is {}
+      }
+      {}
+    |}
+
+
+let%test "no-reserved-keyword-declared-in-Block-instructions" = 
+  let reserved = [ "this"; "super"; "result" ]
+  in let code = Printf.sprintf {|
+      {
+        %s : Integer is {}
+      }
+    |}
+  in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
+
+
+let%test "called-method-exists" =
+  expects_ctx_err {|
+      class Point1() is {
+        def Point1() is {}
+      }
+      {p : Point1
+      is 
+      p.test();}
+    |}
+
+let%test "called-method-exists" =
+  expects_ctx_err {|
+      class Point1() is {
+        def Point1() is {}
+      }
+      {p : Point1
+      is 
+      p.test();}
+    |}
+
+let%test "called-method-params-are-compatible-with-declaration" =
+  expects_ctx_err {|
+      class Point1() is {
+        def Point1() is {}
+        def test(i : Integer) is {}
+      }
+      {p : Point1
+      is 
+      p.test();}
+    |}
