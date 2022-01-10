@@ -19,18 +19,31 @@ let%test "wrong-decls" =
   expects_parse_err {|
     {
       var null : Integer
-      var null : Integer;
     }
   |} &&
   expects_parse_err {|
     {
       next : Integer;
+      is {}
     }
   |} &&
   expects_parse_err {|
     {
-      var x y z : Integer;
+      x, y, z : Integer
     }
+  |} && 
+  expects_parse_err {|
+    {
+      var x : Integer 
+      is { 
+        x = 5;
+      }
+    }
+  |} && 
+  expects_parse_err{|
+	{
+    
+	}
   |}
 
 let%test "wrong-class-decl" =
@@ -39,7 +52,7 @@ let%test "wrong-class-decl" =
     {}
   |} &&
   expects_parse_err {|
-    class Point IS {}
+    class Point is {}
     {}
   |} && 
   expects_parse_err {|
@@ -53,7 +66,8 @@ let%test "wrong-class-decl" =
 let%test "wrong-classbody" = 
   expects_parse_err {|
     class Point(x, y: Integer) is {
-      def 
+     def Point(var x, y: Integer, var name: String) 
+      { this.index := Point.incr(); this.hasClone := 0; }
     }
     {}
   |}  
