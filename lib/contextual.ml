@@ -36,7 +36,7 @@ let check_inheritance decls =
       d.superclass |> Optmanip.map (fun super -> (d.name, super))
     )
   in decls_with_super |> List.iter (fun (name, super) ->
-      match find_class_opt decls super with
+      match get_class_opt decls super with
       | None -> err (Printf.sprintf "class '%s' extends unknown class '%s'" name super)
       | _ -> ()
     )
@@ -49,7 +49,7 @@ let check_cycles decls =
   let rec r_check ancestors decl =
     match decl.superclass with
     | Some(super) ->
-      let superDecl = find_class_opt decls super |> Option.get in
+      let superDecl = get_class_opt decls super |> Option.get in
       if List.exists ((=) super) ancestors
       then err (Printf.sprintf "cycle in heritance: class '%s' extends ancestor class '%s'" decl.name super)
       else r_check (super::ancestors) superDecl
@@ -94,7 +94,7 @@ let check_overrides decls decl =
 
   in match decl.superclass with
   | Some(super) ->
-    let superDecl = find_class decls super
+    let superDecl = get_class decls super
     in List.iter (check_super_method superDecl) decl.body.instMethods
   | None -> List.iter check_base_method decl.body.instMethods
 
@@ -274,8 +274,8 @@ and check_instr decls env instr =
 and check_expr_attr decls env (e, name) =
   check_expr decls env e;
   let t = get_expr_type decls env e
-  in let decl = find_class decls t
-  in let attr = get_inst_attr_opt name decl
+  in let decl = get_class decls t
+  in let attr = find_inst_attr_opt decls name decl
   in if Option.is_none attr
   then err (Printf.sprintf "no attribute named '%s' in class '%s'" name t)
 
@@ -283,7 +283,7 @@ and check_expr_attr decls env (e, name) =
     @raise Contextual_error if a check fails. *)
 
 and check_expr_static_attr decls (t, name) =
-  let decl = find_class decls t
+  let decl = get_class decls t
   in let attr = get_static_attr_opt name decl
   in if Option.is_none attr
   then err (Printf.sprintf "no static attribute named '%s' in class '%s'" name t)
@@ -309,7 +309,7 @@ and check_expr_call decls env (e, methName, args) =
   | "Integer", _, _ -> err (Printf.sprintf "call to unknown method '%s::%s'" t methName)
 
   | _ ->
-    let decl = find_class decls t
+    let decl = get_class decls t
     in let meth = find_method_opt decls methName decl
     in let args = args |> List.map (fun e ->
         check_expr decls env e;
@@ -323,7 +323,7 @@ and check_expr_call decls env (e, methName, args) =
     @raise Contextual_error if a check fails. *)
 
 and check_expr_static_call decls env (className, methName, args) =
-  let decl = find_class_opt decls className
+  let decl = get_class_opt decls className
   in match decl with
   | None -> err (Printf.sprintf "call to static method '%s' of unknown class '%s'" methName className)
   | Some(decl) ->
@@ -340,7 +340,7 @@ and check_expr_static_call decls env (className, methName, args) =
     @raise Contextual_error if a check fails. *)
 
 and check_expr_new decls env (className, args) =
-  let decl = find_class_opt decls className
+  let decl = get_class_opt decls className
   in match decl with
   | None -> err (Printf.sprintf "instantiation of unknown class '%s'" className)
   | Some(decl) ->
@@ -362,7 +362,7 @@ and check_expr_new decls env (className, args) =
 and check_expr_cast decls env (className, e) = 
   check_expr decls env e;
   
-  let decl = find_class_opt decls className 
+  let decl = get_class_opt decls className 
   in match decl with 
   | None -> err (Printf.sprintf "cast to unkown class '%s' " className)
   | Some(_decl) -> 
