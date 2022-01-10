@@ -18,6 +18,7 @@
 * No duplicate instance attribute declaration ✔
 * No duplicate static attribute declaration ✔
 * No reserved keywords in attribute declaration ✔
+
 ## Methods
 
 * Perform *Instruction* checks on method body
@@ -27,7 +28,7 @@
 * Override methods have the *override* keyword ✔
 * Override methods match the overriden method signature ✔
 * If method returns something, all code paths lead to an assign to *result* before return or block ends
-* No static override ✔
+* No static override
 
 ## Constructor
 
@@ -43,7 +44,9 @@
 * --
 * No reserved keyword declared in Block instructions ✔
 * Can only Assign to idents, attributes or static attributes
-* Assign rhs is compatible with lhs
+* Cannot assign to *this* or *super*
+* Assign lhs exists ✔
+* Assign rhs is compatible with lhs ✔
 * Expression in an Ite instruction is of type Integer
 
 ## Expressions

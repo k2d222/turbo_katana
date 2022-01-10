@@ -6,66 +6,151 @@ open Core
 let%test "minimal-prog" =
   expects_ast {| {} |}
 
+
+(* ----------------------- Class Declarations -------------------------- *)
+
 let%test "no-class-inherits-reserved" =
-  let reserved = [ "Integer"; "String"; "Void" ]
+  let reserved = [ "Integer"; "String" ]
   in let code = Printf.sprintf {|
-      class Test() extends %s is { def Test() is {} }
-      {}
-    |}
-  in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
-
-let%test "no-undeclared-variable" =
-  expects_ctx_err {|
-      {p1 := 51;}
-    |}
-
-let%test "no-unmatched-type" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {}
-      }
-
-      class Point2() is {
-        def Point2() is {}
-      }
-
-      {
-        p1: Point1
-        p2: Point2
-        is
-        p1 := p2;
-      }
-    |}
-
-let%test "compatible-types" =
-  expects_ast {|
       class Base() is {
         def Base() is {}
       }
-
-      class Derived() extends Base is {
-        def Derived() : Base() is {}
-      }
-
-      {
-        p1: Base
-        p2: Derived
-        is
-        p1 := p2;
-      }
-    |}
-
-let%test "no-reserved-keyword-in-method-params" = 
-  let reserved = [ "this"; "super"; "result" ]
-  in let code = Printf.sprintf {|
-      class Test() is { 
-        def Test() is {}
-        def testMethod(%s : Integer) : Integer is { result := 0; }
+      class Test() extends %s is { 
+        def Test() : %s() is {} 
       }
       {}
     |}
-  in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
-  && expects_ast (code "foo")
+  in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r r))
+  && expects_ast (code "Base" "Base")
+
+let%test "no-duplicate-class-declaration" =
+  let code = Printf.sprintf {|
+      class %s() is {
+        def %s() is {}
+      }
+
+      class %s(i1 : Integer) is {
+        def %s(i1 : Integer) is {}
+      }
+
+      {}
+    |}
+  in expects_ctx_err (code "Test" "Test" "Test" "Test")
+  && expects_ast (code "Test1" "Test1" "Test2" "Test2")
+
+let%test "no-reserved-class-name" =
+  let reserved = [ "Integer"; "String"]
+  in let code = Printf.sprintf {|
+    class %s() is {
+      def %s() is {}
+    }
+    {}
+  |}
+  in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r r))
+  && expects_ast (code "Foo" "Foo")
+
+let%test "no-duplicate-static-method-declaration" =
+  let code = Printf.sprintf {|
+      class Base() is {
+        def Base() is {}
+        def test3() : Integer is { result := 0; }
+      }
+      class Point1() extends Base is {
+        def Point1() : Base() is {}
+        def static test1() : Integer is { result := 0; }
+        def static %s() : Integer is { result := 0; }
+        def static %s() : String is { result := ""; }
+      }
+      {}
+    |}
+  in expects_ctx_err (code "test1" "test2")
+  && expects_ctx_err (code "test2" "test1")
+  && expects_ast (code "test2" "test3")
+  && expects_ast (code "test3" "test2")
+
+let%test "no-duplicate-instance-method-declaration" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+        def test1() : Integer is {result := 0;}
+        def %s() : Integer is {result := 0;}
+        def %s() : String is {result := "";}
+      }
+      {}
+    |}
+  in expects_ctx_err (code "test1" "test2")
+  && expects_ctx_err (code "test2" "test1")
+  && expects_ast (code "test2" "test3")
+
+let%test "herited-class-exists" =
+  let code = Printf.sprintf {|
+      class Base() is {
+        def Base() is {}
+      }
+  
+      class Derived() extends %s is {
+        def Derived() : %s() is {}
+      }
+      {}
+    |}
+  in expects_ctx_err (code "Test" "Test")
+  && expects_ast (code "Base" "Base")
+
+let%test "no-cycle-in-inheritance-graph" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+      }
+      class Point2() extends Point3 is {
+        def Point2() : Point3() is {}
+      }
+      class Point3() extends %s is {
+        def Point3() : %s() is {}
+      }
+      {}
+    |}
+  in expects_ctx_err (code "Point2" "Point2")
+  && expects_ast (code "Point1" "Point1")
+
+(* ----------------------- Attributes -------------------------- *)
+
+let%test "no-duplicate-instance-attribute-declaration" =
+  let code = Printf.sprintf {|
+      class Base() is {
+        def Base() is {}
+        var test3 : Integer
+      }
+      class Point1() extends Base is {
+        def Point1() : Base() is {}
+        var test1 : Integer
+        var %s : Integer
+        var %s : String
+      }
+      {}
+    |}
+  in expects_ctx_err (code "test1" "test2")
+  && expects_ctx_err (code "test2" "test1")
+  && expects_ast (code "test2" "test3")
+  && expects_ast (code "test3" "test2")
+
+let%test "no-duplicate-static-attribute-declaration" =
+  let code = Printf.sprintf {|
+      class Base() is {
+        def Base() is {}
+        var static test3 : Integer
+      }
+      class Point1() extends Base is {
+        def Point1() : Base() is {}
+        var static test1 : Integer
+        var static %s : Integer
+        var static %s : String
+      }
+      {}
+    |}
+  in expects_ctx_err (code "test1" "test2")
+  && expects_ctx_err (code "test2" "test1")
+  && expects_ast (code "test2" "test3")
+  && expects_ast (code "test3" "test2")
 
 let%test "no-reserved-keyword-in-attributes" = 
   let reserved = [ "this"; "super"; "result" ]
@@ -80,133 +165,75 @@ let%test "no-reserved-keyword-in-attributes" =
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
   && expects_ast (code "foo")
 
-let%test "no-reserved-keyword-in-instructions" = 
+(* ----------------------- Methods -------------------------- *)
+
+let%test "no-reserved-keyword-in-method-params" = 
   let reserved = [ "this"; "super"; "result" ]
   in let code = Printf.sprintf {|
-      {%s : Integer is {}}
+      class Test() is { 
+        def Test() is {}
+        def testMethod(%s : Integer) : Integer is { result := 0; }
+      }
+      {}
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
   && expects_ast (code "foo")
 
-let%test "no-duplicate-class-declaration" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {}
-      }
-
-      class Point1(i1 : Integer) is {
-        def Point1(i1 : Integer) is {}
-      }
-
-      {}
-    |}
-
-let%test "no-reserved-class-name" =
-  let reserved = [ "Integer"; "String"]
-  in let code = Printf.sprintf {|
-    class %s() is {
-      def %s() is {}
-    }
-    {}
-  |}
-  in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r r))
-  && expects_ast (code "Foo" "Foo")
-
-let%test "no-duplicate-static-attribute-declaration" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {}
-        var static static1 : Integer
-        var static static1 : String
-      }
-      {}
-    |}
-
-
-let%test "no-duplicate-static-method-declaration" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {}
-        def static static1() : Integer is { result := 0; }
-        def static static1() : String is { result := ""; }
-      }
-      {}
-    |}
-
-let%test "no-duplicate-instance-attribute-declaration" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {}
-        var static1 : Integer
-        var static1 : String
-      }
-      {}
-    |}
-
-let%test "no-duplicate-instance-method-declaration" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {}
-        def static1() : Integer is {result := 0;}
-        def static1() : String is {result := "";}
-      }
-      {}
-    |}
-
-let%test "herited-class-exists" =
-  expects_ctx_err {|
-      class Point1() extends Point2 is {
-        def Point1() : Point2() is {}
-      }
-      {}
-    |}
-
-let%test "no-cycle-in-inheritance-graph" =
-  expects_ctx_err {|
-      class Point1() extends Point2 is {
-        def Point1() : Point2() is {}
-      }
-      class Point2() extends Point1 is {
-        def Point2() : Point1() is {}
-      }
-      {}
-    |}
-
 let%test "no-method-with-override-in-a-base-class" =
-  expects_ctx_err {|
+  let code = Printf.sprintf {|
       class Point() is {
         def Point() is {}
-        def override test() is {}
+        def %s test() is {}
       }
       {}
     |}
+  in expects_ctx_err (code "override")
+  && expects_ast (code "")
 
-let%test "override-methods-have-the-override-keyword" =
-  expects_ctx_err {|
+let%test "override-methods-have-override-keyword" =
+  let code = Printf.sprintf {|
       class Point1() is {
         def Point1() is {}
         def test() is {}
       }
       class Point2() extends Point1 is {
         def Point2() : Point1() is {}
-        def test() is {}
+        def %s test() is {}
       }
       {}
     |}
+  in expects_ctx_err (code "")
+  && expects_ast (code "override")
 
-let%test "override-methods-match-the-overriden-method-signature" =
-  expects_ctx_err {|
+let%test "override-methods-match-overriden-method-signature" =
+  let code = Printf.sprintf {|
+      class Base() is {
+        def Base() is {}
+      }
+      class Derived() extends Base is {
+        def Derived() : Base() is {}
+      }  
       class Point1() is {
         def Point1() is {}
-        def test(i : Integer) is {}
+        def test(i1, i2 : Integer, b : Base) is {}
       }
       class Point2() extends Point1 is {
         def Point2() : Point1() is {}
-        def override test(i1, i2 : Integer) is {}
+        def override test(%s) is {}
       }
       {}
     |}
-    
+  in expects_ctx_err (code "i1, i2 : Integer")
+  && expects_ctx_err (code "i1, i2 : Integer, b : String")
+  && expects_ctx_err (code "foo, bar : Integer, baz : Derived")
+  && expects_ast (code "foo, bar : Integer, baz : Base")
+
+(* TODO: non-void-code-paths-lead-to-assign-to-result *)
+
+(* TODO: no-static-override *)
+
+(* ----------------------- Constructors -------------------------- *)
+
 let%test "no-reserved-keyword-in-constructor-params" = 
   let reserved = [ "this"; "super"; "result" ]
   in let code = Printf.sprintf {|
@@ -216,33 +243,48 @@ let%test "no-reserved-keyword-in-constructor-params" =
       {}
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r r))
+  && expects_ast (code "foo" "foo")
 
 let%test "constructor-name-and-class-name-are-equal" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point2() is {}
+  let code = Printf.sprintf {|
+      class %s() is {
+        def %s() is {}
       }
       {}
     |}
+  in expects_ctx_err (code "Point1" "Point2")
+  && expects_ast (code "Point1" "Point1")
 
 let%test "constructor-parameters-and-class-parameters-are-equal" =
-  expects_ctx_err {|
-      class Point1(i : Integer) is {
-        def Point1(i : String) is {}
+  let code = Printf.sprintf {|
+      class Point1(%s) is {
+        def Point1(%s) is {}
       }
       {}
     |}
+  in expects_ctx_err (code "s : String" "s : Integer")
+  && expects_ast (code "s : String" "s : String")
 
-let%test "constructor-calls-the-right-super-constructor-if-class-is-derived" =
-  expects_ctx_err {|
-      class Point1(i : Integer) is {
-        def Point1(i : String) is {}
+let%test "constructor-calls-right-super-constructor-if-class-derived" =
+  let code = Printf.sprintf {|
+      class Base(var s: String, i1, i2: Integer) is {
+        def Base(var s: String, i1, i2: Integer) is {}
+      }
+      class Derived() extends Base is {
+        def Derived() : %s is {}
       }
       {}
     |}
+  in expects_ctx_err (code {| Test("hello", 10, 20) |})
+  && expects_ctx_err (code {| Base("hello", 10) |})
+  && expects_ast (code {| Base("hello", 10, 20) |})
+
+(* TODO: no-super-constructor-call-in-base-class *)
 
 
-let%test "no-reserved-keyword-declared-in-Block-instructions" = 
+(* ----------------------- Instructions -------------------------- *)
+
+let%test "no-reserved-keyword-declared-in-block-instructions" = 
   let reserved = [ "this"; "super"; "result" ]
   in let code = Printf.sprintf {|
       {
@@ -250,70 +292,156 @@ let%test "no-reserved-keyword-declared-in-Block-instructions" =
       }
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
+  && expects_ast (code "foo")
+
+(* TODO: only-assign-to-idents-or-attribs *)
+
+(* TODO: no-assign-to-this-or-super *)
+
+let%test "no-undeclared-variable" =
+  let code = Printf.sprintf {|
+      {
+        p1, p2 : Integer
+        is
+        %s := 51;
+      }
+    |}
+  in expects_ctx_err (code "p3")
+  && expects_ast (code "p2")
+  
+let%test "no-incompatible-assign-types" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+      }
+      class Point2() is {
+        def Point2() is {}
+      }
+      class Point3() extends Point2 is {
+        def Point3() : Point2() is {}
+      }
+      {
+        p1: Point1
+        p2: Point2
+        p3: Point3
+        is
+        %s := %s;
+      }
+    |}
+  in expects_ctx_err (code "p1" "p2")
+  && expects_ctx_err (code "p3" "p2")
+  && expects_ast (code "p2" "p3")
+
+(* TODO: ite-expression-type-is-integer *)
+
+(* ----------------------- Expressions -------------------------- *)
 
   let%test "call-to-new-exists" =
-  expects_ctx_err {|
+  let code = Printf.sprintf {|
       class Point1() is {
         def Point1() is {}
-        def test(i : Integer) is {}
       }
-      {p : Point1
-      is 
-      p := new Point2();}
+      {
+        p : Point1
+        is 
+        p := new %s();
+      }
     |}
+  in expects_ctx_err (code "Point2")
+  && expects_ast (code "Point1")
 
 let%test "called-method-exists" =
-  expects_ctx_err {|
+  let code = Printf.sprintf {|
       class Point1() is {
         def Point1() is {}
+        def test() is {}
       }
-      {p : Point1
-      is 
-      p := new Point1();
-      p.test();}
+      {
+        p : Point1
+        is 
+        p := new Point1();
+        p.%s();
+      }
     |}
+  in expects_ctx_err (code "foo")
+  && expects_ast (code "test")
 
 let%test "called-method-params-are-compatible-with-declaration" =
-  expects_ctx_err {|
+  let code = Printf.sprintf {|
       class Point1() is {
         def Point1() is {}
-        def test(i : Integer) is {}
+        def test(i1, i2 : Integer, s: String) is {}
       }
-      {p : Point1
-      is 
-      p := new Point1();
-      p.test();}
-    |}
-
-
-let%test "params-in-new-call-are-compatible-with-ctor" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1(i : Integer) is {}
+      {
+        p : Point1
+        is 
+        p := new Point1();
+        p.test(%s);
       }
-      {p : Point1
-      is 
-      p := new Point1(5);}
     |}
+  in expects_ctx_err (code "10, 20")
+  && expects_ctx_err (code "10, 20, 30")
+  && expects_ast (code "10, 20, \"hello\"")
+
+(* TODO: static-method-call-exists *)
+
+(* TODO: static-method-call-params-compatible *)
+
+let%test "params-in-new-call-compatible-with-constructor" =
+  let code = Printf.sprintf {|
+      class Point1(var i1, i2 : Integer, s: String) is {
+        def Point1(var i1, i2 : Integer, s: String) is {}
+        def test() is {}
+      }
+      {
+        p : Point1
+        is 
+        p := new Point1(%s);
+      }
+    |}
+  in expects_ctx_err (code "10, 20")
+  && expects_ctx_err (code "10, 20, 30")
+  && expects_ast (code "10, 20, \"hello\"")
+
+(* TODO: numeric-operators-used-on-integers *)
+
+(* TODO: string-operators-used-on-strings *)
 
 let%test "identifiers-are-in-scope" =
-  expects_ctx_err {|
-      {p1 : Integer
-      is 
-        {p2 : Integer
+  let code = Printf.sprintf {|
+      {
+        p1 : Integer
         is 
-        p2 := 3;
+        {
+          p2 : Integer
+          is 
+          p2 := %s;
+        }
+        p1 := %s;
       }
-      p1 := p2;}
     |}
+  in expects_ctx_err (code "p1" "p2")
+  && expects_ast (code "p1" "10")
 
 let%test "attributes-exist" =
-  expects_ctx_err {|
+  let code = Printf.sprintf {|
       class Point1() is {
         def Point1() is {}
+        var attr : Integer
       }
-      {p : Point1
-      is 
-      p := new Point1();
-      p.attr := 5;}
+      {
+        p : Point1
+        is 
+        p := new Point1();
+        p.%s := 5;
+      }
     |}
+  in expects_ctx_err (code "foo")
+  && expects_ast (code "attr")
+  
+(* TODO: static-attributes-exist *)
+
+(* ----------------------------------------------- *)
+
+
+
