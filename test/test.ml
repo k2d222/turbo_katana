@@ -29,9 +29,8 @@ let expects_ast str =
 
 (* ------------------------------------- *)
 
-
 let%test_unit "ex1-parse" =
-    ignore @@ parse_file "../progs/ex1.kat"
+  ignore @@ parse_file "../progs/ex1.kat"
 
 (* ---------- Lexical tests ---------- *)
 
@@ -49,7 +48,7 @@ let%test "minimal-prog" =
   expects_ast {| {} |}
 
 let%test "no-class-inherits-reserved" =
-  let reserved = [ "Integer"; "String"; "Void" ]
+  let reserved = [ "Integer"; "String"; "_Void" ]
   in let code = Printf.sprintf {|
       class Test() extends %s is { def Test() is {} }
       {}
