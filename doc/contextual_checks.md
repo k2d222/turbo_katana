@@ -48,14 +48,14 @@
 
 ## Expressions
 
+* Call to new exists ✔
 * Called method exists ✔
 * Called method params are compatible with declaration ✔
 * Called static method exists in static class
 * Called static method params are compatible with declaration
-* Call to New exists
-* Params in New call are compatible with ctor
+* Params in new call are compatible with ctor ✔
 * Numeric operators are used on Integer types
 * StrCat is used on Strings
-* Identifiers are in scope
-* Attributes exist
+* Identifiers are in scope ✔
+* Attributes exist ✔
 * Static Attributes exist

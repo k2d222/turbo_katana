@@ -1,6 +1,7 @@
-      class Point1() is {
-        def Point1() is {}
-        def static static1() : Integer is {}
-        def static static2() : String is {}
-      }
-      {}
+      {p1 : Integer
+      is 
+        {p2 : Integer
+        is 
+        p2 := 3;
+ }
+      p1 := p2;}
