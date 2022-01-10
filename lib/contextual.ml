@@ -450,14 +450,14 @@ let check_main_instr decls instr =
   check_instr decls [] instr
 
 let check_decl decls decl =
-  begin
-    check_ctor decl;
-    check_overrides decls decl;
-    check_no_dup decl;
-    let env = make_class_env decl
-    in List.iter (check_instance_method decls env) decl.body.instMethods;
-    List.iter (check_static_method decls []) decl.body.staticMethods
-  end
+  check_no_reserved_var decl.body.instAttrs;
+  check_no_reserved_var decl.body.staticAttrs;
+  check_ctor decl;
+  check_overrides decls decl;
+  check_no_dup decl;
+  let env = make_class_env decl
+  in List.iter (check_instance_method decls env) decl.body.instMethods;
+  List.iter (check_static_method decls []) decl.body.staticMethods
 
 let check_decls decls =
   check_no_reserved_class decls;
