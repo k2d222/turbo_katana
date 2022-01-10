@@ -1,0 +1,6 @@
+      class Point1() is {
+        def Point1() is {}
+        def static static1() : Integer is {}
+        def static static2() : String is {}
+      }
+      {}

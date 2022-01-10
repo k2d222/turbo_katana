@@ -6,23 +6,26 @@
 * Perform Methods checks
 * --
 * No class derived from Integer or String ✔
-* No duplicate class declaration
-* No reserved class name (Integer, String)
-* No duplicate static attribute declaration
-* No duplicate instance attribute declaration
-* No duplicate instance method declaration
-* No duplicate static method declaration
-* Herited class exists
-* No cycle in inheritance graph
+* No duplicate class declaration ✔
+* No reserved class name (Integer, String) ✔
+* No duplicate static method declaration ✔
+* No duplicate instance method declarations ✔
+* Herited class exists ✔
+* No cycle in inheritance graph ✔
 
+## Attribute
+
+* No duplicate instance attribute declaration ✔
+* No duplicate static attribute declaration ✔
+* No reserved keywords in attribute declaration ✔
 ## Methods
 
 * Perform *Instruction* checks on method body
 * --
 * No reserved keyword in params ✔
-* No method with *override* keyword in a base class
-* Override methods have the *override* keyword
-* Override methods match the overriden method signature
+* No method with *override* keyword in a base class ✔
+* Override methods have the *override* keyword ✔
+* Override methods match the overriden method signature ✔
 * If method returns something, all code paths lead to a return or assign to *result*
 * If methods returns something, all Return instructions are compatible with return type
 * If method returns nothing, no Return instruction
@@ -30,7 +33,7 @@
 
 ## Constructor
 
-* No Return instruction
+* No Return instruction ✔
 * No reserved keyword in params ✔
 * Constructor name and class name are equal
 * Constructor parameters and class parameters are equal
