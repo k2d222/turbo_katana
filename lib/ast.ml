@@ -20,7 +20,7 @@ type ctorParam = {
 type instr =
   | Block of param list * instr list
   | Assign of expr * expr
-  | Return of expr
+  | Return
   | Ite of expr * instr * instr
   | Expr of expr
 

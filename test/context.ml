@@ -243,6 +243,14 @@ let%test "constructor-parameters-and-class-parameters-are-equal" =
       {}
     |}
 
+let%test "constructor-calls-the-right-super-constructor-if-class-is-derived" =
+  expects_ctx_err {|
+      class Point1(i : Integer) is {
+        def Point1(i : String) is {}
+      }
+      {}
+    |}
+
 
 let%test "no-reserved-keyword-declared-in-Block-instructions" = 
   let reserved = [ "this"; "super"; "result" ]
