@@ -88,13 +88,13 @@ methodDecl:
     InstMethod({ name; override; params; retType; body;  })
   }
   | DEF override = boption(OVERRIDE) name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
-    InstMethod({ name; override; params; retType=Some(retType); body=Return(e); })
+    InstMethod({ name; override; params; retType=Some(retType); body=Assign(Id("result"), e); })
   }
   | DEF STATIC name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS body = instrBlock {
     StaticMethod({ name; override=false; params; retType; body; })
   }
   | DEF STATIC name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
-    StaticMethod({ name; override=false; params; retType=Some(retType); body=Return(e); })
+    StaticMethod({ name; override=false; params; retType=Some(retType); body=Assign(Id("result"), e); })
   }
 
 ctorDecl:
@@ -142,7 +142,7 @@ instr:
   | e = expr SEMICOLON { Expr(e) }
   | id = expr ASSIGN e = expr SEMICOLON { Assign(id, e) }
   | IF cond = expr THEN then_ = instr ELSE else_ = instr { Ite(cond, then_, else_) }
-  | RETURN e = expr SEMICOLON { Return(e) }
+  | RETURN SEMICOLON { Return }
 
 expr:
   | c = CSTE { Cste(c) }

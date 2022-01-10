@@ -5,6 +5,7 @@ open Util
 exception Contextual_error of string
 
 let err str = raise (Contextual_error str)
+(* let err str = print_endline @@ "[CONTEXTUAL ERROR]: " ^ str; () *)
 
 (** Check that methods, instance attributes and static attributes unique in a class declaration.
     @raise Contextual_error if a check fails. *)
@@ -113,54 +114,26 @@ let check_method_calls _env _expr _instr =
   () (* TODO *)
 
 (** Performs the following checks:
-    - All code paths lead to either:
-      (a) A return instruction, or
-      (b) an assign to the implicit 'result' variable.
-    - All return instructions have a type compatible with the return type *)
+    - All code paths lead to either an assign to the implicit 'result' variable before return instruction. *)
 
-let check_returns decls env retType instr =
-
-  let assert_type env e =
-    let t = get_expr_type decls env e
-    in if is_base decls t retType
-    then ()
-    else err (Printf.sprintf "invalid return type '%s', expected type compatible with '%s'" t retType);
-
-  in let rec check_ret_type env instr =
+let check_returns instr =
+  let rec has_result instr =
        match instr with
-       | Return e -> assert_type env e
-
-       | Block(vars, li) ->
-         let env = Env.add_all env vars
-         in List.iter (check_ret_type env) li
-
-       | Ite(_, then_, else_) ->
-         check_ret_type env then_;
-         check_ret_type env else_
-
-       | Expr _ | Assign _ -> () (* assigns are already tested in check_assign *)
-
-  in let rec has_return instr =
-       match instr with
-       | Block(_, li) -> List.exists has_return li
-       | Return _ -> true
+       | Block(_, li) -> 
+          li |> List.fold_left (fun (hasRet, res) i -> 
+            if hasRet then (true, false)
+            else if res then (false, true)
+            else match i with
+               | Return -> (true, false)
+               | _ -> (false, has_result i)
+          ) (false, false)
+          |> snd
        | Assign(to_, _) when to_ = Id("result") -> true
-       | Ite(_, then_, else_) -> has_return then_ && has_return else_
+       | Ite(_, then_, else_) -> has_result then_ && has_result else_
        | _ -> false
 
-  in check_ret_type env instr;
-  if not (has_return instr)
-  then err (Printf.sprintf "some code paths lead to no return statement or assign to 'result' when method expects return type '%s'" retType)
-
-(** Checks that there are no return instruction.
-    @raise Contextual_error if a check fails. *)
-
-let rec check_no_return instr =
-  match instr with
-  | Return _ -> err (Printf.sprintf "no return instruction are allowed here");
-  | Block(_, li) -> List.iter check_no_return li
-  | Ite(_, then_, else_) -> check_no_return then_; check_no_return else_
-  | Expr _ | Assign _ -> ()
+  in if not (has_result instr)
+  then err (Printf.sprintf "some code paths lead to no assign to 'result' before end of block or return statement, when method expects a return")
 
 (** Checks that there are no declarations of reserved keywords in vars.
     Note: reserved keywords are: 'this', 'super', 'result'.
@@ -212,7 +185,6 @@ let check_ctor decl =
   in let params = ctor.params |> List.map (fun { name; className; _ } -> { name; className })
   in begin
     check_no_reserved_var params;
-    check_no_return ctor.body;
 
     if decl.name <> ctor.name
     then err (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
@@ -274,12 +246,6 @@ and check_instr_assign decls env (lhs, rhs) =
        else err (Printf.sprintf "cannot assign '%s' to '%s'" t2 t1)
   in ()
 
-(** Checks that a return instruction is valid.
-    @raise Contextual_error if a check fails. *)
-
-and check_instr_return decls env e =
-  check_expr decls env e
-
 (** Checks that if/then/else instructions are valid.
     @raise Contextual_error if a check fails. *)
 
@@ -298,9 +264,9 @@ and check_instr decls env instr =
   match instr with
   | Block (vars, li) -> check_instr_block decls env (vars, li)
   | Assign (to_, from_) -> check_instr_assign decls env (to_, from_)
-  | Return e -> check_instr_return decls env e
   | Ite (e, then_, else_) -> check_instr_ite decls env (e, then_, else_)
   | Expr e -> check_expr decls env e
+  | Return -> ()
 
 (** Checks an Attr expression.
     @raise Contextual_error if a check fails. *)
@@ -445,19 +411,18 @@ let check_static_method decls env meth =
   let env = make_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
-  | Some(ret) -> check_returns decls env ret meth.body
-  | None -> check_no_return meth.body
+  | Some _ -> check_returns meth.body
+  | None -> ()
 
 let check_instance_method decls env meth =
   check_no_reserved_var meth.params;
   let env = make_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
-  | Some(ret) -> check_returns decls env ret meth.body
-  | None -> check_no_return meth.body
+  | Some _ -> check_returns meth.body
+  | None -> ()
 
 let check_main_instr decls instr =
-  check_no_return instr;
   check_instr decls [] instr
 
 let check_decl decls decl =

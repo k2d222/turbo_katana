@@ -60,7 +60,7 @@ let%test "no-reserved-keyword-in-method-params" =
   in let code = Printf.sprintf {|
       class Test() is { 
         def Test() is {}
-        def testMethod(%s : Integer) : Integer is { return 0; }
+        def testMethod(%s : Integer) : Integer is { result := 0; }
       }
       {}
     |}
@@ -127,8 +127,8 @@ let%test "no-duplicate-static-method-declaration" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
-        def static static1() : Integer is { return 0; }
-        def static static1() : String is { return ""; }
+        def static static1() : Integer is { result := 0; }
+        def static static1() : String is { result := ""; }
       }
       {}
     |}
@@ -147,8 +147,8 @@ let%test "no-duplicate-instance-method-declaration" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
-        def static1() : Integer is {return 0;}
-        def static1() : String is {return "";}
+        def static1() : Integer is {result := 0;}
+        def static1() : String is {result := "";}
       }
       {}
     |}
@@ -207,16 +207,6 @@ let%test "override-methods-match-the-overriden-method-signature" =
       {}
     |}
     
-let%test "no-return-instruction-in-constructor" =
-  expects_ctx_err {|
-      class Point1() is {
-        def Point1() is {
-          return 0;
-        }
-      }
-      {}
-    |}
-    
 let%test "no-reserved-keyword-in-constructor-params" = 
   let reserved = [ "this"; "super"; "result" ]
   in let code = Printf.sprintf {|
@@ -243,6 +233,14 @@ let%test "constructor-parameters-and-class-parameters-are-equal" =
       {}
     |}
 
+let%test "constructor-calls-the-right-super-constructor-if-class-is-derived" =
+  expects_ctx_err {|
+      class Point1(i : Integer) is {
+        def Point1(i : String) is {}
+      }
+      {}
+    |}
+
 
 let%test "no-reserved-keyword-declared-in-Block-instructions" = 
   let reserved = [ "this"; "super"; "result" ]
@@ -253,15 +251,15 @@ let%test "no-reserved-keyword-declared-in-Block-instructions" =
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
 
-
-let%test "called-method-exists" =
+  let%test "call-to-new-exists" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
+        def test(i : Integer) is {}
       }
       {p : Point1
       is 
-      p.test();}
+      p := new Point2();}
     |}
 
 let%test "called-method-exists" =
@@ -271,6 +269,7 @@ let%test "called-method-exists" =
       }
       {p : Point1
       is 
+      p := new Point1();
       p.test();}
     |}
 
@@ -282,5 +281,39 @@ let%test "called-method-params-are-compatible-with-declaration" =
       }
       {p : Point1
       is 
+      p := new Point1();
       p.test();}
+    |}
+
+
+let%test "params-in-new-call-are-compatible-with-ctor" =
+  expects_ctx_err {|
+      class Point1() is {
+        def Point1(i : Integer) is {}
+      }
+      {p : Point1
+      is 
+      p := new Point1(5);}
+    |}
+
+let%test "identifiers-are-in-scope" =
+  expects_ctx_err {|
+      {p1 : Integer
+      is 
+        {p2 : Integer
+        is 
+        p2 := 3;
+      }
+      p1 := p2;}
+    |}
+
+let%test "attributes-exist" =
+  expects_ctx_err {|
+      class Point1() is {
+        def Point1() is {}
+      }
+      {p : Point1
+      is 
+      p := new Point1();
+      p.attr := 5;}
     |}
