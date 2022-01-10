@@ -60,7 +60,7 @@ let%test "no-reserved-keyword-in-method-params" =
   in let code = Printf.sprintf {|
       class Test() is { 
         def Test() is {}
-        def testMethod(%s : Integer) : Integer is { return 0; }
+        def testMethod(%s : Integer) : Integer is { result := 0; }
       }
       {}
     |}
@@ -127,8 +127,8 @@ let%test "no-duplicate-static-method-declaration" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
-        def static static1() : Integer is { return 0; }
-        def static static1() : String is { return ""; }
+        def static static1() : Integer is { result := 0; }
+        def static static1() : String is { result := ""; }
       }
       {}
     |}
@@ -147,8 +147,8 @@ let%test "no-duplicate-instance-method-declaration" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
-        def static1() : Integer is {return 0;}
-        def static1() : String is {return "";}
+        def static1() : Integer is {result := 0;}
+        def static1() : String is {result := "";}
       }
       {}
     |}
