@@ -84,13 +84,17 @@ classBodyElement:
   | attr = attrDecl { attr }
 
 methodDecl:
-  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS body = instrBlock {
-    let ctor args = if static then StaticMethod args else InstMethod args
-    in ctor({ name; override; params; retType; body;  })
+  | DEF override = boption(OVERRIDE) name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS body = instrBlock {
+    InstMethod({ name; override; params; retType; body;  })
   }
-  | DEF static = boption(STATIC) override = boption(OVERRIDE) name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
-    let ctor args = if static then StaticMethod args else InstMethod args
-    in ctor({ name; override; params; retType=Some(retType); body=Return(e); })
+  | DEF override = boption(OVERRIDE) name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
+    InstMethod({ name; override; params; retType=Some(retType); body=Return(e); })
+  }
+  | DEF STATIC name = ID params = paramList retType = option(preceded(COLON, CLASSNAME)) IS body = instrBlock {
+    StaticMethod({ name; override=false; params; retType; body; })
+  }
+  | DEF STATIC name = ID params = paramList COLON retType = CLASSNAME ASSIGN e = expr {
+    StaticMethod({ name; override=false; params; retType=Some(retType); body=Return(e); })
   }
 
 ctorDecl:
