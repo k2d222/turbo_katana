@@ -14,12 +14,12 @@ let%test "no-class-inherits-reserved" =
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
 
-let%test "underclared_variable" =
+let%test "no-undeclared-variable" =
   expects_ctx_err {|
       {p1 := 51;}
     |}
-  
-let%test "unmatched-type" =
+
+let%test "no-unmatched-type" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
@@ -37,16 +37,35 @@ let%test "unmatched-type" =
       }
     |}
 
+let%test "compatible-types" =
+  expects_ast {|
+      class Base() is {
+        def Base() is {}
+      }
+
+      class Derived() extends Base is {
+        def Derived() : Base() is {}
+      }
+
+      {
+        p1: Base
+        p2: Derived
+        is
+        p1 := p2;
+      }
+    |}
+
 let%test "no-reserved-keyword-in-method-params" = 
   let reserved = [ "this"; "super"; "result" ]
   in let code = Printf.sprintf {|
       class Test() is { 
         def Test() is {}
-        def testMethod(%s : Integer) : Integer is {}
+        def testMethod(%s : Integer) : Integer is { return 0; }
       }
       {}
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
+  && expects_ast (code "foo")
 
 let%test "no-reserved-keyword-in-attributes" = 
   let reserved = [ "this"; "super"; "result" ]
@@ -59,6 +78,7 @@ let%test "no-reserved-keyword-in-attributes" =
 
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
+  && expects_ast (code "foo")
 
 let%test "no-reserved-keyword-in-instructions" = 
   let reserved = [ "this"; "super"; "result" ]
@@ -66,6 +86,7 @@ let%test "no-reserved-keyword-in-instructions" =
       {%s : Integer is {}}
     |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
+  && expects_ast (code "foo")
 
 let%test "no-duplicate-class-declaration" =
   expects_ctx_err {|
@@ -89,6 +110,7 @@ let%test "no-reserved-class-name" =
     {}
   |}
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r r))
+  && expects_ast (code "Foo" "Foo")
 
 let%test "no-duplicate-static-attribute-declaration" =
   expects_ctx_err {|
@@ -105,8 +127,8 @@ let%test "no-duplicate-static-method-declaration" =
   expects_ctx_err {|
       class Point1() is {
         def Point1() is {}
-        def static static1() : Integer is {return 0;}
-        def static static1() : String is {return "";}
+        def static static1() : Integer is { return 0; }
+        def static static1() : String is { return ""; }
       }
       {}
     |}
