@@ -5,4 +5,5 @@
  (preprocess (pps ppx_jane ppx_expect ppx_inline_test)))
 
 (copy_files
+ (alias runtest)
  (files ../progs/ex1.kat))
