@@ -64,23 +64,19 @@ let check_cycles decls =
 
 let check_overrides decls decl =
 
-  let check_params derived base =
+  let check_params_equal derived base =
     if List.length derived.params <> List.length base.params
     then err (Printf.sprintf "parameters of override method '%s::%s' do not correspond with overriden method" decl.name derived.name)
     else List.iter2 (fun (p1: param) (p2: param) ->
         if not (p1.className = p2.className)
         then err (Printf.sprintf "parameter '%s' in method '%s::%s' must be of type '%s' to match overriden method" p1.name decl.name derived.name p2.className)
       ) derived.params base.params
-
+  
   in let check_super_method superDecl (meth: methodDecl) =
        let overriden = find_method_opt decls meth.name superDecl in
        if meth.override then
          match overriden with
-         | Some(overriden) ->
-           check_params meth overriden;
-           if meth.params <> overriden.params
-           then err (Printf.sprintf "signature mismatch between method '%s::%s' and overriden method" decl.name meth.name)
-           else ()
+         | Some(overriden) -> check_params_equal meth overriden
          | None -> err (Printf.sprintf "method '%s::%s' is marked override but no overriden method found" decl.name meth.name)
        else
          match overriden with
@@ -104,14 +100,6 @@ let check_overrides decls decl =
 let check_in_scope env id =
   if Option.is_none @@ List.assoc_opt id env
   then err (Printf.sprintf "use of undeclared identifier '%s'" id)
-
-(** Performs the following checks:
-    - The method exists for the given type
-    - Method call parameters are compatible with the declaration.
-      @raise Contextual_error if a check fails. *)
-
-let check_method_calls _env _expr _instr =
-  () (* TODO *)
 
 (** Performs the following checks:
     - All code paths lead to either an assign to the implicit 'result' variable before return instruction. *)
@@ -170,51 +158,20 @@ let rec check_no_dup_class = function
     then err (Printf.sprintf "duplicate class declaration: '%s'" decl.name)
     else check_no_dup_class decls
 
-(** Check constructor declaration validity. Performs following checks:
-    * Constructor name and class name are equal
-    * Constructor parameters and class parameters are equal
-    * Constructor parameters have no reserved keywords
-    * Constructor calls the right super constructor if class is derived
-    * Constructor does not call any super constructor if class is base
-    * No return instruction in body
-    @raise Contextual_error if a check fails.
-*)
-
-let check_ctor decl =
-  let ctor = decl.body.ctor
-  in let params = ctor.params |> List.map (fun { name; className; _ } -> { name; className })
-  in begin
-    check_no_reserved_var params;
-
-    if decl.name <> ctor.name
-    then err (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
-    else ();
-
-    (match decl.superclass, ctor.superCall with
-     | Some(n1), Some(n2, _) when n1 <> n2 -> err (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
-     | Some(n1), None -> err (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
-     | None, Some(n2, _) -> err (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
-     | _ -> ());
-
-    if ctor.params <> decl.ctorParams
-    then err (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
-    else ()
-  end
-
 (** Check compatible call arguments *)
 
-let check_call_args decls args meth =
-
+let check_call_args decls args params =
   let check_arg arg param =
     if not (is_base decls arg param)
     then err (Printf.sprintf "invalid call argument: type '%s' is incompatible with '%s'" arg param)
 
-  in if List.length args <> List.length meth.params
-  then err (Printf.sprintf "invalid number of arguments in call to method '%s'" meth.name);
+
+  in if List.length args <> List.length params
+  then err (Printf.sprintf "invalid number of arguments in call to method or constructor");
 
   List.iter2 (fun arg (param: param) ->
       check_arg arg param.className
-    ) args meth.params
+    ) args params
 
 (** Checks that Block instructions are valid.
     @raise Contextual_error if a check fails. *)
@@ -316,7 +273,7 @@ and check_expr_call decls env (e, methName, args) =
         get_expr_type decls env e
       )
     in match meth with
-    | Some(meth) -> check_call_args decls args meth
+    | Some(meth) -> check_call_args decls args meth.params
     | None -> err (Printf.sprintf "call to unknown method '%s::%s'" t methName)
 
 (** Checks a function call expression.
@@ -333,7 +290,7 @@ and check_expr_static_call decls env (className, methName, args) =
         get_expr_type decls env e
       )
     in match meth with
-    | Some(meth) -> check_call_args decls args meth
+    | Some(meth) -> check_call_args decls args meth.params
     | None -> err (Printf.sprintf "call to unknown static method '%s::%s'" className methName)
 
 (** Checks a New expression.
@@ -406,6 +363,50 @@ and check_expr decls env expr =
 
 (* -------------------------------------------------------------------------- *)
 
+(** Check constructor declaration validity. Performs following checks:
+    * Constructor name and class name are equal
+    * Constructor parameters and class parameters are equal
+    * Constructor parameters have no reserved keywords
+    * Constructor calls the right super constructor if class is derived
+    * Constructor does not call any super constructor if class is base
+    * Super constructor call args are compatible if class is derived
+    * No return instruction in body
+    @raise Contextual_error if a check fails.
+*)
+
+let check_ctor decls decl =
+  let ctor = decl.body.ctor
+  in let params = ctor.params |> List.map (fun { name; className; _ } -> { name; className })
+  in begin
+    check_no_reserved_var params;
+
+    if decl.name <> ctor.name
+    then err (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
+    else ();
+
+    (match decl.superclass, ctor.superCall with
+     | Some(n1), Some(n2, _) when n1 <> n2 -> err (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
+     | Some(n1), None -> err (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
+     | None, Some(n2, _) -> err (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
+     | _ -> ());
+    
+    (match ctor.superCall with
+     | Some(super, args) ->
+        let superDecl = get_class decls super
+        in let params = ctor_params_to_method_params superDecl.ctorParams
+        in let env = Util.Env.add_all [] params
+        in let args = args |> List.map (fun e ->
+          check_expr decls env e;
+          get_expr_type decls env e
+        )
+        in check_call_args decls args params
+     | None -> ());
+
+    if ctor.params <> decl.ctorParams
+    then err (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
+    else ()
+  end
+
 let check_static_method decls env meth =
   check_no_reserved_var meth.params;
   let env = make_method_env env meth
@@ -428,7 +429,7 @@ let check_main_instr decls instr =
 let check_decl decls decl =
   check_no_reserved_var decl.body.instAttrs;
   check_no_reserved_var decl.body.staticAttrs;
-  check_ctor decl;
+  check_ctor decls decl;
   check_overrides decls decl;
   check_no_dup decl;
   let env = make_class_env decl

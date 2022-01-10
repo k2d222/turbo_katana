@@ -277,6 +277,7 @@ let%test "constructor-calls-right-super-constructor-if-class-derived" =
     |}
   in expects_ctx_err (code {| Test("hello", 10, 20) |})
   && expects_ctx_err (code {| Base("hello", 10) |})
+  && expects_ctx_err (code {| Base("hello", 10, "world") |})
   && expects_ast (code {| Base("hello", 10, 20) |})
 
 (* TODO: no-super-constructor-call-in-base-class *)

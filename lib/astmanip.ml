@@ -198,7 +198,10 @@ let get_expr_type decls env expr =
 (** Wether derived is convertible to base. *)
 
 let is_base decls derived base =
-  if derived = base then true
+  let builtins = ["Integer"; "String"]
+  in if derived = base then true
+  else if List.exists ((=) derived) builtins || List.exists ((=) derived) builtins (* cannot derive builtins *)
+  then false
   else
     let derived = get_class decls derived
     in let base = get_class decls base
@@ -222,3 +225,6 @@ let make_method_env env meth =
       | Some(ret) -> ("result", ret) :: env
       | None -> env
   in env
+
+let ctor_params_to_method_params ctorParams =
+  ctorParams |> List.map (fun { name; className; _ } -> { name; className })
