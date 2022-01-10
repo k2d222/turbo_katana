@@ -1,0 +1,46 @@
+class A()  is {
+     var va: Integer
+     def sValeur() : Integer := this.va
+     def A() is {
+       "A::(): ".print();
+       this.va.toString().print();
+       ", ".print();
+       this.va := -12;
+       this.va.toString().println();
+    }
+}
+class B() extends A is {
+     var vb: Integer
+     def B() : A() is { "B::(): ".print(); this.vb := this.va + 2;
+                         this.vb.toString().println();
+                      }
+}
+class C(v : Integer) extends B is {
+     var vc: Integer
+     def C(v : Integer): B() is {
+         vc := 3 + this.va + this.vb;
+         "C::(): ".print();
+         this.vc.toString().println();
+     }
+}
+class D(v : Integer) extends C is
+  {  var vd: Integer
+     def valeur() : Integer is {
+        this.va.toString().println();
+        this.vb.toString().println();
+        this.vc.toString().println();
+        this.vd.toString().println();
+        result := this.va + this.vb + this.vc + this.vd;
+     }
+    def D(v : Integer): C(12) is {
+        vd := this.vc + 4;
+	"D::(): ".print();
+        this.vd.toString().println();
+    } 
+  }
+{
+  monD : D
+  is
+  monD := new D(5);
+  monD.valeur().toString().println();
+}

@@ -39,13 +39,8 @@ let%test "wrong-decls" =
         x = 5;
       }
     }
-  |} && 
-  expects_parse_err{|
-	{
-    
-	}
-  |}
-
+  |} 
+  
 let%test "wrong-class-decl" =
   expects_parse_err {|
     class Point() {}
@@ -70,4 +65,11 @@ let%test "wrong-classbody" =
       { this.index := Point.incr(); this.hasClone := 0; }
     }
     {}
-  |}  
+  |} &&  
+  expects_parse_err {|
+    class Point(x, y: Integer) is {
+     def static Point(var x, y: Integer, var name: String) is
+      { this.index := Point.incr(); this.hasClone := 0; }
+    }
+    {}
+  |} 

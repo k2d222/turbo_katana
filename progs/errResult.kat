@@ -1,0 +1,27 @@
+class A() is {
+   var unA : A
+   var result : Integer  /* incorrect: identificateur reserve ! */ 
+   def f(result: Integer) is { } /* incorrect: identificateur reserve ! */ 
+   def g() is {
+      result : Integer /* incorrect: identificateur reserve ! */ 
+      is
+      result := 1;
+   }
+   def h() is {
+     result := 1;  	/* incorrect: h() ne renvoie rien */ 
+   }
+   def k() : Integer is {
+     result := 1; 	/* correct */
+   }
+   def k2() : Integer is {
+     result := "coucou"; /* incorrect: pas du bon type */
+   }
+
+  def  A() is { result := unA; } /* result incorrect dans  un constructeur */
+}
+{
+  result : Integer /* incorrect: identificateur reserve ! */
+  is
+  1;
+  result.toString().println();
+}

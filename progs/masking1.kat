@@ -1,0 +1,46 @@
+class A() is {
+  var v: Integer
+  def f() : Integer := this.v
+  def A() is { v := 1; }
+}
+
+class A2() extends A is {
+  var v: String
+  def g() : String := this.v
+  def A2() : A() is { v := "coucou"; }
+}
+
+class A3() extends A2 is {
+  var v: Integer
+  def h() : Integer := this.v
+  def override f() : Integer := this.v
+  def k() is {
+    ((A this).v).toString().println();
+    ((A2 this).v).println();
+    this.v.toString().println();
+  }
+  def A3() : A2() is { v := 5; }
+}
+class A4() extends A3 is {
+  def z() : Integer := this.v
+  def A4() : A3() is { }
+}
+{
+  monA3 : A3
+  monA4 : A4
+  monA : A
+  is
+  monA3 := new A3();
+  monA4 := new A4();
+  monA := new A();
+  monA3.f().toString().println();
+  /* le cast est une notion statique, doit donner le meme resultat
+   * le cast recherche une fonction f() depuis A2 et tombe sur la signature
+   * de f() dans A.
+   */
+  (A monA3).f().toString().println();
+  monA3.g().println();
+  monA3.h().toString().println();
+  monA3.k();
+  monA4.z().toString().println();
+}

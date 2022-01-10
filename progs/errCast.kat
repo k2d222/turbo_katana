@@ -1,0 +1,48 @@
+class A() is {
+  var v: Integer
+  def f() : Integer := this.v
+  def A() is { v := 1; }
+}
+class A2() extends A is {
+  var v: String
+  var w: Integer
+  def g() : String := this.v
+  def A2() : A() is { v := "coucou"; w := 5; }
+}
+class A3() extends A2 is {
+  var v: Integer
+  def override f() : Integer := this.v
+  def h() : Integer := (A this).v /* OK */
+  def h2(): String := (A2 this).v /* OK */
+  /* def k() : Integer := (A this).w /* Incorrect */
+  def A3() : A2() is { v := 5; }
+}
+class A4() extends A3 is {
+  def A4() : A3() is {}
+}
+class B() extends A /* une soeur de A2 ! */
+is { 
+  def B() : A() is { }
+}
+{
+  monA : A
+  monA2 : A2
+  monA3 : A3
+  monA4 : A4
+  monB : B
+  is
+  monA := new A();
+  monA2 := new A2();
+  monA3 := new A3();
+  monA4 := new A4();
+  monB  := new B();
+  
+  /* (A monA3).h().toString.println(); /* KO: h indefinie dans A */
+  /* (A4 monA3); /* KO: pas de cast descendant */
+  (A3 monA4); /* OK */
+  /* (A3 monA); /* KO: pas de cast descendant */
+  /* (A2 monA4).k(); /* KO: pas de k() dans A2 */
+  /*  (Unknown monA4); */
+  /* (B monA2); /* KO: A2 et B sons sans relation d'héritage */
+  /* (A2 monB); /* idem */
+}

@@ -13,11 +13,11 @@ let parse_str str =
   in Parser.prog Lexer.token lexbuf
 
 let expects_err str =
-  try Contextual.check_all @@ parse_str str; false
+  try ignore @@ parse_str str; false
   with Failure _ -> true
 
 let expects_parse_err str =
-  try Contextual.check_all @@ parse_str str; false
+  try ignore @@ parse_str str; false
   with Parser.Error -> true
 
 let expects_ctx_err str =

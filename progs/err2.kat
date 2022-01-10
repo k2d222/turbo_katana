@@ -1,0 +1,13 @@
+class A() is {
+   var va: Integer
+   def A() is { va := 1; }
+}
+class B() extends Integer /* Incorrect */ is {
+   var vb: Integer
+   def B() : Integer(12) is { vb := 2;  }
+}
+class A2() extends B is {
+   var w: Integer
+   def A2() : B() is { w := 3; }
+ }
+{ /* empty */ }

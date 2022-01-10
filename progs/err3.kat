@@ -1,0 +1,14 @@
+class A() is {
+   var va: Integer
+   def A() is {}
+}
+class B() extends Int is { /* incorrect: Int inconnue */
+   var vb: Integer
+   def B() : Int(12) is { }
+}
+class A() extends B is { /* incorrect: double declaration  de A */
+   var w: Integer
+   def A() : B() is { }
+}
+{
+}

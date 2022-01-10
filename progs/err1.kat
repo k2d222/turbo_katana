@@ -1,0 +1,39 @@
+class Point(xc: Integer, yc: Integer) is {
+  var x: Integer
+  var y: Integer
+  var name: String
+  var super : Integer /* interdit */
+
+  def Point(xc: Integer, yc: Integer) is {
+     this.x := xc; this.y := yc; name = "?";
+  }
+
+
+  def setName(s: String) : Point is {
+      this.name := s;
+      result := this;
+      return;
+      this.super := s; /* interdit */
+  }
+
+  def print() is { 
+      this.name.println();
+      this := new Point(0, 0);   /* interdit */
+      this.x := this.super.x; /* incorrect */
+      result := this;	 /* interdit car pas de type de retour. */
+  }
+
+}
+{ 
+  p, p2: Point
+  x: Integer
+  is
+  p1 := new Point(1, 5);
+  p2 := new Point(2, 3);
+  x := new Integer(1);	/* interdit */
+  this := x;		/* interdit */
+  result := x;		/* interdit */
+  p2.setName("glop");
+  p1.print();
+  p2.print();
+}

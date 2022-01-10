@@ -1,0 +1,7 @@
+class A0() is { var va: Integer def A0() is { va := 1; } }
+class B() extends A is { var vb: Integer def B(): A() is { vb := 2; } }
+/* erreur A et B forment un circuit dans le graphe d'héritage */
+class A() extends B is { var w: Integer def A(): B() is { w := 3; } }
+{
+  /* bloc vide: autorisé ! */
+}
