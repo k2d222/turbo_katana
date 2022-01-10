@@ -94,24 +94,24 @@ let get_static_attr attrName decl =
     )
 
 (** Get the type of a method in a class declaration.
-    Note: procedures have the special type 'Void' *)
+    Note: procedures have the special type '_Void' *)
 
 let get_inst_method_type methName decl =
   decl.body.instMethods
   |> List.find_map  (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType else None
     )
-  |> Optmanip.get_or("Void")
+  |> Optmanip.get_or("_Void")
 
 (** Get the type of a static method in a class declaration.
-    Note: procedures have the special type 'Void' *)
+    Note: procedures have the special type '_Void' *)
 
 let get_static_method_type methName decl =
   decl.body.staticMethods
   |> List.find_map  (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType else None
     )
-  |> Optmanip.get_or("Void")
+  |> Optmanip.get_or("_Void")
 
 (** Computes an expression type. *)
 
@@ -137,7 +137,7 @@ let get_expr_type decls env expr =
 
     | Call(caller, name, _args) ->
       let t = r_get caller
-      in if t = "String" then "Void" (* String methods return Void (print and println) *)
+      in if t = "String" then "_Void" (* String methods return _Void (print and println) *)
       else if t = "Integer" then "String" (* String methods return String (toString) *)
       else
         let decl = find_class decls (r_get caller)
