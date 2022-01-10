@@ -37,6 +37,7 @@ and expr =
   | String of string
   | StrCat of expr * expr
   | New of string * expr list
+  | StaticCast of string * expr
 [@@deriving show]
 
 type ctorDecl = {

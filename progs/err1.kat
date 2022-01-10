@@ -9,20 +9,6 @@ class Point(xc: Integer, yc: Integer) is {
   }
 
 
-  def setName(s: String) : Point is {
-      this.name := s;
-      result := this;
-      return;
-      this.super := s; /* interdit */
-  }
-
-  def print() is { 
-      this.name.println();
-      this := new Point(0, 0);   /* interdit */
-      this.x := this.super.x; /* incorrect */
-      result := this;	 /* interdit car pas de type de retour. */
-  }
-
 }
 { 
   p, p2: Point

@@ -38,7 +38,7 @@ is {
   monB  := new B();
   
   /* (A monA3).h().toString.println(); /* KO: h indefinie dans A */
-  /* (A4 monA3); /* KO: pas de cast descendant */
+   (A4 monA3); /* KO: pas de cast descendant */
   (A3 monA4); /* OK */
   /* (A3 monA); /* KO: pas de cast descendant */
   /* (A2 monA4).k(); /* KO: pas de k() dans A2 */

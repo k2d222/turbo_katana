@@ -183,7 +183,7 @@ let check_no_reserved_class decls =
 
   in let check decl =
        if List.exists (fun r -> decl.name = r || decl.superclass = Some(r)) reserved
-       then err (Printf.sprintf "use of reserved class name '%s'" decl.name)
+       then err (Printf.sprintf "use of reserved class in class '%s'" decl.name)
 
   in List.iter check decls
 
@@ -198,13 +198,13 @@ let rec check_no_dup_class = function
     else check_no_dup_class decls
 
 (** Check constructor declaration validity. Performs following checks:
-    - Constructor name and class name are equal
-    - Constructor parameters and class parameters are equal
-    - Constructor parameters have no reserved keywords
-    - Constructor calls the right super constructor if class is derived
-    - Constructor does not call any super constructor if class is base
-    - No return instruction in body
-      @raise Contextual_error if a check fails.
+    * Constructor name and class name are equal
+    * Constructor parameters and class parameters are equal
+    * Constructor parameters have no reserved keywords
+    * Constructor calls the right super constructor if class is derived
+    * Constructor does not call any super constructor if class is base
+    * No return instruction in body
+    @raise Contextual_error if a check fails.
 *)
 
 let check_ctor decl =
@@ -393,6 +393,16 @@ and check_expr_new decls env (className, args) =
     List.iter2 (fun arg (param: ctorParam) ->
         check_arg arg param.className
       ) args decl.ctorParams
+and check_expr_cast decls env (className, e) = 
+  check_expr decls env e;
+  
+  let decl = find_class_opt decls className 
+  in match decl with 
+  | None -> err (Printf.sprintf "cast to unkown class '%s' " className)
+  | Some(_decl) -> 
+    let t = get_expr_type decls env e
+    in if not (is_base decls t className) 
+       then err(Printf.sprintf "cannot cast '%s' to '%s' " t className)   
 
 and check_expr_op decls env (e1, e2) =
   check_expr decls env e1;
@@ -425,6 +435,7 @@ and check_expr decls env expr =
   | BinOp(e1, _, e2) -> check_expr_op decls env (e1, e2)
   | StrCat(e1, e2) -> check_expr_strcat decls env (e1, e2)
   | New(className, args) -> check_expr_new decls env (className, args)
+  | StaticCast (className, e) -> check_expr_cast decls env (className, e)
   | Cste _ | String _ -> ()
 
 (* -------------------------------------------------------------------------- *)

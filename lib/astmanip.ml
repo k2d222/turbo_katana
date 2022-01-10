@@ -148,6 +148,7 @@ let get_expr_type decls env expr =
       in get_static_method_type name decl
 
     | New(className, _args) -> className
+    | StaticCast(className, _args) -> className 
 
   in r_get expr
 

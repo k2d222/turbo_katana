@@ -165,3 +165,4 @@ expr:
   | MINUS rhs = expr { UMinus (rhs) }
   | PLUS rhs = expr { rhs }
   | NEW name = CLASSNAME LPAREN le = separated_list(COMMA, expr) RPAREN { New(name, le) }
+  | LPAREN c = CLASSNAME e = expr RPAREN { StaticCast(c, e) }

@@ -14,3 +14,4 @@ let string_of_expr_type e =
   | String _ -> "string literal"
   | StrCat _ -> "string concatenation"
   | New _ -> "instantiation"
+  | StaticCast _ -> "static cast"
