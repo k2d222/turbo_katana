@@ -27,38 +27,38 @@
 * No method with *override* keyword in a base class ✔
 * Override methods have the *override* keyword ✔
 * Override methods match the overriden method signature ✔
-* If method returns something, all code paths lead to an assign to *result* before return or block ends
-* No static override
+* If method returns something, all code paths lead to an assign to *result* before return or block ends ✔
+* No static override ✔
 
 ## Constructor
 
 * No reserved keyword in params ✔
 * Constructor name and class name are equal ✔
 * Constructor parameters and class parameters are equal ✔
-* Constructor calls the right super constructor if class is derived
-* Constructor does not call any super constructor if class is base
+* Constructor calls the right super constructor if class is derived ✔
+* Constructor does not call any super constructor if class is base ✔
 
 ## Instructions
 
 * Perform expression checks for Expr, Ite, Return and Assign
 * --
 * No reserved keyword declared in Block instructions ✔
-* Can only Assign to idents, attributes or static attributes
-* Cannot assign to *this* or *super*
+* Can only Assign to idents, attributes or static attributes ✔
+* Cannot assign to *this* or *super* ✔
 * Assign lhs exists ✔
 * Assign rhs is compatible with lhs ✔
-* Expression in an Ite instruction is of type Integer
+* Expression in an Ite instruction is of type Integer ✔
 
 ## Expressions
 
 * Call to new exists ✔
 * Called method exists ✔
 * Called method params are compatible with declaration ✔
-* Called static method exists in static class
-* Called static method params are compatible with declaration
+* Called static method exists in static class ✔
+* Called static method params are compatible with declaration ✔
 * Params in new call are compatible with ctor ✔
-* Numeric operators are used on Integer types
-* StrCat is used on Strings
+* Numeric operators are used on Integer types ✔
+* StrCat is used on Strings ✔
 * Identifiers are in scope ✔
 * Attributes exist ✔
-* Static Attributes exist
+* Static Attributes exist ✔

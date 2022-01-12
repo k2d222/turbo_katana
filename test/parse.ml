@@ -73,3 +73,18 @@ let%test "wrong-classbody" =
     }
     {}
   |} 
+
+let%test "no-static-override" =
+  let code = Printf.sprintf {|
+      class Derived() is {
+        def Derived() is {}
+        def static test() is {}
+      }
+      class Base() extends Derived is {
+        def Base(): Derived() is {}
+        def static %s test() is {}
+      }
+      {}
+    |}
+  in expects_parse_err (code "override")
+  && expects_ast (code "")

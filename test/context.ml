@@ -228,9 +228,32 @@ let%test "override-methods-match-overriden-method-signature" =
   && expects_ctx_err (code "foo, bar : Integer, baz : Derived")
   && expects_ast (code "foo, bar : Integer, baz : Base")
 
-(* TODO: non-void-code-paths-lead-to-assign-to-result *)
-
-(* TODO: no-static-override *)
+let%test "non-void-code-paths-lead-to-assign-to-result" =
+  let template = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+        def test(): Integer is { %s } /* in methods */
+        def static test2(): Integer is { %s } /* in static methods */
+      }
+      {}
+    |}
+  in let t1 = template "result := 0;"
+  in let t2 = (Fn.flip template) "result := 0;"
+  in let tests_err = [
+      {| if 10 then result := 10; else {} |};
+      {| if 10 then {} else result := 20; |};
+      {| foo: Integer is foo := 10; |};
+      {| return; result := 10; |};
+    ]
+  in let tests_ok = [
+          {| if 10 then result := 10; else result := 20; |};
+          {| foo: Integer is result := 10; |};
+          {| result:= 10; return; |};
+        ]
+  in tests_err |> List.map ~f:t1 |> List.for_all ~f:expects_ctx_err
+  && tests_err |> List.map ~f:t2 |> List.for_all ~f:expects_ctx_err
+  && tests_ok |> List.map ~f:t1 |> List.for_all ~f:expects_ast
+  && tests_ok |> List.map ~f:t2 |> List.for_all ~f:expects_ast
 
 (* ----------------------- Constructors -------------------------- *)
 
@@ -280,8 +303,15 @@ let%test "constructor-calls-right-super-constructor-if-class-derived" =
   && expects_ctx_err (code {| Base("hello", 10, "world") |})
   && expects_ast (code {| Base("hello", 10, 20) |})
 
-(* TODO: no-super-constructor-call-in-base-class *)
-
+let%test "no-super-constructor-call-in-base-class" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() %s is {}
+      }
+      {}
+    |}
+  in expects_ctx_err (code " : Foo()")
+  && expects_ast (code "")
 
 (* ----------------------- Instructions -------------------------- *)
 
@@ -295,9 +325,57 @@ let%test "no-reserved-keyword-declared-in-block-instructions" =
   in List.for_all reserved ~f:(fun r -> expects_ctx_err (code r))
   && expects_ast (code "foo")
 
-(* TODO: only-assign-to-idents-or-attribs *)
+let%test "only-assign-to-idents-or-attribs" =
+  let code = Printf.sprintf {|
+      class Point1(var s1: String) is {
+        def Point1(var s1: String) is {}
+        var i1: Integer
+        var static i2: Integer
+        def foo(): Integer := 10
+      }
+      {
+        s: String
+        i, j: Integer
+        p: Point1
+        is %s := %s;
+      }
+    |}
+  in let ok = [
+      ("s", "\"hello\"");
+      ("i", "10");
+      ("Point1.i2", "10");
+      ("p.i1", "10");
+      ("p.s1", "\"hello\"");
+      ("new Point1(\"hello\").i1", "10");
+    ]
+  in let err = [
+      ("\"foo\"", "\"hello\"");
+      ("20", "10");
+      ("20", "10");
+      ("p.foo()", "10");
+    ]  
+  in err |> List.for_all ~f:(fun (a, b) -> expects_ctx_err (code a b))
+  && ok |> List.for_all ~f:(fun (a, b) -> expects_ast (code a b))
 
-(* TODO: no-assign-to-this-or-super *)
+let%test "no-assign-to-this-or-super" = 
+  let code = Printf.sprintf {|
+      class Base() is {
+        def Base() is {}
+      }
+      class Derived() extends Base is {
+        def Derived(): Base() is {}
+        def test() is {
+          b: Base
+          d: Derived
+          is %s := %s;
+        }
+      }
+      {}
+    |}
+  in expects_ctx_err (code "this" "new Derived()")
+  && expects_ctx_err (code "super" "new Base()")
+  && expects_ast (code "d" "new Derived()")
+  && expects_ast (code "b" "new Base()")
 
 let%test "no-undeclared-variable" =
   let code = Printf.sprintf {|
@@ -333,7 +411,14 @@ let%test "no-incompatible-assign-types" =
   && expects_ctx_err (code "p3" "p2")
   && expects_ast (code "p2" "p3")
 
-(* TODO: ite-expression-type-is-integer *)
+let%test "ite-expression-type-is-integer" =
+  let code = Printf.sprintf {|
+      {
+        if %s then {} else {}
+      }
+    |}
+  in expects_ctx_err (code "\"hello\"")
+  && expects_ast (code "10")
 
 (* ----------------------- Expressions -------------------------- *)
 
@@ -384,9 +469,39 @@ let%test "called-method-params-are-compatible-with-declaration" =
   && expects_ctx_err (code "10, 20, 30")
   && expects_ast (code "10, 20, \"hello\"")
 
-(* TODO: static-method-call-exists *)
+let%test "static-method-call-exists" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+        def static test1() is {}
+      }
+      {
+        Point1.%s();
+      }
+    |}
+  in expects_ctx_err (code "test2")
+  && expects_ast (code "test1")
 
-(* TODO: static-method-call-params-compatible *)
+let%test "static-method-call-params-compatible" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+        def static test1(i1, i2: Integer, b: Base, d: Derived) is {}
+      }
+      class Base() is {
+        def Base() is {}
+      }
+      class Derived() extends Base is {
+        def Derived(): Base() is {}
+      }
+      {
+        Point1.test1(%s);
+      }
+    |}
+  in expects_ctx_err (code "10, 20, new Base()")
+  && expects_ctx_err (code "10, 20, new Base(), new Base()")
+  && expects_ast (code "10, 20, new Base(), new Derived()")
+  && expects_ast (code "10, 20, new Derived(), new Derived()")
 
 let%test "params-in-new-call-compatible-with-constructor" =
   let code = Printf.sprintf {|
@@ -404,9 +519,15 @@ let%test "params-in-new-call-compatible-with-constructor" =
   && expects_ctx_err (code "10, 20, 30")
   && expects_ast (code "10, 20, \"hello\"")
 
-(* TODO: numeric-operators-used-on-integers *)
-
-(* TODO: string-operators-used-on-strings *)
+let%test "operators-used-on-right-type" =
+  let code = Printf.sprintf {|
+      { %s; }
+    |}
+  in let ops = [ "+"; "-"; "*"; "/"; "="; "<>"; "<"; ">"; ">="; "<=" ]
+  in ops |> List.for_all ~f:(fun op -> expects_ctx_err (code ("\"hello\" " ^ op ^ " 10")))
+  && expects_ctx_err (code "10 & \"hello\"")
+  && ops |> List.for_all ~f:(fun op -> expects_ast (code ("10" ^ op ^ "10")))
+  && expects_ast (code "\"hello\" & \"world\"")
 
 let%test "identifiers-are-in-scope" =
   let code = Printf.sprintf {|
@@ -440,7 +561,18 @@ let%test "attributes-exist" =
   in expects_ctx_err (code "foo")
   && expects_ast (code "attr")
   
-(* TODO: static-attributes-exist *)
+let%test "static-attributes-exist" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() is {}
+        var static attr : Integer
+      }
+      {
+        Point1.%s := 5;
+      }
+    |}
+  in expects_ctx_err (code "foo")
+  && expects_ast (code "attr")
 
 (* ----------------------------------------------- *)
 

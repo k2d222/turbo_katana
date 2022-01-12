@@ -183,7 +183,7 @@ let rec check_instr_block decls env (vars, li) =
 
 (** Performs the following checks:
     - Left-hand-side assign operand refers to either:
-      (a) An ident,
+      (a) An ident (not 'this' or 'super'),
       (b) (recusively) an attribute of a variable, or
       (c) A static attribute of a class.
     - Right-hand-side assign operand is compatible with the target variable
@@ -195,6 +195,7 @@ and check_instr_assign decls env (lhs, rhs) =
   let t1 = get_expr_type decls env lhs
   in let t2 = get_expr_type decls env rhs
   in let () = match lhs with
+      | Id "this" | Id "super" -> err (Printf.sprintf "cannot assign to 'this' or 'super'")
       | Id _ | Attr _ | StaticAttr _ -> ()
       | _ -> err (Printf.sprintf "cannot assign to an expression of type '%s'" t1)
   in let () =
