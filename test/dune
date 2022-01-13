@@ -6,4 +6,4 @@
 
 (copy_files
  (alias runtest)
- (files ../progs/ex1.kat))
+ (files ../progs/*.kat))
