@@ -6,6 +6,9 @@ let genlbl () =
   lbl_counter := !lbl_counter + 1;
   "lbl" ^ string_of_int !lbl_counter
 
+let gen_meth_lbl className methName =
+  className ^ "_" ^ methName
+  
 let addr_of env id = match List.assoc_opt id env with
   | Some(addr) -> addr
   | None -> failwith (Printf.sprintf "variable %s not found in env" id)
@@ -103,9 +106,15 @@ let compile chan ast =
       | New(s, le) -> ()
       | StaticCast(s, e) -> ()
       )
-
+  
+  and code_vtable_base decl =
+   List.iter(fun (m:methodDecl) -> _LABEL (gen_meth_lbl decl.name m.name)) decl.body.instMethods
+  
+  and code_vtable_derived decl = 
+    ()
+  
 
   and code_ast ast =
-    ()  
+    () 
 in
   code_ast ast
