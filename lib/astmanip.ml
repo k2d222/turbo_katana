@@ -174,10 +174,6 @@ let get_expr_type decls env expr =
       let decl = get_class decls className
       in get_static_attr attrName decl
 
-    | List l ->
-      let last = List.hd (List.rev l)
-      in r_get last
-
     | Call(caller, name, _args) ->
       let t = r_get caller
       in if t = "String" then "_Void" (* String methods return _Void (print and println) *)

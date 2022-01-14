@@ -30,7 +30,6 @@ and expr =
   | Attr of expr * string
   | StaticAttr of string * string
   | UMinus of expr
-  | List of expr list
   | Call of expr * string * expr list
   | StaticCall of string * string * expr list
   | BinOp of expr * numBinOp * expr

@@ -350,7 +350,6 @@ and check_expr decls env expr =
   | Attr(e, name) -> check_expr_attr decls env (e, name)
   | StaticAttr(className, name) -> check_expr_static_attr decls (className, name)
   | UMinus e -> check_expr decls env e
-  | List le -> List.iter (check_expr decls env) le
   | Call(e, methName, args) -> check_expr_call decls env (e, methName, args)
   | StaticCall(className, methName, args) -> check_expr_static_call decls env (className, methName, args)
   | BinOp(e1, _, e2) -> check_expr_op decls env (e1, e2)
