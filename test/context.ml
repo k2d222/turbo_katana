@@ -420,6 +420,33 @@ let%test "ite-expression-type-is-integer" =
   in expects_ctx_err (code "\"hello\"")
   && expects_ast (code "10")
 
+let%test "cannot-cast-Integer-to-String" =
+  let code = Printf.sprintf {|
+      {
+        %s;
+      }
+    |}
+  in expects_ctx_err (code "(String 1)")
+  && expects_ast (code "(String \"hello\")")
+
+let%test "cannot-cast-from-class-to-subclass" =
+  let code = Printf.sprintf {|
+      class Point() is {
+        def Point() is {}
+      }
+      class SubPoint() extends Point is {
+        def SubPoint() is {}
+      }
+      {
+        p : Point
+        sp : SubPoint
+        is
+        %s;
+      }
+    |}
+  in expects_ctx_err (code "(SubPoint p)")
+  && expects_ast (code "(Point sb)")
+
 (* ----------------------- Expressions -------------------------- *)
 
   let%test "call-to-new-exists" =
