@@ -317,16 +317,13 @@ and check_expr_new decls env (className, args) =
     List.iter2 (fun arg (param: ctorParam) ->
         check_arg arg param.className
       ) args decl.ctorParams
+
 and check_expr_cast decls env (className, e) = 
   check_expr decls env e;
-  
-  let decl = get_class_opt decls className 
-  in match decl with 
-  | None -> err (Printf.sprintf "cast to unkown class '%s' " className)
-  | Some(_decl) -> 
-    let t = get_expr_type decls env e
-    in if not (is_base decls t className) 
-       then err(Printf.sprintf "cannot cast '%s' to '%s' " t className)   
+  let t = get_expr_type decls env e
+  in if is_base decls t className
+  then ()
+  else err (Printf.sprintf "cannot cast '%s' to '%s' " t className)
 
 and check_expr_op decls env (e1, e2) =
   check_expr decls env e1;

@@ -435,7 +435,7 @@ let%test "cannot-cast-from-class-to-subclass" =
         def Point() is {}
       }
       class SubPoint() extends Point is {
-        def SubPoint() is {}
+        def SubPoint() : Point() is {}
       }
       {
         p : Point
@@ -445,7 +445,7 @@ let%test "cannot-cast-from-class-to-subclass" =
       }
     |}
   in expects_ctx_err (code "(SubPoint p)")
-  && expects_ast (code "(Point sb)")
+  && expects_ast (code "(Point sp)")
 
 (* ----------------------- Expressions -------------------------- *)
 
