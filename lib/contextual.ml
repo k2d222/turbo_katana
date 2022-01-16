@@ -373,7 +373,8 @@ and check_expr decls env expr =
 
 let check_ctor decls decl =
   let ctor = decl.body.ctor
-  in let params = ctor.params |> List.map (fun { name; className; _ } -> { name; className })
+  in let params = ctor_params_to_method_params ctor.params
+  in let env = Env.add_all [] params
   in begin
     check_no_reserved_var params;
 
@@ -390,13 +391,12 @@ let check_ctor decls decl =
     (match ctor.superCall with
      | Some(super, args) ->
         let superDecl = get_class decls super
-        in let params = ctor_params_to_method_params superDecl.ctorParams
-        in let env = Util.Env.add_all [] params
+        in let superParams = ctor_params_to_method_params superDecl.ctorParams
         in let args = args |> List.map (fun e ->
           check_expr decls env e;
           get_expr_type decls env e
         )
-        in check_call_args decls args params
+        in check_call_args decls args superParams
      | None -> ());
 
     if ctor.params <> decl.ctorParams

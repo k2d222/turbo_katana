@@ -164,7 +164,7 @@ let get_expr_type decls env expr =
     | Cste _ | BinOp _ | UMinus _ -> "Integer"
     | String _ | StrCat _ -> "String"
 
-    | Id id -> Util.Env.get env id
+    | Id id -> Env.get env id
 
     | Attr(e, attrName) ->
       let decl = get_class decls (r_get e)
@@ -216,7 +216,7 @@ let make_class_env decl =
 (** Make an environment with method params and optionally 'result'. *)
 
 let make_method_env env meth =
-  let env = Util.Env.add_all env meth.params
+  let env = Env.add_all env meth.params
   in let env = match meth.retType with
       | Some(ret) -> ("result", ret) :: env
       | None -> env
@@ -224,3 +224,5 @@ let make_method_env env meth =
 
 let ctor_params_to_method_params ctorParams =
   ctorParams |> List.map (fun { name; className; _ } -> { name; className })
+
+  

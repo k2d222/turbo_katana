@@ -34,5 +34,3 @@ let file_ctx_err file =
 
 let expects_ast str =
   Contextual.check_all @@ parse_str str; true
-
-(* ------------------------------------- *)
