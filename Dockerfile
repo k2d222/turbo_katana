@@ -7,14 +7,16 @@ WORKDIR /compil
 RUN sudo apt-get update -y && sudo apt-get upgrade -y
 
 
-ADD compil.opam .
+ADD . .
 
-RUN opam init -a -y --comp $OCAML_VERSION --disable-sandboxing 
-
+RUN set -x && \
+    : "Install related pacakges" && \
+    opam install . --deps-only --locked && \
+    opam update && eval $(opam env) 
 
 RUN opam pin add -yn compil . && \
     opam depext compil && \
-    opam install . && sudo -s eval `opam config env` && opam install dune && \
+    opam install . && sudo -s eval `opam env` && \
     dune runtest
 
 
