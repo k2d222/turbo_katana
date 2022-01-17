@@ -1,23 +1,26 @@
-FROM ocaml/opam:ubuntu-16.04 as base
+FROM ocaml/opam:alpine AS init-opam
 
-ENV OCAML_VERSION 4.12.0
+RUN set -x && \
+    git -C /home/opam/opam-repository pull origin master && opam update && \
+    opam upgrade
 
-WORKDIR /compil
+RUN set -x && \
+    : "Update and upgrade default packagee" && \
+    sudo apk update && sudo apk upgrade && \
+    sudo apk add linux-headers
 
-RUN sudo apt-get update -y && sudo apt-get upgrade -y
+# --- #
 
-
-ADD . .
-
+FROM init-opam AS kat
+COPY . .
 RUN set -x && \
     : "Install related pacakges" && \
     opam install . --deps-only --locked && \
-    opam update && eval $(opam env) 
+    eval $(opam env) && \
+    : "Build applications" && \
+    dune build
 
-RUN opam pin add -yn compil . && \
-    opam depext compil && \
-    opam install . && sudo -s eval `opam env` && \
-    dune runtest
-
-
+#SSH §
 EXPOSE 3000
+
+# TODO : CMD [ "executable" ] 

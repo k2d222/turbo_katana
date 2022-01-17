@@ -1,4 +1,5 @@
 SHELL := /bin/bash 
+ARG := $(word 2, $(MAKECMDGOALS))
 
 docker_setup:
 	docker volume create katana
@@ -6,10 +7,10 @@ docker_setup:
 
 docker_up: 
 	docker-compose up -d
-	@echo 'Running docker, port 3000 exposed'
+	@echo 'Running docker Image, Port 3000 Exposed'
 
 docker_down: 
-	docker_compose down
+	docker-compose down
 
 docker_logs: 
 	docker-compose logs -f $(ARG)

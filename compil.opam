@@ -1,7 +1,7 @@
 opam-version: "2.0"
 name: "Katana"
 version: "0.1"
-synopsis: "The Katana Programming Language"
+synopsis: "The Turbo Katana Programming Language"
 description: """
 Longer description
 """
@@ -17,6 +17,10 @@ bug-reports: "https://github.com/k2d222/turbo_katana"
 depends: [
         "ocaml"
         "dune"
+        "core"
+        "menhir"
+        "ppx_jane"
+        "ppx_deriving"
  ]
  
 build: ["dune" "build"]
