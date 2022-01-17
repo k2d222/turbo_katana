@@ -8,7 +8,7 @@ let genlbl () =
   "lbl" ^ string_of_int !lbl_counter
 
 let meth_lbl className methName =
-  className ^ "_" ^ methName
+  className ^ "_" ^ Printf.sprintf (string_of_int methName) ^ methName
   
 let addr_of env id = match List.assoc_opt id env with
   | Some(addr) -> addr
@@ -91,19 +91,45 @@ let compile chan ast =
   and code_cmp env (op, e1, e2) =
     code_expr env e1; code_expr env e2; code_op op
   
-  and get_attr a = 
-    ()  
+  and index_of_opt l v =
+    let rec r_index l i =
+      match l with
+      | [] -> None
+      | x::_ when x = v -> i
+      | _::r -> r_index r (i+1)
+    in r_index l 0
+
+  and index_of l v =
+    match index_of_opt l v with
+    | Some(v) -> v
+    | None -> raise Not_found
+
+  and all_attrs decl = 
+    match decl.superclass with
+    | None -> decl.body.instAttrs
+    | Some(super) ->
+      let super = get_class decls super
+      in all_attrs super @ decl.body.instAttrs
+    
+  and attr_offset decl s =
+    index_of (all_attrs decl) s
+    
+  and code_expr_attr e s = 
+    code_expr env e;
+    let decl = get_expr_type decls env e 
+    in let decl = get_class decls decl
+    _LOAD attr_offset decl s;
 
   and code_expr env e =
     (match e with
       | Id(id) -> _PUSHG (addr_of env id)
       | Cste(c) -> _PUSHI c
-      | Attr(e, s) -> get_attr e 
+      | Attr(e, s) -> code_expr_attr e s
       | StaticAttr(s1, s2) -> ()
       | UMinus(e) -> _PUSHI 0; code_expr env e; _SUB ()
-      | Call(e, s, le) -> () 
+      | Call(e, s, le) -> code_call env e s le 
       | StaticCall(s1, s2, le) -> ()
-      | BinOp(e1, op, e2) -> code_expr env e1; code_expr env e2; code_op op;
+      | BinOp(e1, op, e2) -> code_expr env e1; code_expr env e2; code_op op
       | String(s) -> _PUSHS s
       | StrCat(s1, s2) -> code_expr env s1; code_expr env s2; _CONCAT ()
       | New(s, le) -> ()
@@ -118,5 +144,19 @@ let compile chan ast =
         _PUSHA (meth_lbl decl.name name);
         _STORE i
       )
+
+  and code_call env e s le = 
+    _PUSHI 0;
+    List.iter (code_expr env) le;
+    code_expr env e;
+    _DUPN 1;
+    _LOAD 0;
+    let decl = get_expr_type decls env e 
+    in let decl = get_class decls decl
+    in let vt = Vtable.make decls decl
+    in let meth = find_method decls s decl
+    in _LOAD (Vtable.offset vt s meth);
+    _CALL ()
+        
 in
   List.iter code_vtable decls 
