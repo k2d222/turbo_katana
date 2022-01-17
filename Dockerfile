@@ -1,12 +1,12 @@
-FROM ocaml/opam:alpine as base
+FROM ocaml/opam:ubuntu-16.04 as base
 
 ENV OCAML_VERSION 4.12.0
 
-WORKDIR compil
+WORKDIR /compil
 
-RUN sudo apk update
+RUN sudo apt-get update -y && sudo apt-get upgrade -y
 
-# Install dependencies
+
 ADD compil.opam .
 
 RUN opam init -a -y --comp $OCAML_VERSION --disable-sandboxing 
@@ -14,7 +14,7 @@ RUN opam init -a -y --comp $OCAML_VERSION --disable-sandboxing
 
 RUN opam pin add -yn compil . && \
     opam depext compil && \
-    opam install . && eval `opam config env` && \
+    opam install . && sudo -s eval `opam config env` && opam install dune && \
     dune runtest
 
 

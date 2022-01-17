@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 docker_setup:
 	docker volume create katana
-	docker-compose build --no-cache katana --parallel
+	docker-compose build katana --parallel
 
 docker_up: 
 	docker-compose up -d
