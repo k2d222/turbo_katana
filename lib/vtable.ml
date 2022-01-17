@@ -4,7 +4,7 @@ open Astmanip
 (** Get the offset of a method in the VTable
     @raise Not_found if method is not in vtable *)
 
-let offset vt meth =
+let offset vt (meth: methodDecl) =
   let rec r_find i vt = 
     match vt with
     | [] -> raise Not_found

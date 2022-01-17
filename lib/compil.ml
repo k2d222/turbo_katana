@@ -3,22 +3,59 @@ open Astmanip
 
 let lbl_counter = ref 0
 
+(** Generate a unique label. *)
+  
 let genlbl () =
   lbl_counter := !lbl_counter + 1;
   "lbl" ^ string_of_int !lbl_counter
 
+(** Generate a unique method label. *)
+
 let meth_lbl className methName =
-  className ^ "_" ^ Printf.sprintf (string_of_int methName) ^ methName
+  Printf.sprintf "%s_%i_%s" className (String.length methName) methName
+
+(** Generate a unique constructor label. *)
+
+let ctor_lbl className =
+  Printf.sprintf "_CTOR_%s_" className
   
-let addr_of env id = match List.assoc_opt id env with
+(** Get the address of a local variable. *)
+
+let get_addr addrs id =
+  match List.assoc_opt id addrs with
   | Some(addr) -> addr
-  | None -> failwith (Printf.sprintf "variable %s not found in env" id)
+  | None -> failwith (Printf.sprintf "variable %s not found in addrs" id)
 
-let addenv env id = match env with
-  | [] -> [(id, 0)]
-  | (_, addr)::_ -> (id, addr + 1)::env
+(** Make a lookup between method parameter names and their address *)
 
+let make_method_addrs params =
+    let len = List.length params
+    in let addrs = params |> List.mapi (fun i (p: param) -> 
+        (p.name, -len + i)
+      )
+    in let addrs = ("result", -len - 2)::addrs
+    in let addrs = ("this", -len - 1)::addrs
+    in addrs
+
+(** Get a list of all instance attributes in a class, in offset order. *)
+
+let rec all_attrs decls decl = 
+  let attrs = 
+    List.map (fun ({ name; _ }: param) -> name) decl.body.instAttrs
+  in match decl.superclass with
+  | None -> attrs
+  | Some(super) ->
+    let super = get_class decls super
+    in all_attrs decls super @ attrs
+  
+(** Get the offset of an instance attribute in a class. *)
+
+let attr_offset decls decl attrName =
+  Util.index_of (all_attrs decls decl) attrName
+    
 (* --------------------------------------------- *)
+
+(** Put the code of the program on the output channel. *)
 
 let compile chan ast =
   let decls = ast.decls in
@@ -76,66 +113,86 @@ let compile chan ast =
     | Mul -> _MUL ()
     | Div -> _DIV () in
   
-  
-  let rec code_ite env cmp yes no =
+  let rec code_instr_ite attrs env (cmp, yes, no) =
     let lbl_else = genlbl () in
     let lbl_end = genlbl () in
-    code_cmp env cmp;
+    code_expr attrs env cmp;
     _JZ lbl_else;
-    (code_expr env yes);
+    (code_instr attrs env yes);
     _JUMP lbl_end;
     _LABEL lbl_else;
-    (code_expr env no);
+    (code_instr attrs env no);
     _LABEL lbl_end;
   
-  and code_cmp env (op, e1, e2) =
-    code_expr env e1; code_expr env e2; code_op op
+  and code_instr_block attrs env (lp, li) =
+    ()
+ 
+  and code_instr_assign attrs env (from_, to_) =
+    ()
+    
+  (** Code to compute an instruction.
+      Leave nothing on the stack after execution. *)
   
-  and index_of_opt l v =
-    let rec r_index l i =
-      match l with
-      | [] -> None
-      | x::_ when x = v -> i
-      | _::r -> r_index r (i+1)
-    in r_index l 0
-
-  and index_of l v =
-    match index_of_opt l v with
-    | Some(v) -> v
-    | None -> raise Not_found
-
-  and all_attrs decl = 
-    match decl.superclass with
-    | None -> decl.body.instAttrs
-    | Some(super) ->
-      let super = get_class decls super
-      in all_attrs super @ decl.body.instAttrs
-    
-  and attr_offset decl s =
-    index_of (all_attrs decl) s
-    
-  and code_expr_attr e s = 
-    code_expr env e;
+  and code_instr addrs env instr = 
+    match instr with
+    | Block(lp, li) -> code_instr_block addrs env (lp, li)
+    | Assign(from_, to_) -> code_instr_assign addrs env (from_, to_)
+    | Return -> _RETURN ()
+    | Ite(cmp, yes, no) -> code_instr_ite addrs env (cmp, yes, no)
+    | Expr(e) -> code_expr addrs env e; _POPN 1 
+  
+  and code_expr_attr addrs env (e, s) = 
+    code_expr addrs env e;
     let decl = get_expr_type decls env e 
     in let decl = get_class decls decl
-    _LOAD attr_offset decl s;
+    in _LOAD ((attr_offset decls decl s) + 1)
 
-  and code_expr env e =
-    (match e with
-      | Id(id) -> _PUSHG (addr_of env id)
-      | Cste(c) -> _PUSHI c
-      | Attr(e, s) -> code_expr_attr e s
-      | StaticAttr(s1, s2) -> ()
-      | UMinus(e) -> _PUSHI 0; code_expr env e; _SUB ()
-      | Call(e, s, le) -> code_call env e s le 
-      | StaticCall(s1, s2, le) -> ()
-      | BinOp(e1, op, e2) -> code_expr env e1; code_expr env e2; code_op op
-      | String(s) -> _PUSHS s
-      | StrCat(s1, s2) -> code_expr env s1; code_expr env s2; _CONCAT ()
-      | New(s, le) -> ()
-      | StaticCast(s, e) -> ())
+  and code_expr_call addrs env (e, s, le) = 
+    let decl = get_expr_type decls env e
+    in let decl = get_class decls decl
+    in let vt = Vtable.make decls decl
+    in let meth = find_method decls s decl
+    in _PUSHI 0; (* push result *)
+    List.iter (code_expr addrs env) le; (* push args *)
+    code_expr addrs env e; (* push this *)
+    _DUPN 1;
+    _LOAD 0;
+    _LOAD (Vtable.offset vt meth);
+    _CALL ();
+    _POPN ((List.length le) + 1) (* pop args & this, leave result *)
   
-  and code_vtable decl =
+  and code_expr_static_attr addrs env (clName, attrName) =
+    ()
+  
+  and code_expr_static_call (clName, methName, args) =
+    ()
+  
+  and code_expr_new (clName, args) =
+    ()
+  
+  and code_expr_cast (to_, e) =
+    ()
+        
+  (** Code to compute an expression.
+      Leave a pointer to the expr result after execution. *)
+  
+  and code_expr addrs env e =
+    match e with
+      | Id(id) -> _PUSHL (get_addr addrs id)
+      | Cste(c) -> _PUSHI c
+      | Attr(e, s) -> code_expr_attr addrs env (e, s)
+      | StaticAttr(clName, attrName) -> code_expr_static_attr addrs env (clName, attrName)      | UMinus(e) -> _PUSHI 0; code_expr addrs env e; _SUB ()
+      | Call(e, s, le) -> code_expr_call addrs env (e, s, le) 
+      | StaticCall(clName, methName, args) -> code_expr_static_call (clName, methName, args)      | BinOp(e1, op, e2) -> code_expr addrs env e1; code_expr addrs env e2; code_op op
+      | String(s) -> _PUSHS s
+      | StrCat(s1, s2) -> code_expr addrs env s1; code_expr addrs env s2; _CONCAT ()
+      | New(clName, args) -> code_expr_new (clName, args)
+      | StaticCast(to_, e) -> code_expr_cast (to_, e)
+  
+  (** Generate a virtual table for a class.
+      Leave a pointer to the VT on stack after execution. *)
+  
+  in let code_vtable decl =
     let vt = Vtable.make decls decl
     in if vt <> [] then 
       _ALLOC (List.length vt);
@@ -144,19 +201,65 @@ let compile chan ast =
         _PUSHA (meth_lbl decl.name name);
         _STORE i
       )
+  
+  (** Code of a call to super constructor.
+      Expects 'this' on stack and leave 'this' after execution. *)
+  
+  in let code_super_call addrs env decl =
+    let args = snd (decl.body.ctor.superCall |> Option.get)
+    in let super = decl.superclass |> Option.get
+    in List.iter (code_expr addrs env) args; (* push args *)
+    _PUSHL (-1 - List.length args); (* push this *)
+    _PUSHA (ctor_lbl super);
+    _CALL ();
+    _POPN ((List.length args) + 1) (* pop args & this *)
 
-  and code_call env e s le = 
-    _PUSHI 0;
-    List.iter (code_expr env) le;
-    code_expr env e;
-    _DUPN 1;
-    _LOAD 0;
-    let decl = get_expr_type decls env e 
-    in let decl = get_class decls decl
-    in let vt = Vtable.make decls decl
-    in let meth = find_method decls s decl
-    in _LOAD (Vtable.offset vt s meth);
-    _CALL ()
-        
+  (** Code of a constructor. *)
+  
+  in let code_ctor decl =
+    let size = List.length (all_attrs decls decl) + 1
+    in let params = ctor_params_to_method_params decl.body.ctor.params
+    in let addrs = make_method_addrs params
+    in let env = Env.add_all [] params
+    in let vti = Util.index_of decls decl
+
+    in let rec call_super_ctor decl = 
+      match decl.superclass with 
+      | Some(_) -> code_super_call addrs [] decl        
+      | None -> ()
+
+    in _LABEL (ctor_lbl decl.name);
+    _ALLOC size;
+    _PUSHI vti;
+    _STORE 0;
+    call_super_ctor decl;
+    code_instr addrs env decl.body.ctor.body
+
+  in let code_inst_method meth =
+    ()
+  
+  in let code_static_method meth =
+    ()
+ 
+  in let code_main_instr instr =
+    ()
+  
+  in let code_static_attr attr =
+    ()
+
 in
-  List.iter code_vtable decls 
+  _COMMENT "----- VTABLES -----";
+  List.iter code_vtable decls;
+
+  _COMMENT "----- STATIC ATTRIBS -----";
+  List.iter (fun decl -> code_static_attr decl.body.staticAttrs) decls;
+
+  _COMMENT "----- MAIN INSTRUCTION -----";
+  code_main_instr ast.instr;
+
+  _COMMENT "----- FUNCTIONS -----";
+  decls |> List.iter (fun decl ->
+      code_ctor decl;
+      decl.body.instMethods |> List.iter code_inst_method;
+      decl.body.staticMethods |> List.iter code_static_method
+    );
