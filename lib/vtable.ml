@@ -29,13 +29,13 @@ let rec make decls decl =
   | Some(super) ->
       let super = get_class decls super 
       in let vt = make decls super
-      in decl.body.instMethods
+      in decl.instMethods
       |> List.fold_left (fun vt (m: methodDecl) -> 
           insert vt m.name decl
         ) vt
 
   | None -> 
-      decl.body.instMethods 
+      decl.instMethods 
       |> List.map (fun (m: methodDecl) -> 
           (m.name, decl)
         )

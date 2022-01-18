@@ -11,10 +11,10 @@ let err str = raise (Contextual_error str)
     @raise Contextual_error if a check fails. *)
 
 let check_no_dup decl =
-  let instMethods = decl.body.instMethods |> List.map (fun (m: methodDecl) -> m.name)
-  in let staticMethods = decl.body.staticMethods |> List.map (fun (m: methodDecl) -> m.name)
-  in let staticAttrs = decl.body.staticAttrs |> List.map (fun (a: param) -> a.name)
-  in let instAttrs = decl.body.instAttrs |> List.map (fun (a: param) -> a.name)
+  let instMethods = decl.instMethods |> List.map (fun (m: methodDecl) -> m.name)
+  in let staticMethods = decl.staticMethods |> List.map (fun (m: methodDecl) -> m.name)
+  in let staticAttrs = decl.staticAttrs |> List.map (fun (a: param) -> a.name)
+  in let instAttrs = decl.instAttrs |> List.map (fun (a: param) -> a.name)
 
   in let rec check t = function
       | [] -> ()
@@ -91,8 +91,8 @@ let check_overrides decls decl =
   in match decl.superclass with
   | Some(super) ->
     let superDecl = get_class decls super
-    in List.iter (check_super_method superDecl) decl.body.instMethods
-  | None -> List.iter check_base_method decl.body.instMethods
+    in List.iter (check_super_method superDecl) decl.instMethods
+  | None -> List.iter check_base_method decl.instMethods
 
 (** Checks that id is in scope.
     @raise Contextual_error if a check fails. *)
@@ -372,7 +372,7 @@ and check_expr decls env expr =
 *)
 
 let check_ctor decls decl =
-  let ctor = decl.body.ctor
+  let ctor = decl.ctor
   in let params = ctor_params_to_method_params ctor.params
   in let env = Env.add_all [] params
   in begin
@@ -424,14 +424,14 @@ let check_main_instr decls instr =
   check_instr decls [] instr
 
 let check_decl decls decl =
-  check_no_reserved_var decl.body.instAttrs;
-  check_no_reserved_var decl.body.staticAttrs;
+  check_no_reserved_var decl.instAttrs;
+  check_no_reserved_var decl.staticAttrs;
   check_ctor decls decl;
   check_overrides decls decl;
   check_no_dup decl;
   let env = make_class_env decl
-  in List.iter (check_instance_method decls env) decl.body.instMethods;
-  List.iter (check_static_method decls []) decl.body.staticMethods
+  in List.iter (check_instance_method decls env) decl.instMethods;
+  List.iter (check_static_method decls []) decl.staticMethods
 
 let check_decls decls =
   check_no_reserved_class decls;

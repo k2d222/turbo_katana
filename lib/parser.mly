@@ -1,6 +1,8 @@
 %{
 open Ast
 
+exception Syntax_error of string
+
 type classBodyElt =
   | StaticMethod of Ast.methodDecl
   | InstMethod of Ast.methodDecl
@@ -67,15 +69,13 @@ prog:
   decls = list(classDecl) instr = instrBlock EOF { { decls; instr } }
 
 classDecl:
-  CLASS name = CLASSNAME ctorParams = ctorParamList superclass = extends IS body = classBody {
-    { name; ctorParams; body; superclass }
-  }
-
-classBody:
-  LCURLY l = list(classBodyElement) RCURLY {
+  CLASS name = CLASSNAME ctorParams = ctorParamList superclass = extends IS LCURLY l = list(classBodyElement) RCURLY {
     let (lsm, lim, lc, lsa, lia) = split_body_elts l
-    in let ctor = List.hd lc (* TODO: make sure there is only one ctor *)
-    in { staticMethods=lsm; instMethods=lim; ctor; staticAttrs=lsa; instAttrs=lia }
+    in if List.length lc <> 1
+    then raise (Syntax_error (Printf.sprintf "class '%s' defines %d constructor(s), expected 1" name (List.length lc)))
+    else
+      let ctor = List.hd lc
+      in { name; ctorParams; superclass; staticMethods=lsm; instMethods=lim; ctor; staticAttrs=lsa; instAttrs=lia }
   }
 
 classBodyElement:
@@ -99,7 +99,7 @@ methodDecl:
 
 ctorDecl:
   | DEF name = CLASSNAME params = ctorParamList IS body = instrBlock {
-     Ctor({ name; params; superCall=None; body;  })
+    Ctor({ name; params; superCall=None; body;  })
   }
   | DEF name = CLASSNAME params = ctorParamList COLON super = CLASSNAME lsuper = superList IS b = instrBlock {
     Ctor({ name; params; superCall=Some(super, lsuper); body=b; })

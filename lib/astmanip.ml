@@ -42,7 +42,7 @@ let rec ancestors decls decl =
 (** Get the method declaration in a class with a given name. *)
 
 let get_method_opt name decl =
-  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.instMethods
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.instMethods
 
 (** Find (recursively through ancestors) the method declaration in a class
     with a given name. *)
@@ -64,7 +64,7 @@ let find_method decls name decl =
 (** Get a static method declaration in a class with a given name. *)
 
 let get_static_method_opt name decl =
-  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.staticMethods
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.staticMethods
 
 (** Get a static method declaration in a class with a given name.
     @raise Not_found if the class has no such static method. *)
@@ -83,7 +83,7 @@ let get_inst_attr_opt attrName decl =
     if attr.name = attrName then Some(attr.className) else None
   in let pred2 (attr: ctorParam) =
        if attr.name = attrName then Some(attr.className) else None
-  in List.find_map pred decl.body.instAttrs
+  in List.find_map pred decl.instAttrs
      |> Optmanip.or_else (fun () ->
          List.find_map pred2 decl.ctorParams
        )
@@ -108,7 +108,7 @@ let find_inst_attr decls attrName decl =
 let get_static_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
-  in List.find_map pred decl.body.staticAttrs
+  in List.find_map pred decl.staticAttrs
 
 (** Get the type of a static attribute in a class declaration.
     @raise Not_found if the class has no such attribute. *)
@@ -124,7 +124,7 @@ let get_static_attr attrName decl =
     Note: procedures have the special type '_Void' *)
 
 let get_inst_method_type_opt methName decl =
-  decl.body.instMethods
+  decl.instMethods
   |> List.find_map (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType |> Optmanip.or_ (Some("_Void")) else None
     )
@@ -150,7 +150,7 @@ let find_inst_method_type decls attrName decl =
     Note: procedures have the special type '_Void' *)
 
 let get_static_method_type methName decl =
-  decl.body.staticMethods
+  decl.staticMethods
   |> List.find_map  (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType else None
     )

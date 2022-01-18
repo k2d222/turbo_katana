@@ -56,20 +56,15 @@ type methodDecl = {
 }
 [@@deriving show]
 
-type classBody = {
+type classDecl = {
+  name: string;
+  ctorParams: ctorParam list;
+  superclass: string option;
   ctor: ctorDecl;
   staticMethods: methodDecl list;
   instMethods: methodDecl list;
   staticAttrs: param list;
   instAttrs: param list;
-}
-[@@deriving show]
-
-type classDecl = {
-  name: string;
-  ctorParams: ctorParam list;
-  body: classBody;
-  superclass: string option;
 }
 [@@deriving show]
 

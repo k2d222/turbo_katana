@@ -41,7 +41,7 @@ let make_method_addrs params =
 
 let rec all_attrs decls decl = 
   let attrs = 
-    List.map (fun ({ name; _ }: param) -> name) decl.body.instAttrs
+    List.map (fun ({ name; _ }: param) -> name) decl.instAttrs
   in match decl.superclass with
   | None -> attrs
   | Some(super) ->
@@ -225,7 +225,7 @@ let compile chan ast =
       Expects 'this' on stack and leave 'this' after execution. *)
   
   in let code_super_call addrs env decl =
-    let args = snd (decl.body.ctor.superCall |> Option.get)
+    let args = snd (decl.ctor.superCall |> Option.get)
     in let super = decl.superclass |> Option.get
     in List.iter (code_expr addrs env) args; (* push args *)
     _PUSHL (-1 - List.length args); (* push this *)
@@ -237,7 +237,7 @@ let compile chan ast =
   
   in let code_ctor decl =
     let size = List.length (all_attrs decls decl) + 1
-    in let params = ctor_params_to_method_params decl.body.ctor.params
+    in let params = ctor_params_to_method_params decl.ctor.params
     in let addrs = make_method_addrs params
     in let env = Env.add_all [] params
     in let vti = Util.index_of decls decl
@@ -252,7 +252,7 @@ let compile chan ast =
     _PUSHI vti;
     _STORE 0;
     call_super_ctor decl;
-    code_instr addrs env decl.body.ctor.body
+    code_instr addrs env decl.ctor.body
 
   in let code_inst_method meth =
     ()
@@ -271,7 +271,7 @@ in
   List.iter code_vtable decls;
 
   _COMMENT "----- STATIC ATTRIBS -----";
-  List.iter (fun decl -> code_static_attr decl.body.staticAttrs) decls;
+  List.iter (fun decl -> code_static_attr decl.staticAttrs) decls;
 
   _COMMENT "----- MAIN INSTRUCTION -----";
   code_main_instr ast.instr;
@@ -279,6 +279,6 @@ in
   _COMMENT "----- FUNCTIONS -----";
   decls |> List.iter (fun decl ->
       code_ctor decl;
-      decl.body.instMethods |> List.iter code_inst_method;
-      decl.body.staticMethods |> List.iter code_static_method
+      decl.instMethods |> List.iter code_inst_method;
+      decl.staticMethods |> List.iter code_static_method
     );
