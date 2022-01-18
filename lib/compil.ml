@@ -146,20 +146,40 @@ let compile chan ast =
     let decl = get_expr_type decls env e 
     in let decl = get_class decls decl
     in _LOAD ((attr_offset decls decl s) + 1)
-
-  and code_expr_call addrs env (e, s, le) = 
-    let decl = get_expr_type decls env e
-    in let decl = get_class decls decl
-    in let vt = Vtable.make decls decl
-    in let meth = find_method decls s decl
-    in _PUSHI 0; (* push result *)
-    List.iter (code_expr addrs env) le; (* push args *)
+  
+  and code_builtin_string addrs env e m = 
     code_expr addrs env e; (* push this *)
-    _DUPN 1;
-    _LOAD 0;
-    _LOAD (Vtable.offset vt meth);
-    _CALL ();
-    _POPN ((List.length le) + 1) (* pop args & this, leave result *)
+
+    match m with
+    | "print" -> _DUPN 1; _WRITES ()
+    | "println" -> _DUPN 1; _WRITES (); _PUSHS "\n"; _WRITES ()
+    | _ -> failwith "unreachable"
+    
+  and code_builtin_integer addrs env e m =
+    code_expr addrs env e; (* push this *)
+
+    match m with
+    | "toString" -> _STR ()
+    | _ -> failwith "unreachable"
+  
+  and code_expr_call addrs env (e, s, le) = 
+    let clName = get_expr_type decls env e
+      
+    in match clName with
+    | "Integer" -> code_builtin_integer addrs env e s
+    | "String" -> code_builtin_string addrs env e s
+    | _ ->
+      let decl = get_class decls clName
+      in let vt = Vtable.make decls decl
+      in let meth = find_method decls s decl
+      in _PUSHI 0; (* push result *)
+      List.iter (code_expr addrs env) le; (* push args *)
+      code_expr addrs env e; (* push this *)
+      _DUPN 1;
+      _LOAD 0;
+      _LOAD (Vtable.offset vt meth);
+      _CALL ();
+      _POPN ((List.length le) + 1) (* pop args & this, leave result *)
   
   and code_expr_static_attr addrs env (clName, attrName) =
     ()
@@ -168,9 +188,6 @@ let compile chan ast =
     ()
   
   and code_expr_new (clName, args) =
-    ()
-  
-  and code_expr_cast (to_, e) =
     ()
         
   (** Code to compute an expression.
@@ -181,13 +198,15 @@ let compile chan ast =
       | Id(id) -> _PUSHL (get_addr addrs id)
       | Cste(c) -> _PUSHI c
       | Attr(e, s) -> code_expr_attr addrs env (e, s)
-      | StaticAttr(clName, attrName) -> code_expr_static_attr addrs env (clName, attrName)      | UMinus(e) -> _PUSHI 0; code_expr addrs env e; _SUB ()
+      | StaticAttr(clName, attrName) -> code_expr_static_attr addrs env (clName, attrName)
+      | UMinus(e) -> _PUSHI 0; code_expr addrs env e; _SUB ()
       | Call(e, s, le) -> code_expr_call addrs env (e, s, le) 
-      | StaticCall(clName, methName, args) -> code_expr_static_call (clName, methName, args)      | BinOp(e1, op, e2) -> code_expr addrs env e1; code_expr addrs env e2; code_op op
+      | StaticCall(clName, methName, args) -> code_expr_static_call (clName, methName, args)
+      | BinOp(e1, op, e2) -> code_expr addrs env e1; code_expr addrs env e2; code_op op
       | String(s) -> _PUSHS s
       | StrCat(s1, s2) -> code_expr addrs env s1; code_expr addrs env s2; _CONCAT ()
       | New(clName, args) -> code_expr_new (clName, args)
-      | StaticCast(to_, e) -> code_expr_cast (to_, e)
+      | StaticCast(_, e) -> code_expr addrs env e
   
   (** Generate a virtual table for a class.
       Leave a pointer to the VT on stack after execution. *)
