@@ -1,12 +1,13 @@
 %{
 open Ast
 
-exception Syntax_error of string
+type ctorParam = { param: Ast.param; isMember: bool }
+type ctorDecl = { meth: Ast.methodDecl; super: superCall option; cparams: ctorParam list }
 
 type classBodyElt =
   | StaticMethod of Ast.methodDecl
   | InstMethod of Ast.methodDecl
-  | Ctor of Ast.ctorDecl
+  | Ctor of ctorDecl
   | StaticAttrib of Ast.param list
   | InstAttrib of Ast.param list
 
@@ -71,11 +72,23 @@ prog:
 classDecl:
   CLASS name = CLASSNAME ctorParams = ctorParamList superclass = extends IS LCURLY l = list(classBodyElement) RCURLY {
     let (lsm, lim, lc, lsa, lia) = split_body_elts l
-    in if List.length lc <> 1
-    then raise (Syntax_error (Printf.sprintf "class '%s' defines %d constructor(s), expected 1" name (List.length lc)))
-    else
-      let ctor = List.hd lc
-      in { name; ctorParams; superclass; staticMethods=lsm; instMethods=lim; ctor; staticAttrs=lsa; instAttrs=lia }
+
+    in let ctor = 
+      if List.length lc <> 1
+      then raise (Syntax_error (Printf.sprintf "class '%s' defines %d constructor(s), expected 1" name (List.length lc)))
+      else List.hd lc
+
+    in let lia = lia @ (ctor.cparams |> List.filter_map (fun p -> if p.isMember then Some(p.param) else None))
+
+    in if ctorParams <> ctor.cparams
+      then raise (Syntax_error (Printf.sprintf "different parameters between class '%s' header and constructor definition" name));
+    
+    (match ctor.super, superclass with
+    | None, None -> ()
+    | Some{ name=s1; args=_ }, Some(s2) when s1 = s2 -> ()
+    | _ -> raise (Syntax_error (Printf.sprintf "different super class between class '%s' header and constructor definition" name)));
+      
+    { name; super=ctor.super; staticMethods=lsm; instMethods=lim; ctor=ctor.meth; staticAttrs=lsa; instAttrs=lia }
   }
 
 classBodyElement:
@@ -98,13 +111,24 @@ methodDecl:
   }
 
 ctorDecl:
-  | DEF name = CLASSNAME params = ctorParamList IS body = instrBlock {
-    Ctor({ name; params; superCall=None; body;  })
+  | DEF name = CLASSNAME cparams = ctorParamList IS b = instrBlock {
+    let instAttrs = cparams |> List.filter_map (fun p -> if p.isMember then Some(p.param) else None)
+    in let params = cparams |> List.map (fun p -> p.param)
+    in let prelude = instAttrs |> List.map (fun (p: param) -> Assign(Attr(Id("this"), p.name), Id(p.name))) 
+    in let body = match b with
+    | Block(lp, li) -> Block(lp, prelude @ li)
+    | _ -> failwith "unreachable"
+    in Ctor({ super=None; meth={ name; params; body; override=false; retType=None }; cparams })
   }
-  | DEF name = CLASSNAME params = ctorParamList COLON super = CLASSNAME lsuper = superList IS b = instrBlock {
-    Ctor({ name; params; superCall=Some(super, lsuper); body=b; })
+  | DEF name = CLASSNAME cparams = ctorParamList COLON super = CLASSNAME lsuper = superList IS b = instrBlock {
+    let instAttrs = cparams |> List.filter_map (fun p -> if p.isMember then Some(p.param) else None)
+    in let params = cparams |> List.map (fun p -> p.param)
+    in let prelude = instAttrs |> List.map (fun (p: param) -> Assign(Attr(Id("this"), p.name), Id(p.name))) 
+    in let body = match b with
+    | Block(lp, li) -> Block(lp, prelude @ li)
+    | _ -> failwith "unreachable"
+    in Ctor({ super=Some{name=super; args=lsuper}; meth={ name; params; body; override=false; retType=None }; cparams })
   }
-
 
 attrDecl:
   | VAR static = boption(STATIC) lname = separated_list(COMMA, ID) COLON className = CLASSNAME {
@@ -123,7 +147,7 @@ ctorParamList:
 
 ctorParam:
   isMember = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME
-  { List.map (fun name -> { isMember; name; className }) names }
+  { List.map (fun name -> { isMember; param={ name; className } }) names }
 
 extends:
   | EXTENDS id = CLASSNAME { Some(id) }

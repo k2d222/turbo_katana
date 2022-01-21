@@ -88,3 +88,36 @@ let%test "no-static-override" =
     |}
   in expects_parse_err (code "override")
   && expects_ast (code "")
+
+let%test "constructor-parameters-and-class-parameters-are-equal" =
+  let code = Printf.sprintf {|
+      class Point1(%s) is {
+        def Point1(%s) is {}
+      }
+      {}
+    |}
+  in expects_syntax_err (code "s : String" "s : Integer")
+  && expects_ast (code "s : String" "s : String")
+
+let%test "constructor-calls-right-super-constructor-name-if-class-derived" =
+  let code = Printf.sprintf {|
+      class Base(var s: String, i1, i2: Integer) is {
+        def Base(var s: String, i1, i2: Integer) is {}
+      }
+      class Derived() extends Base is {
+        def Derived() : %s is {}
+      }
+      {}
+    |}
+  in expects_syntax_err (code {| Test("hello", 10, 20) |})
+  && expects_ast (code {| Base("hello", 10, 20) |})
+
+let%test "no-super-constructor-call-in-base-class" =
+  let code = Printf.sprintf {|
+      class Point1() is {
+        def Point1() %s is {}
+      }
+      {}
+    |}
+  in expects_syntax_err (code " : Foo()")
+  && expects_ast (code "")

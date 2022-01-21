@@ -7,7 +7,7 @@ exception Contextual_error of string
 let err str = raise (Contextual_error str)
 (* let err str = print_endline @@ "[CONTEXTUAL ERROR]: " ^ str; () *)
 
-(** Check that methods, instance attributes and static attributes unique in a class declaration.
+(** Check that methods, instance attributes and static attributes are unique in a class declaration.
     @raise Contextual_error if a check fails. *)
 
 let check_no_dup decl =
@@ -33,11 +33,11 @@ let check_no_dup decl =
 
 let check_inheritance decls =
   let decls_with_super = decls |> List.filter_map (fun d ->
-      d.superclass |> Optmanip.map (fun super -> (d.name, super))
+      d.super |> Optmanip.map (fun super -> (d.name, super))
     )
-  in decls_with_super |> List.iter (fun (name, super) ->
-      match get_class_opt decls super with
-      | None -> err (Printf.sprintf "class '%s' extends unknown class '%s'" name super)
+  in decls_with_super |> List.iter (fun (name, (super: superCall)) ->
+      match get_class_opt decls super.name with
+      | None -> err (Printf.sprintf "class '%s' extends unknown class '%s'" name super.name)
       | _ -> ()
     )
 
@@ -47,11 +47,11 @@ let check_inheritance decls =
 let check_cycles decls =
   (* complexity unoptimized (add memoization?) *)
   let rec r_check ancestors decl =
-    match decl.superclass with
+    match decl.super with
     | Some(super) ->
-      let superDecl = get_class_opt decls super |> Option.get in
+      let superDecl = get_class_opt decls super.name |> Option.get in
       if List.exists ((=) super) ancestors
-      then err (Printf.sprintf "cycle in heritance: class '%s' extends ancestor class '%s'" decl.name super)
+      then err (Printf.sprintf "cycle in heritance: class '%s' extends ancestor class '%s'" decl.name super.name)
       else r_check (super::ancestors) superDecl
     | None -> ()
   in List.iter (r_check []) decls
@@ -88,9 +88,9 @@ let check_overrides decls decl =
        then err (Printf.sprintf "method '%s' of base class '%s' is marked override" meth.name decl.name)
        else ()
 
-  in match decl.superclass with
+  in match decl.super with
   | Some(super) ->
-    let superDecl = get_class decls super
+    let superDecl = get_class decls super.name
     in List.iter (check_super_method superDecl) decl.instMethods
   | None -> List.iter check_base_method decl.instMethods
 
@@ -140,11 +140,11 @@ let check_no_reserved_var vars =
     @raise Contextual_error if a check fails. *)
 
 let check_no_reserved_class decls =
-  let reserved = ["String"; "Integer"; "_Void"]
+  let reserved = ["String"; "Integer"]
 
   in let check decl =
-       if List.exists (fun r -> decl.name = r || decl.superclass = Some(r)) reserved
-       then err (Printf.sprintf "use of reserved class in class '%s'" decl.name)
+    if List.exists ((=) decl.name) reserved
+    then err (Printf.sprintf "use of reserved class in class '%s'" decl.name)
 
   in List.iter check decls
 
@@ -311,12 +311,12 @@ and check_expr_new decls env (className, args) =
          if not (is_base decls arg param)
          then err (Printf.sprintf "invalid call argument: type '%s' is incompatible with '%s'" arg param)
 
-    in if List.length args <> List.length decl.ctorParams
+    in if List.length args <> List.length decl.ctor.params
     then err (Printf.sprintf "invalid number of arguments in instantiation of '%s'" className);
 
-    List.iter2 (fun arg (param: ctorParam) ->
+    List.iter2 (fun arg (param: param) ->
         check_arg arg param.className
-      ) args decl.ctorParams
+      ) args decl.ctor.params
 
 and check_expr_cast decls env (className, e) = 
   check_expr decls env e;
@@ -362,7 +362,6 @@ and check_expr decls env expr =
 
 (** Check constructor declaration validity. Performs following checks:
     * Constructor name and class name are equal
-    * Constructor parameters and class parameters are equal
     * Constructor parameters have no reserved keywords
     * Constructor calls the right super constructor if class is derived
     * Constructor does not call any super constructor if class is base
@@ -383,25 +382,18 @@ let check_ctor decls decl =
     if decl.name <> ctor.name
     then err (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
     else ();
-
-    (match decl.superclass, ctor.superCall with
-     | Some(n1), Some(n2, _) when n1 <> n2 -> err (Printf.sprintf "class '%s' extends superclass '%s' but constructor calls super constructor of '%s'" decl.name n1 n2)
-     | Some(n1), None -> err (Printf.sprintf "class '%s' extends superclass '%s' but constructor does not call the super constructor" decl.name n1)
-     | None, Some(n2, _) -> err (Printf.sprintf "class '%s' is a base class but constructor calls super constructor of '%s'" decl.name n2)
-     | _ -> ());
     
-    (match ctor.superCall with
-     | Some(super, args) ->
-        let superDecl = get_class decls super
-        in let superParams = ctor_params_to_method_params superDecl.ctorParams
+    (match decl.super with
+     | Some{ name; args } ->
+        let superDecl = get_class decls name
         in let args = args |> List.map (fun e ->
           check_expr decls env e;
           get_expr_type decls env e
         )
-        in check_call_args decls args superParams
+        in check_call_args decls args superDecl.ctor.params
      | None -> ());
 
-    if ctor.params <> decl.ctorParams
+    if ctor.params <> decl.ctor.params
     then err (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
     else ();
   

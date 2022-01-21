@@ -20,10 +20,10 @@ let get_class decls name =
 let rec recursively decls decl f =
   f decl
   |> Optmanip.or_else (fun () ->
-      match decl.superclass with
+      match decl.super with
       | None -> None
       | Some(super) ->
-        (get_class_opt decls super)
+        (get_class_opt decls super.name)
         |> Optmanip.and_then (fun superDecl ->
             recursively decls superDecl f
           )
@@ -33,10 +33,10 @@ let rec recursively decls decl f =
     @raise Not_found if an ancestor has no declaration. *)
 
 let rec ancestors decls decl =
-  match decl.superclass with
+  match decl.super with
   | None -> []
   | Some(super) ->
-    let superDecl = (get_class decls super) in
+    let superDecl = (get_class decls super.name) in
     superDecl :: (ancestors decls superDecl)
 
 (** Get the method declaration in a class with a given name. *)
@@ -81,12 +81,7 @@ let get_static_method name decl =
 let get_inst_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
-  in let pred2 (attr: ctorParam) =
-       if attr.name = attrName then Some(attr.className) else None
   in List.find_map pred decl.instAttrs
-     |> Optmanip.or_else (fun () ->
-         List.find_map pred2 decl.ctorParams
-       )
 
 (** Find (recursively through ancestors) the type of an attribute in a class declaration. *)
 
@@ -208,8 +203,8 @@ let is_base decls derived base =
 
 let make_class_env decl =
   let env = ("this", decl.name) :: []
-  in let env = match decl.superclass with
-      | Some(super) -> ("super", super) :: env
+  in let env = match decl.super with
+      | Some(super) -> ("super", super.name) :: env
       | None -> env
   in env
 

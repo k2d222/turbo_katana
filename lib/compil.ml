@@ -50,10 +50,10 @@ let make_method_addrs params =
 let rec all_attrs decls decl = 
   let attrs = 
     List.map (fun ({ name; _ }: param) -> name) decl.instAttrs
-  in match decl.superclass with
+  in match decl.super with
   | None -> attrs
   | Some(super) ->
-    let super = get_class decls super
+    let super = get_class decls super.name
     in all_attrs decls super @ attrs
   
 (** Get the offset of an instance attribute in a class. *)
@@ -274,11 +274,10 @@ let compile chan ast =
       Expects 'this' on stack and leave 'this' after execution. *)
   
   in let code_super_call addrs env decl =
-    let args = snd (decl.ctor.superCall |> Option.get)
-    in let super = decl.superclass |> Option.get
+    let { args; name } = Option.get decl.super
     in List.iter (code_expr addrs env) args; (* push args *)
     _PUSHL (-1 - List.length args); (* push this *)
-    _PUSHA (ctor_lbl super);
+    _PUSHA (ctor_lbl name);
     _CALL ();
     _POPN ((List.length args) + 1) (* pop args & this *)
 
@@ -293,7 +292,7 @@ let compile chan ast =
     in let vti = Util.index_of decl decls
 
     in let rec call_super_ctor decl = 
-      match decl.superclass with 
+      match decl.super with 
       | Some(_) -> code_super_call addrs [] decl        
       | None -> ()
 

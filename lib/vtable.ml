@@ -25,10 +25,10 @@ let insert vt methName decl =
 (** Build a VTable from a class declaration *)
 
 let rec make decls decl = 
-  match decl.superclass with
+  match decl.super with
   | Some(super) ->
-      let super = get_class decls super 
-      in let vt = make decls super
+      let superDecl = get_class decls super.name 
+      in let vt = make decls superDecl
       in decl.instMethods
       |> List.fold_left (fun vt (m: methodDecl) -> 
           insert vt m.name decl
