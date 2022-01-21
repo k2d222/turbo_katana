@@ -59,7 +59,7 @@ let rec all_attrs decls decl =
 (** Get the offset of an instance attribute in a class. *)
 
 let attr_offset decls decl attrName =
-  Util.index_of (all_attrs decls decl) attrName
+  all_attrs decls decl |> Util.index_of attrName 
 
 let static_attr_offset decls decl attr =  
 	let rec marcel decls =
@@ -68,7 +68,7 @@ let static_attr_offset decls decl attr =
 			List.map (fun (a: param) -> a.name) d.staticAttrs 
 			|> Util.index_of attr
 		| d::r -> (List.length d.staticAttrs) + marcel r 
-		| _ -> failwith "unreachable"
+		| _ -> failwith "static_attr_offset unreachable"
 	in marcel decls
     
 (* --------------------------------------------- *)
@@ -148,7 +148,7 @@ let compile chan ast =
 		in let env = List.fold_left (fun env (p: param) -> Env.add env p) env lp
 		in List.iter (code_instr addrs env) li
 
-  and code_instr_assign addrs env (from_, to_) =
+  and code_instr_assign addrs env (to_, from_) =
 		match to_ with
 		| Attr(e, s) -> 
 			let name = get_expr_type decls env e 
@@ -172,7 +172,7 @@ let compile chan ast =
 			code_expr addrs env from_;
 			_STOREL addr
 
-		| _ -> failwith "unreachable"
+		| _ -> failwith "code_instr_assign unreachable"
     
   (** Code to compute an instruction.
       Leave nothing on the stack after execution. *)
@@ -180,7 +180,7 @@ let compile chan ast =
   and code_instr addrs env instr = 
     match instr with
     | Block(lp, li) -> code_instr_block addrs env (lp, li)
-    | Assign(from_, to_) -> code_instr_assign addrs env (from_, to_)
+    | Assign(to_, from_) -> code_instr_assign addrs env (to_, from_)
     | Return -> _RETURN ()
     | Ite(cmp, yes, no) -> code_instr_ite addrs env (cmp, yes, no)
     | Expr(e) -> code_expr addrs env e; _POPN 1 
@@ -197,14 +197,14 @@ let compile chan ast =
     match m with
     | "print" -> _DUPN 1; _WRITES ()
     | "println" -> _DUPN 1; _WRITES (); _PUSHS "\n"; _WRITES ()
-    | _ -> failwith "unreachable"
+    | _ -> failwith "code_builtin_string unreachable"
     
   and code_builtin_integer addrs env e m =
     code_expr addrs env e; (* push this *)
 
     match m with
     | "toString" -> _STR ()
-    | _ -> failwith "unreachable"
+    | _ -> failwith "code_builtin_integer unreachable"
   
   and code_expr_call addrs env (e, s, le) = 
     let clName = get_expr_type decls env e
@@ -288,8 +288,9 @@ let compile chan ast =
     let size = List.length (all_attrs decls decl) + 1
     in let params = ctor_params_to_method_params decl.ctor.params
     in let addrs = make_method_addrs params
-    in let env = Env.add_all [] params
-    in let vti = Util.index_of decls decl
+    in let env = make_class_env decl
+    in let env = Env.add_all env params
+    in let vti = Util.index_of decl decls
 
     in let rec call_super_ctor decl = 
       match decl.superclass with 

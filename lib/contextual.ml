@@ -368,13 +368,15 @@ and check_expr decls env expr =
     * Constructor does not call any super constructor if class is base
     * Super constructor call args are compatible if class is derived
     * No return instruction in body
+    * Constructor body is valid
     @raise Contextual_error if a check fails.
 *)
 
 let check_ctor decls decl =
   let ctor = decl.ctor
   in let params = ctor_params_to_method_params ctor.params
-  in let env = Env.add_all [] params
+  in let env = make_class_env decl
+  in let env = Env.add_all env params
   in begin
     check_no_reserved_var params;
 
@@ -401,7 +403,9 @@ let check_ctor decls decl =
 
     if ctor.params <> decl.ctorParams
     then err (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
-    else ()
+    else ();
+  
+    check_instr decls env decl.ctor.body
   end
 
 let check_static_method decls env meth =
