@@ -15,3 +15,5 @@ docker_down:
 docker_logs: 
 	docker-compose logs -f $(ARG)
 
+docker_run:
+	docker run --rm -it turbo_katana_katana:latest

@@ -15,7 +15,7 @@ FROM init-opam AS kat
 COPY . .
 RUN set -x && \
     : "Install related pacakges" && \
-    opam install . --deps-only --locked && \
+    opam install . --deps-only && \
     eval $(opam env) && \
     : "Build applications" && \
     dune build
