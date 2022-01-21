@@ -18,6 +18,10 @@ let meth_lbl className methName =
 
 let ctor_lbl className =
   Printf.sprintf "_CTOR_%s_" className
+
+let static_lbl className methName =
+	Printf.sprintf "%s_%i_%s" className (String.length methName) methName
+
   
 (** Get the address of a local variable. *)
 
@@ -27,6 +31,10 @@ let get_addr addrs id =
   | None -> failwith (Printf.sprintf "variable %s not found in addrs" id)
 
 (** Make a lookup between method parameter names and their address *)
+
+let addrs_add addrs name =
+	let prev = List.fold_left (fun acc (_name, addr) -> max acc addr) (-1) addrs
+	in (name, prev + 1)::addrs 
 
 let make_method_addrs params =
     let len = List.length params
@@ -52,6 +60,16 @@ let rec all_attrs decls decl =
 
 let attr_offset decls decl attrName =
   Util.index_of (all_attrs decls decl) attrName
+
+let static_attr_offset decls decl attr =  
+	let rec marcel decls =
+		match decls with 
+		| d::_ when decl = d -> 
+			List.map (fun (a: param) -> a.name) d.staticAttrs 
+			|> Util.index_of attr
+		| d::r -> (List.length d.staticAttrs) + marcel r 
+		| _ -> failwith "unreachable"
+	in marcel decls
     
 (* --------------------------------------------- *)
 
@@ -113,22 +131,48 @@ let compile chan ast =
     | Mul -> _MUL ()
     | Div -> _DIV () in
   
-  let rec code_instr_ite attrs env (cmp, yes, no) =
+  let rec code_instr_ite addrs env (cmp, yes, no) =
     let lbl_else = genlbl () in
     let lbl_end = genlbl () in
-    code_expr attrs env cmp;
+    code_expr addrs env cmp;
     _JZ lbl_else;
-    (code_instr attrs env yes);
+    (code_instr addrs env yes);
     _JUMP lbl_end;
     _LABEL lbl_else;
-    (code_instr attrs env no);
+    (code_instr addrs env no);
     _LABEL lbl_end;
   
-  and code_instr_block attrs env (lp, li) =
-    ()
- 
-  and code_instr_assign attrs env (from_, to_) =
-    ()
+  and code_instr_block addrs env (lp, li) =
+    _PUSHN (List.length lp);
+		let addrs = List.fold_left (fun addrs (p: param) -> addrs_add addrs p.name) addrs lp
+		in let env = List.fold_left (fun env (p: param) -> Env.add env p) env lp
+		in List.iter (code_instr addrs env) li
+
+  and code_instr_assign addrs env (from_, to_) =
+		match to_ with
+		| Attr(e, s) -> 
+			let name = get_expr_type decls env e 
+			in let decl = get_class decls name
+			in let off = attr_offset decls decl s
+			in code_expr addrs env to_; 
+			code_expr addrs env from_;
+			_STORE off
+
+		| StaticAttr(name, s) -> 
+			let decl = get_class decls name
+			in let off = static_attr_offset decls decl s
+			in code_expr addrs env to_; 
+			code_expr addrs env from_;
+			_STORE off
+			
+
+		| Id(s) -> 
+			let addr = get_addr addrs s
+			in code_expr addrs env to_; 
+			code_expr addrs env from_;
+			_STOREL addr
+
+		| _ -> failwith "unreachable"
     
   (** Code to compute an instruction.
       Leave nothing on the stack after execution. *)
@@ -184,11 +228,16 @@ let compile chan ast =
   and code_expr_static_attr addrs env (clName, attrName) =
     ()
   
-  and code_expr_static_call (clName, methName, args) =
-    ()
-  
+  and code_expr_static_call addrs env (clName, methName, args) =
+		let name = static_lbl clName methName
+		in List.iter (code_expr addrs env) args;
+		_PUSHA name;
+		_CALL ()
+
   and code_expr_new (clName, args) =
-    ()
+		let name = ctor_lbl clName
+		in _PUSHA name;
+		_CALL ()
         
   (** Code to compute an expression.
       Leave a pointer to the expr result after execution. *)
@@ -201,7 +250,7 @@ let compile chan ast =
       | StaticAttr(clName, attrName) -> code_expr_static_attr addrs env (clName, attrName)
       | UMinus(e) -> _PUSHI 0; code_expr addrs env e; _SUB ()
       | Call(e, s, le) -> code_expr_call addrs env (e, s, le) 
-      | StaticCall(clName, methName, args) -> code_expr_static_call (clName, methName, args)
+      | StaticCall(clName, methName, args) -> code_expr_static_call addrs env (clName, methName, args)
       | BinOp(e1, op, e2) -> code_expr addrs env e1; code_expr addrs env e2; code_op op
       | String(s) -> _PUSHS s
       | StrCat(s1, s2) -> code_expr addrs env s1; code_expr addrs env s2; _CONCAT ()
@@ -263,15 +312,16 @@ let compile chan ast =
   in let code_main_instr instr =
     ()
   
-  in let code_static_attr attr =
-    ()
+  in let code_static_attrs () =
+    let size = List.fold_left (fun acc decl -> acc + (List.length decl.staticAttrs)) 0 decls
+		in _PUSHN size
 
 in
   _COMMENT "----- VTABLES -----";
   List.iter code_vtable decls;
 
   _COMMENT "----- STATIC ATTRIBS -----";
-  List.iter (fun decl -> code_static_attr decl.staticAttrs) decls;
+	code_static_attrs ();
 
   _COMMENT "----- MAIN INSTRUCTION -----";
   code_main_instr ast.instr;
@@ -282,3 +332,5 @@ in
       decl.instMethods |> List.iter code_inst_method;
       decl.staticMethods |> List.iter code_static_method
     );
+
+(*	><,`C   --------- ><> *)  
