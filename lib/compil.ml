@@ -21,7 +21,6 @@ let ctor_lbl className =
 
 let static_lbl className methName =
 	Printf.sprintf "%s_%i_%s" className (String.length methName) methName
-
   
 (** Get the address of a local variable. *)
 
@@ -83,7 +82,7 @@ let compile chan ast =
   let _START () = Printf.fprintf chan "START\n" in
   let _STOP () = Printf.fprintf chan "STOP\n" in
   let _PUSHI = Printf.fprintf chan "PUSHI %i\n" in
-  let _PUSHS = Printf.fprintf chan "PUSHS %s\n" in
+  let _PUSHS s = Printf.fprintf chan "PUSHS \"%s\"\n" (String.escaped s) in
   let _PUSHG = Printf.fprintf chan "PUSHG %i\n" in
   let _PUSHL = Printf.fprintf chan "PUSHL %i\n" in
   let _PUSHSP = Printf.fprintf chan "PUSHSP %i\n" in
@@ -310,13 +309,18 @@ let compile chan ast =
     ()
  
   in let code_main_instr instr =
-    ()
-  
+    _LABEL "start";
+    _START ();
+    code_instr [] [] instr;
+    _STOP ();
+      
   in let code_static_attrs () =
     let size = List.fold_left (fun acc decl -> acc + (List.length decl.staticAttrs)) 0 decls
 		in _PUSHN size
 
 in
+  _JUMP "start";
+
   _COMMENT "----- VTABLES -----";
   List.iter code_vtable decls;
 
