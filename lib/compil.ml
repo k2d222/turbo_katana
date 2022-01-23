@@ -44,6 +44,14 @@ let make_method_addrs params =
     in let addrs = ("this", -len - 1)::addrs
     in addrs
 
+let make_ctor_addrs params =
+    let len = List.length params
+    in let addrs = params |> List.mapi (fun i (p: param) -> 
+        (p.name, -len + i)
+      )
+    in let addrs = ("this", -len - 1)::addrs
+    in addrs
+
 (** Get a list of all instance attributes in a class, in offset order. *)
 
 let rec all_attrs decls decl = 
@@ -142,10 +150,12 @@ let compile chan ast =
     _LABEL lbl_end;
   
   and code_instr_block addrs env (lp, li) =
-    _PUSHN (List.length lp);
 		let addrs = List.fold_left (fun addrs (p: param) -> addrs_add addrs p.name) addrs lp
 		in let env = List.fold_left (fun env (p: param) -> Env.add env p) env lp
-		in List.iter (code_instr addrs env) li
+    in _PUSHN (List.length lp);
+		List.iter (code_instr addrs env) li;
+    _POPN (List.length lp)
+    
 
   and code_instr_assign addrs env (to_, from_) =
 		match to_ with
@@ -153,7 +163,7 @@ let compile chan ast =
 			let name = get_expr_type decls env e 
 			in let decl = get_class decls name
 			in let off = attr_offset decls decl s
-			in code_expr addrs env to_; 
+			in code_expr addrs env to_;
 			code_expr addrs env from_;
 			_STORE off
 
@@ -163,12 +173,10 @@ let compile chan ast =
 			in code_expr addrs env to_; 
 			code_expr addrs env from_;
 			_STORE off
-			
 
 		| Id(s) -> 
 			let addr = get_addr addrs s
-			in code_expr addrs env to_; 
-			code_expr addrs env from_;
+			in code_expr addrs env from_;
 			_STOREL addr
 
 		| _ -> failwith "code_instr_assign unreachable"
@@ -205,38 +213,50 @@ let compile chan ast =
     | "toString" -> _STR ()
     | _ -> failwith "code_builtin_integer unreachable"
   
-  and code_expr_call addrs env (e, s, le) = 
+  and code_expr_call addrs env (e, methName, args) = 
     let clName = get_expr_type decls env e
       
     in match clName with
-    | "Integer" -> code_builtin_integer addrs env e s
-    | "String" -> code_builtin_string addrs env e s
+    | "Integer" -> code_builtin_integer addrs env e methName
+    | "String" -> code_builtin_string addrs env e methName
     | _ ->
       let decl = get_class decls clName
       in let vt = Vtable.make decls decl
-      in let meth = find_method decls s decl
+      in let meth = find_method decls methName decl
       in _PUSHI 0; (* push result *)
-      List.iter (code_expr addrs env) le; (* push args *)
+      List.iter (code_expr addrs env) args; (* push args *)
       code_expr addrs env e; (* push this *)
       _DUPN 1;
       _LOAD 0;
       _LOAD (Vtable.offset vt meth);
       _CALL ();
-      _POPN ((List.length le) + 1) (* pop args & this, leave result *)
+      _POPN ((List.length args) + 1) (* pop args & this, leave result *)
   
   and code_expr_static_attr addrs env (clName, attrName) =
     ()
   
   and code_expr_static_call addrs env (clName, methName, args) =
 		let name = static_lbl clName methName
-		in List.iter (code_expr addrs env) args;
+    in _PUSHI 0; (* push result *)
+		List.iter (code_expr addrs env) args; (* push args *)
 		_PUSHA name;
-		_CALL ()
+		_CALL ();
+    _POPN (List.length args) (* pop args, leave result *)
 
-  and code_expr_new (clName, args) =
+  and code_expr_new addrs env (clName, args) =
 		let name = ctor_lbl clName
-		in _PUSHA name;
-		_CALL ()
+    in let decl = get_class decls clName
+    in let size = List.length (all_attrs decls decl) + 1
+    in let vti = Util.index_of decl decls
+		in
+    _ALLOC size;
+    _DUPN 1;
+    _PUSHG vti;
+    _STORE 0;
+    List.iter (code_expr addrs env) args; (* push args *)
+    _PUSHA name;
+		_CALL ();
+    _POPN (List.length args) (* pop args, leave this *)
         
   (** Code to compute an expression.
       Leave a pointer to the expr result after execution. *)
@@ -253,7 +273,7 @@ let compile chan ast =
       | BinOp(e1, op, e2) -> code_expr addrs env e1; code_expr addrs env e2; code_op op
       | String(s) -> _PUSHS s
       | StrCat(s1, s2) -> code_expr addrs env s1; code_expr addrs env s2; _CONCAT ()
-      | New(clName, args) -> code_expr_new (clName, args)
+      | New(clName, args) -> code_expr_new addrs env (clName, args)
       | StaticCast(_, e) -> code_expr addrs env e
   
   (** Generate a virtual table for a class.
@@ -280,15 +300,14 @@ let compile chan ast =
     _CALL ();
     _POPN ((List.length args) + 1) (* pop args & this *)
 
-  (** Code of a constructor. *)
+  (** Code of a constructor.
+      Leave the new'ed instance pointer on the stack *)
   
   in let code_ctor decl =
-    let size = List.length (all_attrs decls decl) + 1
-    in let params = ctor_params_to_method_params decl.ctor.params
-    in let addrs = make_method_addrs params
+    let params = ctor_params_to_method_params decl.ctor.params
+    in let addrs = make_ctor_addrs params
     in let env = make_class_env decl
     in let env = Env.add_all env params
-    in let vti = Util.index_of decl decls
 
     in let rec call_super_ctor decl = 
       match decl.super with 
@@ -296,30 +315,28 @@ let compile chan ast =
       | None -> ()
 
     in _LABEL (ctor_lbl decl.name);
-    _ALLOC size;
-    _PUSHI vti;
-    _STORE 0;
     call_super_ctor decl;
-    code_instr addrs env decl.ctor.body
+    code_instr addrs env decl.ctor.body;
+    _RETURN ()
 
-  in let code_inst_method meth =
-    ()
+  in let code_inst_method decl (meth: methodDecl) =
+    _LABEL (static_lbl decl.name meth.name);
+    (* TODO *)
+    _RETURN ()
   
-  in let code_static_method meth =
-    ()
+  in let code_static_method decl (meth: methodDecl) =
+    _LABEL (static_lbl decl.name meth.name);
+    (* TODO *)
+    _RETURN ()
  
   in let code_main_instr instr =
-    _LABEL "start";
-    _START ();
     code_instr [] [] instr;
-    _STOP ();
       
   in let code_static_attrs () =
     let size = List.fold_left (fun acc decl -> acc + (List.length decl.staticAttrs)) 0 decls
 		in _PUSHN size
 
 in
-  _JUMP "start";
 
   _COMMENT "----- VTABLES -----";
   List.iter code_vtable decls;
@@ -328,13 +345,15 @@ in
 	code_static_attrs ();
 
   _COMMENT "----- MAIN INSTRUCTION -----";
+  _START ();
   code_main_instr ast.instr;
+  _STOP ();
 
   _COMMENT "----- FUNCTIONS -----";
   decls |> List.iter (fun decl ->
       code_ctor decl;
-      decl.instMethods |> List.iter code_inst_method;
-      decl.staticMethods |> List.iter code_static_method
+      decl.instMethods |> List.iter (code_inst_method decl);
+      decl.staticMethods |> List.iter (code_static_method decl)
     );
 
 (*	><,`C   --------- ><> *)  

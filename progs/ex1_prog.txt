@@ -560,6 +560,30 @@ PUSHL -4
 LOAD 3
 PUSHI 0
 STORE 2
+Point_4_egal: NOP
+RETURN
+Point_9_allClones: NOP
+RETURN
+Point_5_clone: NOP
+RETURN
+Point_5_print: NOP
+RETURN
+Point_4_move: NOP
+RETURN
+Point_8_isCloned: NOP
+RETURN
+Point_7_setName: NOP
+RETURN
+Point_4_gety: NOP
+RETURN
+Point_4_getx: NOP
+RETURN
+Point_4_init: NOP
+RETURN
+Point_7_howMany: NOP
+RETURN
+Point_4_incr: NOP
+RETURN
 _CTOR_Couleur_: NOP
 ALLOC 2
 PUSHI 1
@@ -594,11 +618,23 @@ lbl5: NOP
 PUSHN 0
 lbl6: NOP
 lbl4: NOP
+Couleur_7_estGris: NOP
+RETURN
+Couleur_4_name: NOP
+RETURN
 _CTOR_CouleurFactory_: NOP
 ALLOC 1
 PUSHI 2
 STORE 0
 PUSHN 0
+CouleurFactory_4_gris: NOP
+RETURN
+CouleurFactory_4_noir: NOP
+RETURN
+CouleurFactory_5_blanc: NOP
+RETURN
+CouleurFactory_4_init: NOP
+RETURN
 _CTOR_PointColore_: NOP
 ALLOC 8
 PUSHI 3
@@ -619,6 +655,16 @@ PUSHL -4
 LOAD 7
 PUSHL -1
 STORE 6
+PointColore_5_print: NOP
+RETURN
+PointColore_7_estGris: NOP
+RETURN
+PointColore_5_clone: NOP
+RETURN
+PointColore_6_colore: NOP
+RETURN
+PointColore_7_couleur: NOP
+RETURN
 _CTOR_PointNoir_: NOP
 ALLOC 8
 PUSHI 4
@@ -632,6 +678,12 @@ PUSHA _CTOR_PointColore_
 CALL
 POPN 4
 PUSHN 0
+PointNoir_7_couleur: NOP
+RETURN
+PointNoir_6_colore: NOP
+RETURN
+PointNoir_7_estGris: NOP
+RETURN
 _CTOR_DefaultPoint_: NOP
 ALLOC 8
 PUSHI 5
@@ -645,8 +697,16 @@ PUSHA _CTOR_PointColore_
 CALL
 POPN 4
 PUSHN 0
+DefaultPoint_7_couleur: NOP
+RETURN
+DefaultPoint_7_estGris: NOP
+RETURN
 _CTOR_Test_: NOP
 ALLOC 1
 PUSHI 6
 STORE 0
 PUSHN 0
+Test_5_test2: NOP
+RETURN
+Test_4_test: NOP
+RETURN
