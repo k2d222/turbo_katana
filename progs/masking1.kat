@@ -1,13 +1,13 @@
 class A() is {
   var v: Integer
   def f() : Integer := this.v
-  def A() is { v := 1; }
+  def A() is { this.v := 1; }
 }
 
 class A2() extends A is {
   var v: String
   def g() : String := this.v
-  def A2() : A() is { v := "coucou"; }
+  def A2() : A() is { this.v := "coucou"; }
 }
 
 class A3() extends A2 is {
@@ -19,7 +19,7 @@ class A3() extends A2 is {
     ((A2 this).v).println();
     this.v.toString().println();
   }
-  def A3() : A2() is { v := 5; }
+  def A3() : A2() is { this.v := 5; }
 }
 class A4() extends A3 is {
   def z() : Integer := this.v

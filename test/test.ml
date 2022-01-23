@@ -1,22 +1,19 @@
 open Utils
 
-let%test_unit "ex1-parse" =
-    ignore @@ parse_file "../progs/ex1.kat"
+let%test "ex1-parse" =
+    file_ast "../progs/ex1.kat"
     
-let%test_unit "ex1-V3-file-parse" = 
-    ignore @@ parse_file "../progs/ex1-V3.kat"
+let%test "gn-file-parse" = 
+    file_ast "../progs/gn.kat"
 
-let%test_unit "gn-file-parse" = 
-    ignore @@ parse_file "../progs/gn.kat"
+let%test "grandMere-file-parse" = 
+    file_ast "../progs/grandMere.kat"
 
-let%test_unit "grandMere-file-parse" = 
-    ignore @@ parse_file "../progs/grandMere.kat"
+let%test "masking1-file-parse" = 
+    file_ast "../progs/masking1.kat"
 
-let%test_unit "masking1-file-parse" = 
-    ignore @@ parse_file "../progs/masking1.kat"
-
-let%test_unit "test-file-parse" = 
-    ignore @@ parse_file "../progs/test.kat"
+let%test "test-file-parse" = 
+    file_ast "../progs/test.kat"
 
 
 let%test "err1-file-parse" = 

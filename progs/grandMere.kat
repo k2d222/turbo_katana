@@ -18,7 +18,7 @@ class B() extends A is {
 class C(v : Integer) extends B is {
      var vc: Integer
      def C(v : Integer): B() is {
-         vc := 3 + this.va + this.vb;
+         this.vc := 3 + this.va + this.vb;
          "C::(): ".print();
          this.vc.toString().println();
      }
@@ -33,7 +33,7 @@ class D(v : Integer) extends C is
         result := this.va + this.vb + this.vc + this.vd;
      }
     def D(v : Integer): C(12) is {
-        vd := this.vc + 4;
+        this.vd := this.vc + 4;
 	"D::(): ".print();
         this.vd.toString().println();
     } 
