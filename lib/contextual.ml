@@ -402,7 +402,7 @@ let check_ctor decls decl =
 
 let check_static_method decls env meth =
   check_no_reserved_var meth.params;
-  let env = make_method_env env meth
+  let env = add_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
   | Some _ -> check_returns meth.body
@@ -410,7 +410,7 @@ let check_static_method decls env meth =
 
 let check_instance_method decls env meth =
   check_no_reserved_var meth.params;
-  let env = make_method_env env meth
+  let env = add_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
   | Some _ -> check_returns meth.body

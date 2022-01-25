@@ -210,7 +210,7 @@ let make_class_env decl =
 
 (** Make an environment with method params and optionally 'result'. *)
 
-let make_method_env env meth =
+let add_method_env env meth =
   let env = Env.add_all env meth.params
   in let env = match meth.retType with
       | Some(ret) -> ("result", ret) :: env

@@ -35,21 +35,31 @@ let addrs_add addrs name =
 	let prev = List.fold_left (fun acc (_name, addr) -> max acc addr) (-1) addrs
 	in (name, prev + 1)::addrs 
 
+(** Order of stack: result, params, this *)
+
 let make_method_addrs params =
+    let len = List.length params
+    in let addrs = params |> List.mapi (fun i (p: param) -> 
+        (p.name, -len - 1 + i)
+      )
+    in let addrs = ("result", -len - 2)::addrs
+    in let addrs = ("this", -1)::addrs
+    in addrs
+
+let make_static_method_addrs params =
     let len = List.length params
     in let addrs = params |> List.mapi (fun i (p: param) -> 
         (p.name, -len + i)
       )
-    in let addrs = ("result", -len - 2)::addrs
-    in let addrs = ("this", -len - 1)::addrs
+    in let addrs = ("result", -len - 1)::addrs
     in addrs
 
 let make_ctor_addrs params =
     let len = List.length params
     in let addrs = params |> List.mapi (fun i (p: param) -> 
-        (p.name, -len + i)
+        (p.name, -len - 1 + i)
       )
-    in let addrs = ("this", -len - 1)::addrs
+    in let addrs = ("this", -1)::addrs
     in addrs
 
 (** Get a list of all instance attributes in a class, in offset order. *)
@@ -68,15 +78,15 @@ let rec all_attrs decls decl =
 let attr_offset decls decl attrName =
   all_attrs decls decl |> Util.index_of attrName 
 
-let static_attr_offset decls decl attr =  
-	let rec marcel decls =
+let static_attr_offset decls decl attr =
+	let rec r_offset decls =
 		match decls with 
 		| d::_ when decl = d -> 
 			List.map (fun (a: param) -> a.name) d.staticAttrs 
 			|> Util.index_of attr
-		| d::r -> (List.length d.staticAttrs) + marcel r 
+		| d::r -> (List.length d.staticAttrs) + r_offset r 
 		| _ -> failwith "static_attr_offset unreachable"
-	in marcel decls
+	in r_offset decls
     
 (* --------------------------------------------- *)
 
@@ -193,10 +203,20 @@ let compile chan ast =
     | Expr(e) -> code_expr addrs env e; _POPN 1 
   
   and code_expr_attr addrs env (e, s) = 
-    code_expr addrs env e;
-    let decl = get_expr_type decls env e 
-    in let decl = get_class decls decl
-    in _LOAD ((attr_offset decls decl s) + 1)
+    
+    match e with
+    | Id("super") ->
+        let clName = Env.get env "this"
+        in let decl = get_class decls clName
+        in let superDecl = get_class decls (Option.get decl.super).name
+        in _PUSHL (get_addr addrs "this"); (* push this *)
+        _LOAD ((attr_offset decls superDecl s) + 1)
+    
+    | _ ->
+      code_expr addrs env e; (* push this *)
+      let decl = get_expr_type decls env e 
+      in let decl = get_class decls decl
+      in _LOAD ((attr_offset decls decl s) + 1)
   
   and code_builtin_string addrs env e m = 
     code_expr addrs env e; (* push this *)
@@ -220,21 +240,35 @@ let compile chan ast =
     | "Integer" -> code_builtin_integer addrs env e methName
     | "String" -> code_builtin_string addrs env e methName
     | _ ->
-      let decl = get_class decls clName
-      in let vt = Vtable.make decls decl
-      in let meth = find_method decls methName decl
-      in _PUSHI 0; (* push result *)
-      List.iter (code_expr addrs env) args; (* push args *)
-      code_expr addrs env e; (* push this *)
-      _DUPN 1;
-      _LOAD 0;
-      _LOAD (Vtable.offset vt meth);
-      _CALL ();
-      _POPN ((List.length args) + 1) (* pop args & this, leave result *)
+      if e = Id("super")
+      then
+        let decl = get_class decls clName
+        in let superDecl = get_class decls (Option.get decl.super).name
+        in _PUSHI 0; (* push result *)
+        List.iter (code_expr addrs env) args; (* push args *)
+        _PUSHL (get_addr addrs "this"); (* push this *)
+        _PUSHA (meth_lbl superDecl.name methName);
+        _CALL ();
+        _POPN ((List.length args) + 1) (* pop args & this, leave result *)
+
+      else
+        let decl = get_class decls clName
+        in let vt = Vtable.make decls decl
+        in let meth = find_method decls methName decl
+        in _PUSHI 0; (* push result *)
+        List.iter (code_expr addrs env) args; (* push args *)
+        code_expr addrs env e; (* push this *)
+        _DUPN 1;
+        _LOAD 0;
+        _LOAD (Vtable.offset vt meth);
+        _CALL ();
+        _POPN ((List.length args) + 1) (* pop args & this, leave result *)
   
-  and code_expr_static_attr addrs env (clName, attrName) =
-    ()
-  
+  and code_expr_static_attr (clName, attrName) =
+    let decl = get_class decls clName
+    in let off = static_attr_offset decls decl attrName
+    in _PUSHG off  
+
   and code_expr_static_call addrs env (clName, methName, args) =
 		let name = static_lbl clName methName
     in _PUSHI 0; (* push result *)
@@ -266,7 +300,7 @@ let compile chan ast =
       | Id(id) -> _PUSHL (get_addr addrs id)
       | Cste(c) -> _PUSHI c
       | Attr(e, s) -> code_expr_attr addrs env (e, s)
-      | StaticAttr(clName, attrName) -> code_expr_static_attr addrs env (clName, attrName)
+      | StaticAttr(clName, attrName) -> code_expr_static_attr (clName, attrName)
       | UMinus(e) -> _PUSHI 0; code_expr addrs env e; _SUB ()
       | Call(e, s, le) -> code_expr_call addrs env (e, s, le) 
       | StaticCall(clName, methName, args) -> code_expr_static_call addrs env (clName, methName, args)
@@ -320,13 +354,18 @@ let compile chan ast =
     _RETURN ()
 
   in let code_inst_method decl (meth: methodDecl) =
-    _LABEL (static_lbl decl.name meth.name);
-    (* TODO *)
+    let addrs = make_method_addrs meth.params
+    in let env = make_class_env decl
+    in let env = add_method_env env meth
+    in _LABEL (static_lbl decl.name meth.name);
+    code_instr addrs env meth.body;
     _RETURN ()
   
   in let code_static_method decl (meth: methodDecl) =
-    _LABEL (static_lbl decl.name meth.name);
-    (* TODO *)
+    let addrs = make_static_method_addrs meth.params
+    in let env = add_method_env [] meth
+    in _LABEL (static_lbl decl.name meth.name);
+    code_instr addrs env meth.body;
     _RETURN ()
  
   in let code_main_instr instr =
