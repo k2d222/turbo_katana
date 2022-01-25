@@ -57,9 +57,9 @@ let make_static_method_addrs params =
 let make_ctor_addrs params =
     let len = List.length params
     in let addrs = params |> List.mapi (fun i (p: param) -> 
-        (p.name, -len - 1 + i)
+        (p.name, -len + i)
       )
-    in let addrs = ("this", -1)::addrs
+    in let addrs = ("this", -len - 1)::addrs
     in addrs
 
 (** Get a list of all instance attributes in a class, in offset order. *)
@@ -242,7 +242,8 @@ let compile chan ast =
     | _ ->
       if e = Id("super")
       then
-        let decl = get_class decls clName
+        let clName = Env.get env "this"
+        in let decl = get_class decls clName
         in let superDecl = get_class decls (Option.get decl.super).name
         in _PUSHI 0; (* push result *)
         List.iter (code_expr addrs env) args; (* push args *)
@@ -283,7 +284,7 @@ let compile chan ast =
     in let size = List.length (all_attrs decls decl) + 1
     in let vti = Util.index_of decl decls
 		in
-    _ALLOC size;
+    _ALLOC size; (* push this *)
     _DUPN 1;
     _PUSHG vti;
     _STORE 0;
@@ -329,7 +330,7 @@ let compile chan ast =
   in let code_super_call addrs env decl =
     let { args; name } = Option.get decl.super
     in List.iter (code_expr addrs env) args; (* push args *)
-    _PUSHL (-1 - List.length args); (* push this *)
+    _PUSHL (get_addr addrs "this"); (* push this *)
     _PUSHA (ctor_lbl name);
     _CALL ();
     _POPN ((List.length args) + 1) (* pop args & this *)
