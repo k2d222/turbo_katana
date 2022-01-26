@@ -1,4 +1,5 @@
 -- ----- VTABLES -----
+ALLOC 0
 ALLOC 1
 DUPN 1
 PUSHA Derived_4_test
