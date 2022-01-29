@@ -70,7 +70,7 @@ prog:
   decls = list(classDecl) instr = instrBlock EOF { { decls; instr } }
 
 classDecl:
-  CLASS name = CLASSNAME ctorParams = ctorParamList superclass = extends IS LCURLY l = list(classBodyElement) RCURLY {
+  CLASS name = CLASSNAME ctorParams = ctorParamList superclass = option(preceded(EXTENDS, CLASSNAME)) IS LCURLY l = list(classBodyElement) RCURLY {
     let (lsm, lim, lc, lsa, lia) = split_body_elts l
 
     in let ctor = 
@@ -146,12 +146,8 @@ ctorParamList:
   LPAREN lp = separated_list(COMMA, ctorParam) RPAREN { List.flatten lp }
 
 ctorParam:
-  isMember = boption(VAR) names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME
-  { List.map (fun name -> { isMember; param={ name; className } }) names }
-
-extends:
-  | EXTENDS id = CLASSNAME { Some(id) }
-  | { None }
+  isMember = boption(VAR) params = param
+  { List.map (fun param -> { isMember; param }) params }
 
 param:
   names = separated_nonempty_list(COMMA, ID) COLON className = CLASSNAME { List.map (fun name -> { name; className }) names }

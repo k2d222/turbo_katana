@@ -57,7 +57,7 @@ let find_method_opt decls name decl =
 let find_method decls name decl =
   find_method_opt decls name decl
   |> Optmanip.get_or_else (fun () ->
-     Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name; 
+      Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name;
       raise Not_found
     )
 
@@ -72,7 +72,7 @@ let get_static_method_opt name decl =
 let get_static_method name decl =
   get_static_method_opt name decl
   |> Optmanip.get_or_else (fun () ->
-     Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name; 
+      Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name;
       raise Not_found
     )
 
@@ -88,7 +88,7 @@ let get_inst_attr_opt attrName decl =
 let find_inst_attr_opt decls attrName decl =
   (get_inst_attr_opt attrName) |> recursively decls decl
 
-(** Find (recursively through ancestors) the type of an attribute in a class declaration. 
+(** Find (recursively through ancestors) the type of an attribute in a class declaration.
     @raise Not_found if the class has no such attribute. *)
 
 let find_inst_attr decls attrName decl =
@@ -182,16 +182,16 @@ let get_expr_type decls env expr =
       in get_static_method_type name decl
 
     | New(className, _args) -> className
-    | StaticCast(className, _args) -> className 
+    | StaticCast(className, _args) -> className
 
   in r_get expr
 
 (** Wether derived is convertible to base. *)
 
 let is_base decls derived base =
-  let builtins = ["Integer"; "String"]
+  let builtins = ["Integer"; "String"; "_Void"]
   in if derived = base then true
-  else if List.exists ((=) derived) builtins || List.exists ((=) derived) builtins (* cannot derive builtins *)
+  else if List.exists ((=) derived) builtins || List.exists ((=) base) builtins (* cannot derive builtins *)
   then false
   else
     let derived = get_class decls derived
@@ -219,5 +219,3 @@ let add_method_env env meth =
 
 let ctor_params_to_method_params ctorParams =
   ctorParams |> List.map (fun { name; className; _ } -> { name; className })
-
-  

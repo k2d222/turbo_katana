@@ -33,9 +33,9 @@ class TriNombre() is {
         } else {
         if this.last = 1 then {
              this.lier(new TriNombre());
-	  } else { }
-	  this.suivant.assurerCapacite(capa - 1);
-	}
+          } else { }
+          this.suivant.assurerCapacite(capa - 1);
+        }
         result := this;
     }
 
@@ -60,71 +60,71 @@ class TriNombre() is {
 
     def additionner(nombre:Integer) : Integer is {
         somme:Integer
-	is
+        is
         somme := this.trinome + nombre;
-	if nombre > 0 then {
-	   if somme >= 1000 then {
-	      div:Integer
-	      is
-	      div := somme / 1000;
-	      this.trinome := somme - (div * 1000);
-	      this.assurerCapacite(2);
-	      result := this.suivant.additionner(div) + 1;
-	   } else { this.trinome := somme; result := 1; }
-	} else result := 1;
+        if nombre > 0 then {
+           if somme >= 1000 then {
+              div:Integer
+              is
+              div := somme / 1000;
+              this.trinome := somme - (div * 1000);
+              this.assurerCapacite(2);
+              result := this.suivant.additionner(div) + 1;
+           } else { this.trinome := somme; result := 1; }
+        } else result := 1;
     }
 
     def additionnerTri(tri:TriNombre) : Integer is {
-	somme: Integer
-	nb1: Integer
-	nb2: Integer
-	is
-	somme := this.trinome + tri.trinome();
-	if somme >= 1000 then {
-	   this.trinome := somme - 1000;
-	   this.assurerCapacite(2);
-	   nb1 := this.suivant.additionner(1);
-	} else { this.trinome := somme; nb1 := 1; }
-	if this.last = 1 then { result := nb1; }
-	else {
-	   this.assurerCapacite(2);
+        somme: Integer
+        nb1: Integer
+        nb2: Integer
+        is
+        somme := this.trinome + tri.trinome();
+        if somme >= 1000 then {
+           this.trinome := somme - 1000;
+           this.assurerCapacite(2);
+           nb1 := this.suivant.additionner(1);
+        } else { this.trinome := somme; nb1 := 1; }
+        if this.last = 1 then { result := nb1; }
+        else {
+           this.assurerCapacite(2);
            result := this.suivant.additionnerTri(tri.suivant());
-	}
+        }
     }
 
    def multiplier(nb: Integer) : Integer is {
-	if nb = 0 then { this.affecter(0); result := 1;
-	} else {
-	    nb1: Integer
-	    nb2: Integer
+        if nb = 0 then { this.affecter(0); result := 1;
+        } else {
+            nb1: Integer
+            nb2: Integer
             res: Integer
-	    is
-	    nb1 := 0; nb2 := 0;
-	    if this.last = 0 then
+            is
+            nb1 := 0; nb2 := 0;
+            if this.last = 0 then
                nb1 := this.suivant.multiplier(nb)+1; else nb1 := 1;
-	    this.trinome := this.trinome * nb;
-	    if this.trinome >= 1000 then {
-	       reste: Integer
-	       is
-	       reste := this.trinome / 1000;
-	       this.trinome := this.trinome - reste * 1000;
-	       this.assurerCapacite(2);
-	       nb2 := this.suivant.additionner(reste) + 1;
-	    } else { }
+            this.trinome := this.trinome * nb;
+            if this.trinome >= 1000 then {
+               reste: Integer
+               is
+               reste := this.trinome / 1000;
+               this.trinome := this.trinome - reste * 1000;
+               this.assurerCapacite(2);
+               nb2 := this.suivant.additionner(reste) + 1;
+            } else { }
            if nb2 > nb1 then result := nb2; else result := nb1;
-	}
+        }
     }
 
     def imprimer(nb:Integer) is {
-	if nb >= 1 then {
-	   if nb > 1 then {
-	      if this.last = 0 then this.suivant.imprimer(nb - 1); else { }
-	      " ".print();
-	      if this.trinome < 100 then 0.toString().print(); else { }
-	      if this.trinome < 10 then 0.toString().print(); else { }
-	   } else { }
-	   this.trinome.toString().print();
-	} else { }
+        if nb >= 1 then {
+           if nb > 1 then {
+              if this.last = 0 then this.suivant.imprimer(nb - 1); else { }
+              " ".print();
+              if this.trinome < 100 then 0.toString().print(); else { }
+              if this.trinome < 10 then 0.toString().print(); else { }
+           } else { }
+           this.trinome.toString().print();
+        } else { }
     }
 }
 
@@ -157,37 +157,37 @@ class GrandNombre() is {
     }
 
     def calculerNbTri(valeur:Integer) : Integer is {
-	if valeur > 0 then result :=  1 + this.calculerNbTri(valeur/1000);
+        if valeur > 0 then result :=  1 + this.calculerNbTri(valeur/1000);
         else result := 0;
     }
 
     def additionner(nb:Integer) : Integer is {
-	nbTriAffecte: Integer
+        nbTriAffecte: Integer
         is
-	nbTriAffecte := this.nombre.additionner(nb);
-	if this.nbTri < nbTriAffecte then this.nbTri := nbTriAffecte; else { }
-	if this.nbTri = 0 then this.nbTri := 1; else { }
+        nbTriAffecte := this.nombre.additionner(nb);
+        if this.nbTri < nbTriAffecte then this.nbTri := nbTriAffecte; else { }
+        if this.nbTri = 0 then this.nbTri := 1; else { }
         result := this.nbTri;
     }
 
     def additionnerGN(gn:GrandNombre) : Integer is {
-	nbTriAffecte:Integer
-	is
-	nbTriAffecte := this.nombre.additionnerTri(gn.nombre());
-	if this.nbTri < nbTriAffecte then this.nbTri := nbTriAffecte; else { }
-	if this.nbTri = 0 then this.nbTri := 1; else { }
+        nbTriAffecte:Integer
+        is
+        nbTriAffecte := this.nombre.additionnerTri(gn.nombre());
+        if this.nbTri < nbTriAffecte then this.nbTri := nbTriAffecte; else { }
+        if this.nbTri = 0 then this.nbTri := 1; else { }
         result := this.nbTri;
     }
 
     def multiplier(nb: Integer) : Integer is {
-	this.nbTri := this.nombre.multiplier(nb);
-	if this.nbTri = 0 then this.nbTri := 1; else { }
+        this.nbTri := this.nombre.multiplier(nb);
+        if this.nbTri = 0 then this.nbTri := 1; else { }
         result := this.nbTri;
     }
 
    /* fonction auxiliaire */
    def affecter(nb:Integer) : Integer is {
-	this.nbTri := this.nombre.affecter(nb);
+        this.nbTri := this.nombre.affecter(nb);
         result := this.nbTri;
     }
 
@@ -198,21 +198,21 @@ class Test() is {
    def Test() is {}
    def static test1(num: Integer, cible: Integer, res: GrandNombre) is {
         if num <= cible then {
-	   /* additionner renvoie un Integer (qu'on ignore) et modifie res */
-	   res.additionner(num);
-	   Test.test1(num+1, cible, res);
-	} else { }
+           /* additionner renvoie un Integer (qu'on ignore) et modifie res */
+           res.additionner(num);
+           Test.test1(num+1, cible, res);
+        } else { }
     }
 
     def static test2(num: Integer, cible: Integer, gn: GrandNombre) is {
         if num <= cible then {
            num.toString().print(); "! ".print();
-	   /* sert juste a aligner les = dans les impressions */
+           /* sert juste a aligner les = dans les impressions */
            if num < 10 then " ".print(); else {}
            "= ".print();
-	   gn.multiplier(num); gn.imprimer();
-	   Test.test2(num+1, cible, gn);
-	} else { }
+           gn.multiplier(num); gn.imprimer();
+           Test.test2(num+1, cible, gn);
+        } else { }
     }
 }
 {

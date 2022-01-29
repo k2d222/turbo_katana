@@ -1,11 +1,14 @@
 open Ast
 open Astmanip
-open Util
 
 exception Contextual_error of string
 
+(** This function is called when a contextual check failed.
+    Uncomment line below for a non-terminating version. *)
 let err str = raise (Contextual_error str)
 (* let err str = print_endline @@ "[CONTEXTUAL ERROR]: " ^ str; () *)
+
+(* --------------------------------------------- *)
 
 (** Check that methods, instance attributes and static attributes are unique in a class declaration.
     @raise Contextual_error if a check fails. *)
@@ -28,29 +31,17 @@ let check_no_dup decl =
   check "attribute" instAttrs;
   check "static attribute" staticAttrs
 
-(** Check that each class declaration extends a declared class, if any.
-    @raise Contextual_error if a check fails. *)
-
-let check_inheritance decls =
-  let decls_with_super = decls |> List.filter_map (fun d ->
-      d.super |> Optmanip.map (fun super -> (d.name, super))
-    )
-  in decls_with_super |> List.iter (fun (name, (super: superCall)) ->
-      match get_class_opt decls super.name with
-      | None -> err (Printf.sprintf "class '%s' extends unknown class '%s'" name super.name)
-      | _ -> ()
-    )
-
 (** Check that there are no cycles in the inheritance graph.
     @raise Contextual_error if a check fails. *)
 
-let check_cycles decls =
+let check_no_cycles decls =
   (* complexity unoptimized (add memoization?) *)
   let rec r_check ancestors decl =
     match decl.super with
     | Some(super) ->
-      let superDecl = get_class_opt decls super.name |> Option.get in
-      if List.exists ((=) super) ancestors
+      let superDecl = get_class_opt decls super.name
+                      |> Optmanip.get_or_else (fun () -> err (Printf.sprintf "class '%s' inherits unknown class '%s'" decl.name super.name))
+      in if List.exists ((=) super) ancestors
       then err (Printf.sprintf "cycle in heritance: class '%s' extends ancestor class '%s'" decl.name super.name)
       else r_check (super::ancestors) superDecl
     | None -> ()
@@ -71,7 +62,7 @@ let check_overrides decls decl =
         if not (p1.className = p2.className)
         then err (Printf.sprintf "parameter '%s' in method '%s::%s' must be of type '%s' to match overriden method" p1.name decl.name derived.name p2.className)
       ) derived.params base.params
-  
+
   in let check_super_method superDecl (meth: methodDecl) =
        let overriden = find_method_opt decls meth.name superDecl in
        if meth.override then
@@ -101,30 +92,31 @@ let check_in_scope env id =
   if Option.is_none @@ List.assoc_opt id env
   then err (Printf.sprintf "use of undeclared identifier '%s'" id)
 
-(** Performs the following checks:
-    - All code paths lead to either an assign to the implicit 'result' variable before return instruction. *)
+(** Checks that all code paths lead to an assign to the implicit 'result' variable
+    before the return instruction or the end of block.
+    @raise Contextual_error if a check fails. *)
 
 let check_returns instr =
   let rec has_result instr =
-       match instr with
-       | Block(_, li) -> 
-          li |> List.fold_left (fun (hasRet, res) i -> 
-            if hasRet then (true, false)
-            else if res then (false, true)
-            else match i with
-               | Return -> (true, false)
-               | _ -> (false, has_result i)
-          ) (false, false)
-          |> snd
-       | Assign(to_, _) when to_ = Id("result") -> true
-       | Ite(_, then_, else_) -> has_result then_ && has_result else_
-       | _ -> false
+    match instr with
+    | Block(_, li) ->
+      li |> List.fold_left (fun (hasRet, res) i ->
+          if hasRet then (true, false)
+          else if res then (false, true)
+          else match i with
+            | Return -> (true, false)
+            | _ -> (false, has_result i)
+        ) (false, false)
+      |> snd
+    | Assign(to_, _) when to_ = Id("result") -> true
+    | Ite(_, then_, else_) -> has_result then_ && has_result else_
+    | _ -> false
 
   in if not (has_result instr)
   then err (Printf.sprintf "some code paths lead to no assign to 'result' before end of block or return statement, when method expects a return")
 
 (** Checks that there are no declarations of reserved keywords in vars.
-    Note: reserved keywords are: 'this', 'super', 'result'.
+    Note: reserved keywords are: 'this', 'super' and 'result'.
     @raise Contextual_error if a check fails. *)
 
 let check_no_reserved_var vars =
@@ -136,15 +128,16 @@ let check_no_reserved_var vars =
 
   in List.iter check vars
 
-(** Checks that there are no class declarations with reserved name (String or Integer).
+(** Checks that there are no class declarations with reserved name.
+    Note: reserved class names are 'String' and 'Integer'.
     @raise Contextual_error if a check fails. *)
 
 let check_no_reserved_class decls =
   let reserved = ["String"; "Integer"]
 
   in let check decl =
-    if List.exists ((=) decl.name) reserved
-    then err (Printf.sprintf "use of reserved class in class '%s'" decl.name)
+       if List.exists ((=) decl.name) reserved
+       then err (Printf.sprintf "use of reserved class in class '%s'" decl.name)
 
   in List.iter check decls
 
@@ -158,13 +151,16 @@ let rec check_no_dup_class = function
     then err (Printf.sprintf "duplicate class declaration: '%s'" decl.name)
     else check_no_dup_class decls
 
-(** Check compatible call arguments *)
+(** Check that arguments are compatible with parameters.
+    Note: arg is compatible with param if param type is equal to, or a base class of arg type.
+    @raise Contextual_error if a check fails. *)
 
 let check_call_args decls args params =
   let check_arg arg param =
-    if not (is_base decls arg param)
+    if arg = "_Void"
+    then err (Printf.sprintf "cannot use a Void expression as argument (expected type '%s')" param)
+    else if not (is_base decls arg param)
     then err (Printf.sprintf "invalid call argument: type '%s' is incompatible with '%s'" arg param)
-
 
   in if List.length args <> List.length params
   then err (Printf.sprintf "invalid number of arguments in call to method or constructor");
@@ -173,7 +169,10 @@ let check_call_args decls args params =
       check_arg arg param.className
     ) args params
 
-(** Checks that Block instructions are valid.
+(* -------------- INSTRUCTIONS -------------- *)
+(* Below are functions to check instructions. *)
+
+(** Checks that a Block instruction is valid.
     @raise Contextual_error if a check fails. *)
 
 let rec check_instr_block decls env (vars, li) =
@@ -194,10 +193,16 @@ and check_instr_assign decls env (lhs, rhs) =
   check_expr decls env rhs;
   let t1 = get_expr_type decls env lhs
   in let t2 = get_expr_type decls env rhs
-  in let () = match lhs with
-      | Id "this" | Id "super" -> err (Printf.sprintf "cannot assign to 'this' or 'super'")
-      | Id _ | Attr _ | StaticAttr _ -> ()
-      | _ -> err (Printf.sprintf "cannot assign to an expression of type '%s'" t1)
+
+  in if t1 = "_Void"
+  then err (Printf.sprintf "cannot assign to expression of type Void")
+  else if t2 = "_Void"
+  then err (Printf.sprintf "cannot assign from expression of type Void");
+
+  let () = match lhs with
+    | Id "this" | Id "super" -> err (Printf.sprintf "cannot assign to 'this' or 'super'")
+    | Id _ | Attr _ | StaticAttr _ -> ()
+    | _ -> err (Printf.sprintf "cannot assign to an expression of type '%s'" t1)
   in let () =
        if is_base decls t2 t1
        then ()
@@ -211,7 +216,7 @@ and check_instr_ite decls env (e, then_, else_) =
   check_expr decls env e;
   let t = get_expr_type decls env e
   in if t <> "Integer"
-  then err (Printf.sprintf "'if' condition must be of type 'Integer'");
+  then err (Printf.sprintf "'if' condition must be of type 'Integer', not '%s'" t);
   check_instr decls env then_;
   check_instr decls env else_
 
@@ -226,25 +231,32 @@ and check_instr decls env instr =
   | Expr e -> check_expr decls env e
   | Return -> ()
 
+(* -------------- EXPRESSIONS -------------- *)
+(* Below are functions to check expressions. *)
+
 (** Checks an Attr expression.
     @raise Contextual_error if a check fails. *)
 
 and check_expr_attr decls env (e, name) =
   check_expr decls env e;
   let t = get_expr_type decls env e
-  in let decl = get_class decls t
+  in if t = "_Void"
+  then err (Printf.sprintf "cannot access attribute on Void type");
+  let decl = get_class decls t
   in let attr = find_inst_attr_opt decls name decl
   in if Option.is_none attr
   then err (Printf.sprintf "no attribute named '%s' in class '%s'" name t)
 
-(** Checks an StaticAttr expression.
+(** Checks a StaticAttr expression.
     @raise Contextual_error if a check fails. *)
 
 and check_expr_static_attr decls (t, name) =
-  let decl = get_class decls t
-  in let attr = get_static_attr_opt name decl
-  in if Option.is_none attr
-  then err (Printf.sprintf "no static attribute named '%s' in class '%s'" name t)
+  match get_class_opt decls t with
+  | None -> err (Printf.sprintf "cannot access static attribute '%s' of unknown class '%s'" name t)
+  | Some(decl) ->
+    let attr = get_static_attr_opt name decl
+    in if Option.is_none attr
+    then err (Printf.sprintf "no static attribute named '%s' in class '%s'" name t)
 
 (** Checks a function call expression.
     @raise Contextual_error if a check fails. *)
@@ -253,7 +265,10 @@ and check_expr_call decls env (e, methName, args) =
   check_expr decls env e;
   let t = get_expr_type decls env e
 
-  in match t, methName, args with
+  in if t = "_Void"
+  then err (Printf.sprintf "cannot call method on Void type");
+
+  match t, methName, args with
   | "String", "print", []
   | "String", "println", []
   | "Integer", "toString", [] -> ()
@@ -318,7 +333,7 @@ and check_expr_new decls env (className, args) =
         check_arg arg param.className
       ) args decl.ctor.params
 
-and check_expr_cast decls env (className, e) = 
+and check_expr_cast decls env (className, e) =
   check_expr decls env e;
   let t = get_expr_type decls env e
   in if is_base decls t className
@@ -363,6 +378,7 @@ and check_expr decls env expr =
 (** Check constructor declaration validity. Performs following checks:
     * Constructor name and class name are equal
     * Constructor parameters have no reserved keywords
+    * Base class exists if class is derived
     * Constructor calls the right super constructor if class is derived
     * Constructor does not call any super constructor if class is base
     * Super constructor call args are compatible if class is derived
@@ -382,21 +398,25 @@ let check_ctor decls decl =
     if decl.name <> ctor.name
     then err (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
     else ();
-    
+
     (match decl.super with
      | Some{ name; args } ->
-        let superDecl = get_class decls name
-        in let args = args |> List.map (fun e ->
-          check_expr decls env e;
-          get_expr_type decls env e
-        )
-        in check_call_args decls args superDecl.ctor.params
+       (match get_class_opt decls name with
+        | None -> err (Printf.sprintf "class '%s' extends undeclared class '%s'" decl.name name)
+        | _ -> ());
+
+       let superDecl = get_class decls name
+       in let args = args |> List.map (fun e ->
+           check_expr decls env e;
+           get_expr_type decls env e
+         )
+       in check_call_args decls args superDecl.ctor.params
      | None -> ());
 
     if ctor.params <> decl.ctor.params
     then err (Printf.sprintf "constructor params of class '%s' do not correspond with the constructor definition" decl.name)
     else ();
-  
+
     check_instr decls env decl.ctor.body
   end
 
@@ -432,8 +452,7 @@ let check_decl decls decl =
 let check_decls decls =
   check_no_reserved_class decls;
   check_no_dup_class decls;
-  check_inheritance decls;
-  check_cycles decls;
+  check_no_cycles decls;
   List.iter (check_decl decls) decls
 
 (** Perform all checks on ast.

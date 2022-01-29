@@ -15,6 +15,12 @@ let%test "masking1-file-parse" =
 let%test "test-file-parse" = 
     file_ast "../progs/test.kat"
 
+let%test "list-file-parse" = 
+    file_ast "../progs/list.kat"
+
+let%test "math-file-parse" = 
+    file_ast "../progs/math.kat"
+
 
 let%test "err1-file-parse" = 
     file_ctx_err "../progs/err1.kat"
