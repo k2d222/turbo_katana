@@ -63,7 +63,7 @@ let table_parse (filename: string): Ast.prog option =
 
 let run ast = begin
   Contextual.check_all ast;
-  Compil.compile stdout ast;
+  Compil.compile ast;
 end
 
 let () =

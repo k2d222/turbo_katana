@@ -389,11 +389,10 @@ and check_expr decls env expr =
 
 let check_ctor decls decl =
   let ctor = decl.ctor
-  in let params = ctor_params_to_method_params ctor.params
-  in let env = make_class_env decl
-  in let env = Env.add_all env params
+  in let env = Env.make_class_env decl
+  in let env = Env.add_all env ctor.params
   in begin
-    check_no_reserved_var params;
+    check_no_reserved_var ctor.params;
 
     if decl.name <> ctor.name
     then err (Printf.sprintf "constructor name '%s' does dot correspond with class name '%s'" ctor.name decl.name)
@@ -422,7 +421,7 @@ let check_ctor decls decl =
 
 let check_static_method decls env meth =
   check_no_reserved_var meth.params;
-  let env = add_method_env env meth
+  let env = Env.add_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
   | Some _ -> check_returns meth.body
@@ -430,7 +429,7 @@ let check_static_method decls env meth =
 
 let check_instance_method decls env meth =
   check_no_reserved_var meth.params;
-  let env = add_method_env env meth
+  let env = Env.add_method_env env meth
   in check_instr decls env meth.body;
   match meth.retType with
   | Some _ -> check_returns meth.body
@@ -445,7 +444,7 @@ let check_decl decls decl =
   check_ctor decls decl;
   check_overrides decls decl;
   check_no_dup decl;
-  let env = make_class_env decl
+  let env = Env.make_class_env decl
   in List.iter (check_instance_method decls env) decl.instMethods;
   List.iter (check_static_method decls []) decl.staticMethods
 

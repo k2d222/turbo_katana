@@ -23,7 +23,20 @@ let get env varName =
       raise Not_found
     )
 
-let print env =
-  env |> List.iter (fun (name, type_) ->
-      Printf.printf "%s : %s\n" name type_
-    )
+(** Make an environment with 'super' and 'this'. *)
+
+let make_class_env (decl: Ast.classDecl) =
+  let env = ("this", decl.name) :: []
+  in let env = match decl.super with
+      | Some(super) -> ("super", super.name) :: env
+      | None -> env
+  in env
+
+(** Make an environment with method params and optionally 'result'. *)
+
+let add_method_env env (meth: Ast.methodDecl) =
+  let env = add_all env meth.params
+  in let env = match meth.retType with
+      | Some(ret) -> ("result", ret) :: env
+      | None -> env
+  in env

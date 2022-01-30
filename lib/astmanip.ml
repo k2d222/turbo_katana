@@ -197,25 +197,3 @@ let is_base decls derived base =
     let derived = get_class decls derived
     in let base = get_class decls base
     in List.exists ((=) base) (ancestors decls derived)
-
-
-(** Make an environment with 'super' and 'this'. *)
-
-let make_class_env decl =
-  let env = ("this", decl.name) :: []
-  in let env = match decl.super with
-      | Some(super) -> ("super", super.name) :: env
-      | None -> env
-  in env
-
-(** Make an environment with method params and optionally 'result'. *)
-
-let add_method_env env meth =
-  let env = Env.add_all env meth.params
-  in let env = match meth.retType with
-      | Some(ret) -> ("result", ret) :: env
-      | None -> env
-  in env
-
-let ctor_params_to_method_params ctorParams =
-  ctorParams |> List.map (fun { name; className; _ } -> { name; className })
