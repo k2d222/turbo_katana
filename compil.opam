@@ -1,0 +1,26 @@
+opam-version: "2.0"
+name: "Katana"
+version: "0.1"
+synopsis: "The Turbo Katana Programming Language"
+description: """
+Longer description
+"""
+maintainer: "Brossier Mahmoud Surer"
+authors: "Brossier Mahmoud Surer"
+license: "MIT"
+homepage: "https://github.com/k2d222/turbo_katana"
+dev-repo: "git+https://github.com/k2d222/turbo_katana.git"
+bug-reports: "https://github.com/k2d222/turbo_katana"
+
+# PASTE ALL DEPS SO NO PROBLEM STUPID PACKAGE MANAGER
+
+depends: [
+        "ocaml"
+        "dune"
+        "core"
+        "menhir"
+        "ppx_jane"
+        "ppx_deriving"
+ ]
+ 
+build: ["dune" "build"]
