@@ -2,7 +2,7 @@ open Printf
 open Libcompil
 module E = MenhirLib.ErrorReports
 module L = MenhirLib.LexerUtil
-module I = Libcompil.Parser.MenhirInterpreter
+module I = Parser.MenhirInterpreter
 
 let fast_parse (filename: string): Ast.prog option =
   let _text, lexbuf = L.read filename in
@@ -66,11 +66,18 @@ let run ast = begin
   Compil.compile ast;
 end
 
-let () =
+let () = begin
+  let argc = Array.length Sys.argv
+  in if argc <> 2
+  then failwith ("Usage: " ^ Sys.argv.(0) ^ " <file-to-compile>");
+
   let filename = Sys.argv.(1) in
   let res = fast_parse filename in
+
   match res with
-  | Some(ast) -> run ast
+  | Some(ast) -> 
+    run ast;
   | None ->
     printf "Syntax error occured, running diagnostics...\n";
     let _ast = table_parse filename in exit(1)
+end
