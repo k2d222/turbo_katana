@@ -1,0 +1,11 @@
+{
+    i, j: Integer
+    is {
+        10.toString().print();
+        "hello".println();
+        (10 + 10).toString().println();
+        i := 1;
+        j := 2;
+        (i + 10 * 10 / j).toString().println();
+    }
+}

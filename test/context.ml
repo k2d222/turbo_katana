@@ -278,17 +278,7 @@ let%test "constructor-name-and-class-name-are-equal" =
   in expects_ctx_err (code "Point1" "Point2")
   && expects_ast (code "Point1" "Point1")
 
-let%test "constructor-parameters-and-class-parameters-are-equal" =
-  let code = Printf.sprintf {|
-      class Point1(%s) is {
-        def Point1(%s) is {}
-      }
-      {}
-    |}
-  in expects_ctx_err (code "s : String" "s : Integer")
-  && expects_ast (code "s : String" "s : String")
-
-let%test "constructor-calls-right-super-constructor-if-class-derived" =
+let%test "constructor-calls-right-super-params-constructor-if-class-derived" =
   let code = Printf.sprintf {|
       class Base(var s: String, i1, i2: Integer) is {
         def Base(var s: String, i1, i2: Integer) is {}
@@ -298,20 +288,9 @@ let%test "constructor-calls-right-super-constructor-if-class-derived" =
       }
       {}
     |}
-  in expects_ctx_err (code {| Test("hello", 10, 20) |})
-  && expects_ctx_err (code {| Base("hello", 10) |})
+  in expects_ctx_err (code {| Base("hello", 10) |})
   && expects_ctx_err (code {| Base("hello", 10, "world") |})
   && expects_ast (code {| Base("hello", 10, 20) |})
-
-let%test "no-super-constructor-call-in-base-class" =
-  let code = Printf.sprintf {|
-      class Point1() is {
-        def Point1() %s is {}
-      }
-      {}
-    |}
-  in expects_ctx_err (code " : Foo()")
-  && expects_ast (code "")
 
 (* ----------------------- Instructions -------------------------- *)
 
@@ -419,6 +398,33 @@ let%test "ite-expression-type-is-integer" =
     |}
   in expects_ctx_err (code "\"hello\"")
   && expects_ast (code "10")
+
+let%test "cannot-cast-Integer-to-String" =
+  let code = Printf.sprintf {|
+      {
+        %s;
+      }
+    |}
+  in expects_ctx_err (code "(String 1)")
+  && expects_ast (code "(String \"hello\")")
+
+let%test "cannot-cast-from-class-to-subclass" =
+  let code = Printf.sprintf {|
+      class Point() is {
+        def Point() is {}
+      }
+      class SubPoint() extends Point is {
+        def SubPoint() : Point() is {}
+      }
+      {
+        p : Point
+        sp : SubPoint
+        is
+        %s;
+      }
+    |}
+  in expects_ctx_err (code "(SubPoint p)")
+  && expects_ast (code "(Point sp)")
 
 (* ----------------------- Expressions -------------------------- *)
 

@@ -7,7 +7,6 @@ let string_of_expr_type e =
   | Attr _ -> "instance attribute"
   | StaticAttr _ -> "static attribute"
   | UMinus _ -> "unary minus"
-  | List _ -> "list of expressions"
   | Call _ -> "method call"
   | StaticCall _ -> "static method call"
   | BinOp _ -> "numeric operation"

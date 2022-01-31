@@ -48,6 +48,8 @@
 * Assign lhs exists ✔
 * Assign rhs is compatible with lhs ✔
 * Expression in an Ite instruction is of type Integer ✔
+* Can't cast Integer to String ✔
+* Can't cast from class to subclass ✔
 
 ## Expressions
 

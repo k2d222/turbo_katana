@@ -1,0 +1,55 @@
+
+/**
+ * Opérations communes sur les entiers.
+ */
+class Math() is {
+  def Math() is {}
+
+  /** Modulo (ou reste de division euclidienne) sur entiers positifs. */
+  def static mod(i, m: Integer): Integer is {
+    result := i - i / m;
+  }
+
+  /** Puissance positive. */
+  def static pow(n, exp: Integer): Integer is {
+    if exp <= 0
+    then result := 1;
+    else result := n * Math.pow(n, exp - 1);
+  }
+
+  /** Décalage à gauche des bits. */
+  def static leftShift(n, shift: Integer): Integer is {
+    if shift <= 0
+    then result := n;
+    else result := Math.leftShift(n * 2, shift - 1);
+  }
+
+  /** Décalage à droite des bits. */
+  def static rightShift(n, shift: Integer): Integer is {
+    if shift <= 0
+    then result := n;
+    else result := Math.leftShift(n / 2, shift - 1);
+  }
+
+  /** Nombre pseudo-aléatoire. */
+  def static rand(seed: Integer): Integer is {
+    /* Approx. ANSI C LCG */
+    result := Math.leftShift(Math.mod(1103515245 * seed + 12345, 2147483648), 30);
+  }
+}
+
+
+{
+  r: Integer
+  is
+  r := 10;
+  "r0: ".print(); r.toString().println();
+  r := Math.rand(r);
+  "r1: ".print(); r.toString().println();
+  r := Math.rand(r);
+  "r2: ".print(); r.toString().println();
+  r := Math.rand(r);
+  "r3: ".print(); r.toString().println();
+  r := Math.rand(r);
+  "r4: ".print(); r.toString().println();
+}
