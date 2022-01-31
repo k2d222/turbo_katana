@@ -1,3 +1,5 @@
+exception Syntax_error of string
+
 type numBinOp =
   | Eq | Neq
   | Lt | Le | Gt | Ge
@@ -5,13 +7,6 @@ type numBinOp =
 [@@deriving show]
 
 type param = {
-  name: string;
-  className: string;
-}
-[@@deriving show]
-
-type ctorParam = {
-  isMember: bool;
   name: string;
   className: string;
 }
@@ -39,14 +34,6 @@ and expr =
   | StaticCast of string * expr
 [@@deriving show]
 
-type ctorDecl = {
-  name: string;
-  params: ctorParam list;
-  superCall: (string * expr list) option;
-  body: instr;
-}
-[@@deriving show]
-
 type methodDecl = {
   name: string;
   override: bool;
@@ -56,20 +43,20 @@ type methodDecl = {
 }
 [@@deriving show]
 
-type classBody = {
-  ctor: ctorDecl;
-  staticMethods: methodDecl list;
-  instMethods: methodDecl list;
-  staticAttrs: param list;
-  instAttrs: param list;
+type superCall = {
+  name: string;
+  args: expr list
 }
 [@@deriving show]
 
 type classDecl = {
   name: string;
-  ctorParams: ctorParam list;
-  body: classBody;
-  superclass: string option;
+  super: superCall option;
+  ctor: methodDecl;
+  staticMethods: methodDecl list;
+  instMethods: methodDecl list;
+  staticAttrs: param list;
+  instAttrs: param list;
 }
 [@@deriving show]
 

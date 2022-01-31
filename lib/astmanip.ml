@@ -20,10 +20,10 @@ let get_class decls name =
 let rec recursively decls decl f =
   f decl
   |> Optmanip.or_else (fun () ->
-      match decl.superclass with
+      match decl.super with
       | None -> None
       | Some(super) ->
-        (get_class_opt decls super)
+        (get_class_opt decls super.name)
         |> Optmanip.and_then (fun superDecl ->
             recursively decls superDecl f
           )
@@ -33,16 +33,16 @@ let rec recursively decls decl f =
     @raise Not_found if an ancestor has no declaration. *)
 
 let rec ancestors decls decl =
-  match decl.superclass with
+  match decl.super with
   | None -> []
   | Some(super) ->
-    let superDecl = (get_class decls super) in
+    let superDecl = (get_class decls super.name) in
     superDecl :: (ancestors decls superDecl)
 
 (** Get the method declaration in a class with a given name. *)
 
 let get_method_opt name decl =
-  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.instMethods
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.instMethods
 
 (** Find (recursively through ancestors) the method declaration in a class
     with a given name. *)
@@ -57,14 +57,14 @@ let find_method_opt decls name decl =
 let find_method decls name decl =
   find_method_opt decls name decl
   |> Optmanip.get_or_else (fun () ->
-     Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name; 
+      Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name;
       raise Not_found
     )
 
 (** Get a static method declaration in a class with a given name. *)
 
 let get_static_method_opt name decl =
-  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.body.staticMethods
+  List.find_opt (fun (meth: methodDecl) -> meth.name = name) decl.staticMethods
 
 (** Get a static method declaration in a class with a given name.
     @raise Not_found if the class has no such static method. *)
@@ -72,7 +72,7 @@ let get_static_method_opt name decl =
 let get_static_method name decl =
   get_static_method_opt name decl
   |> Optmanip.get_or_else (fun () ->
-     Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name; 
+      Printf.eprintf "[ERR] get_static_method_opt '%s' failed\n" name;
       raise Not_found
     )
 
@@ -81,19 +81,14 @@ let get_static_method name decl =
 let get_inst_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
-  in let pred2 (attr: ctorParam) =
-       if attr.name = attrName then Some(attr.className) else None
-  in List.find_map pred decl.body.instAttrs
-     |> Optmanip.or_else (fun () ->
-         List.find_map pred2 decl.ctorParams
-       )
+  in List.find_map pred decl.instAttrs
 
 (** Find (recursively through ancestors) the type of an attribute in a class declaration. *)
 
 let find_inst_attr_opt decls attrName decl =
   (get_inst_attr_opt attrName) |> recursively decls decl
 
-(** Find (recursively through ancestors) the type of an attribute in a class declaration. 
+(** Find (recursively through ancestors) the type of an attribute in a class declaration.
     @raise Not_found if the class has no such attribute. *)
 
 let find_inst_attr decls attrName decl =
@@ -108,7 +103,7 @@ let find_inst_attr decls attrName decl =
 let get_static_attr_opt attrName decl =
   let pred (attr: param) =
     if attr.name = attrName then Some(attr.className) else None
-  in List.find_map pred decl.body.staticAttrs
+  in List.find_map pred decl.staticAttrs
 
 (** Get the type of a static attribute in a class declaration.
     @raise Not_found if the class has no such attribute. *)
@@ -124,7 +119,7 @@ let get_static_attr attrName decl =
     Note: procedures have the special type '_Void' *)
 
 let get_inst_method_type_opt methName decl =
-  decl.body.instMethods
+  decl.instMethods
   |> List.find_map (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType |> Optmanip.or_ (Some("_Void")) else None
     )
@@ -150,7 +145,7 @@ let find_inst_method_type decls attrName decl =
     Note: procedures have the special type '_Void' *)
 
 let get_static_method_type methName decl =
-  decl.body.staticMethods
+  decl.staticMethods
   |> List.find_map  (fun (meth: methodDecl) ->
       if meth.name = methName then meth.retType else None
     )
@@ -164,7 +159,7 @@ let get_expr_type decls env expr =
     | Cste _ | BinOp _ | UMinus _ -> "Integer"
     | String _ | StrCat _ -> "String"
 
-    | Id id -> Util.Env.get env id
+    | Id id -> Env.get env id
 
     | Attr(e, attrName) ->
       let decl = get_class decls (r_get e)
@@ -187,40 +182,18 @@ let get_expr_type decls env expr =
       in get_static_method_type name decl
 
     | New(className, _args) -> className
-    | StaticCast(className, _args) -> className 
+    | StaticCast(className, _args) -> className
 
   in r_get expr
 
 (** Wether derived is convertible to base. *)
 
 let is_base decls derived base =
-  let builtins = ["Integer"; "String"]
+  let builtins = ["Integer"; "String"; "_Void"]
   in if derived = base then true
-  else if List.exists ((=) derived) builtins || List.exists ((=) derived) builtins (* cannot derive builtins *)
+  else if List.exists ((=) derived) builtins || List.exists ((=) base) builtins (* cannot derive builtins *)
   then false
   else
     let derived = get_class decls derived
     in let base = get_class decls base
     in List.exists ((=) base) (ancestors decls derived)
-
-
-(** Make an environment with 'super' and 'this'. *)
-
-let make_class_env decl =
-  let env = ("this", decl.name) :: []
-  in let env = match decl.superclass with
-      | Some(super) -> ("super", super) :: env
-      | None -> env
-  in env
-
-(** Make an environment with method params and optionally 'result'. *)
-
-let make_method_env env meth =
-  let env = Util.Env.add_all env meth.params
-  in let env = match meth.retType with
-      | Some(ret) -> ("result", ret) :: env
-      | None -> env
-  in env
-
-let ctor_params_to_method_params ctorParams =
-  ctorParams |> List.map (fun { name; className; _ } -> { name; className })

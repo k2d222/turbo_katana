@@ -1,0 +1,15 @@
+class Foo() is {
+    def Foo() is {}
+    def print() is {
+        "hello".println();
+    }
+}
+
+{
+    f: Foo
+    is {
+        f := new Foo();
+        f.print();
+    }
+    
+}

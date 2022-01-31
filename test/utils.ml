@@ -20,19 +20,24 @@ let expects_parse_err str =
   try ignore @@ parse_str str; false
   with Parser.Error -> true
 
-let file_parse_err file = 
-  try ignore @@ parse_file file; false
-  with Parser.Error -> true
-
 let expects_ctx_err str =
   try Contextual.check_all @@ parse_str str; false
   with Contextual.Contextual_error _ -> true
+
+let expects_syntax_err str =
+  try ignore @@ parse_str str; false
+  with Ast.Syntax_error _ -> true
+
+let expects_ast str =
+  Contextual.check_all @@ parse_str str; true
+
+let file_parse_err file = 
+  try ignore @@ parse_file file; false
+  with Parser.Error -> true
 
 let file_ctx_err file = 
   try Contextual.check_all @@ parse_file file; false
   with Contextual.Contextual_error _ -> true 
 
-let expects_ast str =
-  Contextual.check_all @@ parse_str str; true
-
-(* ------------------------------------- *)
+let file_ast file =
+  Contextual.check_all @@ parse_file file; true

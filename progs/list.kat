@@ -1,0 +1,303 @@
+
+/**
+ * Opérations logiques booléennes.
+ */
+class Bool(v: Integer) is {
+
+  var b: Integer
+
+  /** Construit un booléen à partir d'un entier (0 = faux, sinon vrai). */
+  def Bool(v: Integer) is {
+    if v = 0
+    then this.b := Bool.false();
+    else this.b := Bool.true();
+  }
+
+  /** Récupère la valeur entière (0 ou 1) du booléen. */
+  def val(): Integer := this.b
+
+  def static true(): Integer := 1
+  def static false(): Integer := 0
+
+  def static not(b: Integer): Integer := 1 - b
+
+  def static and(b1, b2: Integer): Integer is {
+    if b1 + b2 = 2
+    then result := Bool.true();
+    else result := Bool.false();
+  }
+
+  def static or(b1, b2: Integer): Integer is {
+    if b1 + b2 = 0
+    then result := Bool.false();
+    else result := Bool.true();
+  }
+
+  def static xor(b1, b2: Integer): Integer is {
+    if b1 + b2 = 1
+    then result := Bool.true();
+    else result := Bool.false();
+  }
+}
+
+/**
+ * Liste simplement chaînée d'entiers.
+ */
+class List() is {
+
+  var next: List
+  var val: Integer
+  var isTail: Integer
+
+  /* Construit une liste vide. */
+  def List() is {
+    this.isTail := Bool.true();
+  }
+
+  /* Construit une liste vide. */
+  def static tail(): List := new List()
+
+  /* L'élément en tête de liste. Les éléments suivants sont des références. */
+  def shallowCopy(): List is {
+    result := new List();
+    result.isTail := this.isTail;
+    result.next := this.next;
+    result.val := this.val;
+  }
+
+  /* Copie la liste. */
+  def deepCopy(): List is {
+    result := this.shallowCopy();
+    if this.isTail()
+    then {}
+    else result.next := this.next.deepCopy();
+  }
+
+  /* Insert un élément en début de liste. */
+  def prepend(val: Integer) is {
+    this.next := this.shallowCopy();
+    this.isTail := Bool.false();
+    this.val := val;
+  }
+
+  /* Insert un élément en fin de liste. */
+  def append(val: Integer) is {
+    if this.isTail()
+    then {
+      this.isTail := Bool.false();
+      this.val := val;
+      this.next := List.tail();
+    }
+    else {
+      this.next.append(val);
+    }
+  }
+
+  /* Récupère la taille de la liste. */
+  def length(): Integer is {
+    if this.isTail()
+    then result := 0;
+    else result := 1 + this.next.length();
+  }
+
+  /* Récupère l'élément à l'indice donné. */
+  def at(i: Integer): Integer is {
+    if i = 0
+    then result := this.val;
+    else result := this.next.at(i - 1);
+  }
+
+  /* Calcule la somme de tous les éléments. */
+  def sum(): Integer is {
+    if this.isTail()
+    then result := 0;
+    else result := this.val + this.next.sum();
+  }
+
+  /* Met la valeur v à l'indice i. */
+  def set(i: Integer, v: Integer) is {
+    if i = 0
+    then this.val := v;
+    else this.next.set(i - 1, v);
+  }
+
+  /* Échange deux éléments aux indices i1 et i2. */
+  def swap(i1, i2: Integer) is {
+    tmp: Integer
+    is
+    tmp := this.at(i1);
+    this.set(i1, this.at(i2));
+    this.set(i2, tmp);
+  }
+
+  /* Récupère l'indice du premier élément de valeur v. */
+  def indexOf(v: Integer): Integer is {
+    if v = this.val
+    then result := 0;
+    else result := 1 + this.next.indexOf(v);
+  }
+
+  def priv_min(gmin: Integer): Integer is {
+    if this.isTail()
+    then result := gmin;
+    else if this.val < gmin
+    then result := this.next.priv_min(this.val);
+    else result := this.next.priv_min(gmin);
+  }
+
+  /* Calcule la valeur minimale de la liste. */
+  def min(): Integer := this.next.priv_min(this.val)
+
+  /* Calcule l'indice de la valeur minimale. */
+  def argmin(): Integer := this.indexOf(this.min())
+
+  def priv_max(gmin: Integer): Integer is {
+    if this.isTail()
+    then result := gmin;
+    else if this.val > gmin
+    then result := this.next.priv_max(this.val);
+    else result := this.next.priv_max(gmin);
+  }
+
+  /* Calcule la valeur maximale de la liste. */
+  def max(): Integer := this.next.priv_max(this.val)
+
+  /* Calcule l'indice de la valeur maximale. */
+  def argmax(): Integer := this.indexOf(this.max())
+
+  /* Trie la liste par ordre croissant. */
+  def sort() is {
+    if this.length() >= 2
+    then {
+      if this.val > this.next.min()
+      then this.swap(0, this.next.argmin() + 1);
+      else {}
+      this.next.sort();
+    }
+    else {}
+  }
+
+  def priv_rev(lb: Integer) is {
+    if lb > 0
+    then {
+      this.swap(0, lb);
+      this.next.priv_rev(lb - 2);
+    }
+    else {}
+  }
+
+  /* Retourne la liste. */
+  def reverse() is {
+    this.priv_rev(this.length() - 1);
+  }
+
+  /* Ajoute la liste l à la fin de la liste. */
+  def concat(l: List) is {
+    if this.isTail()
+    then {
+      this.isTail := l.isTail;
+      this.val := l.val;
+      this.next := l.next;
+    }
+    else this.next.concat(l);
+  }
+
+  /* Retire l'élément en fin de liste. */
+  def pop() is {
+    if this.next.isTail()
+    then this.isTail := Bool.true();
+    else this.next.pop();
+  }
+
+  /* Retire l'élément en début de liste. */
+  def unshift() is {
+    if this.next.isTail()
+    then {
+      this.isTail := Bool.true();
+    }
+    else {
+      this.val := this.next.val;
+      this.next := this.next.next;
+    }
+  }
+
+  /* Si la liste est vide. */
+  def isTail(): Integer := this.isTail
+
+  /* Affiche la liste. */
+  def print() is {
+    if this.isTail()
+    then {}
+    else {
+      this.val.toString().print();
+      " ".print();
+      this.next.print();
+    }
+  }
+
+  /* Valeur du premier élément de la liste. */
+  def val(): Integer := this.val
+}
+
+{
+  l1, l2: List
+  is {
+    l1 := List.tail();
+    l1.prepend(0);
+    l1.prepend(1);
+    l1.prepend(2);
+    l1.prepend(3);
+    "prepend: [ ".print(); l1.print(); "]".println();
+
+    l1 := List.tail();
+    l1.append(0);
+    l1.append(1);
+    l1.append(2);
+    l1.append(3);
+    "append: [ ".print(); l1.print(); "]".println();
+
+    "length: ".print();
+    l1.length().toString().println();
+
+    "at 3: ".print();
+    l1.at(3).toString().println();
+
+    "sum: ".print();
+    l1.sum().toString().println();
+
+    "min: ".print();
+    l1.min().toString().print();
+    ", arg: ".print();
+    l1.argmin().toString().println();
+
+    "max: ".print();
+    l1.max().toString().print();
+    ", arg: ".print();
+    l1.argmax().toString().println();
+
+    l2 := List.tail();
+    l2.append(4);
+    l2.append(-10);
+    l2.append(120);
+    l2.append(8);
+    "l2: [ ".print(); l2.print(); "]".println();
+    l2.sort();
+    "sorted: [ ".print(); l2.print(); "]".println();
+
+    l2.reverse();
+    "reverse: [ ".print(); l2.print(); "]".println();
+
+    l1.concat(l2);
+    "concat: [ ".print(); l1.print(); "]".println();
+
+    l1.pop();
+    "pop: [ ".print(); l1.print(); "]".println();
+
+    l1.unshift();
+    "unshift: [ ".print(); l1.print(); "]".println();
+
+    l1 := l2;
+    l1.concat(l2.deepCopy());
+    "deepCopy: [ ".print(); l1.print(); "]".println();
+  }
+}
