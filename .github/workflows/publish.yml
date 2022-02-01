@@ -1,0 +1,23 @@
+name: publish
+
+on: [push]
+
+jobs:
+  publish-docker-image:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.CR_PAT }}
+
+    - name: Build the katana image
+      run: |
+        docker build . --tag ghcr.io/OopsOverflow/turbo-katana:latest
+        docker run ghcr.io/OopsOverflow/turbo-katana:latest
+        docker push ghcr.io/OopsOverflow/turbo-katana:latest
