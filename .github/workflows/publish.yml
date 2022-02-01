@@ -19,5 +19,5 @@ jobs:
     - name: Build the katana image
       run: |
         docker build . --tag ghcr.io/katana/turbo-katana:latest
-        docker run ghcr.io/katana/turbo-katana:latest
-        docker push ghcr.io/katana/turbo-katana:latest
+        docker run ghcr.io/OopsOverflow/turbo-katana:latest
+        docker push ghcr.io/OopsOverflow/turbo-katana:latest
