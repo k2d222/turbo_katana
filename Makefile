@@ -1,3 +1,37 @@
+# -------------------------------
+# Docker part
+
+ARG := $(word 2, $(MAKECMDGOALS))
+PROG := $(word 2, $(MAKECMDGOALS))
+$(eval $(PROG):;@:)
+
+docker_setup:
+	docker volume create katana
+	docker-compose build katana --parallel
+
+docker_up: 
+	docker-compose up -d
+	@echo 'Running docker Image, Port 3000 Exposed'
+
+docker_down: 
+	docker-compose down
+
+docker_logs: 
+	docker-compose logs -f $(ARG)
+
+docker_run:
+	docker run --rm -it turbo_katana_katana:latest
+
+katana: 
+	@echo ">>> Running Turbo Katana v1.0.1.b"
+	@echo ">>> Target" $(PROG)
+	dune exec compilc $(PROG) | interprete/interp
+
+
+
+# -------------------------------
+# Other Part
+
 LIB_SRCS := ast.ml optmanip.ml env.ml astmanip.ml addrs.ml contextual.ml util.ml vtable.ml compil.ml
 BUILD_DIR := _build
 
@@ -30,24 +64,3 @@ clean:
 	rm -rf $(BUILD_DIR)
 	mkdir $(BUILD_DIR)
 
-# -------------------------------
-# Docker part
-
-ARG := $(word 2, $(MAKECMDGOALS))
-
-docker_setup:
-	docker volume create katana
-	docker-compose build katana --parallel
-
-docker_up: 
-	docker-compose up -d
-	@echo 'Running docker Image, Port 3000 Exposed'
-
-docker_down: 
-	docker-compose down
-
-docker_logs: 
-	docker-compose logs -f $(ARG)
-
-docker_run:
-	docker run --rm -it turbo_katana_katana:latest

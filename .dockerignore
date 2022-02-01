@@ -1,2 +1,5 @@
 doc
 _build
+output.txt
+comp
+*.o
