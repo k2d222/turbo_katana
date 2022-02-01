@@ -10,11 +10,18 @@ class Math() is {
     result := i - i / m;
   }
 
-  /** Puissance positive. */
+  /** Puissance. exp positif ou nul. */
   def static pow(n, exp: Integer): Integer is {
     if exp <= 0
     then result := 1;
     else result := n * Math.pow(n, exp - 1);
+  }
+  
+  /** Factorielle. n positif ou nul. */
+  def static fact(n: Integer): Integer is {
+    if n <= 0
+    then result := 1;
+    else result := n * Math.fact(n - 1);
   }
 
   /** Décalage à gauche des bits. */
@@ -42,6 +49,7 @@ class Math() is {
 {
   r: Integer
   is
+  /* Test du générateur pseudo-aléatoire. */
   r := 10;
   "r0: ".print(); r.toString().println();
   r := Math.rand(r);
