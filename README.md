@@ -1,7 +1,7 @@
 <a href="">
   <img src="img/colour-logo.png"
        alt="OCaml"
-       style="border: none; width: 50px;" />
+       style="border: none; width: 80px;" />
 </a>
 
 
