@@ -48,7 +48,7 @@ If everything is well configured the command will display nothing.
 
 <br>
 
-Thn you have to build the `Interp` in the `interprete` folder: 
+Thn you have to build the `interp` in the `interprete` folder: 
 ```
 $ make clean
 $ make
@@ -72,11 +72,11 @@ $ dune build
 You can run the tests again to make sure everything went correctly. 
 If so you can write your program and run it using the following command:
 ```
-$ make katana <path-to-prog.kat-here>
+$ dune exec compilc <path-to-prog.kat-here>
 ```
 For example Running the `gn.kat` program should give the following output:
 ```
-$ make katana progs/gn.kat
+$ dune exec compilc progs/gn.kat
 ```
 ```ocaml
 >>> Running Turbo Katana v1.0.1.b
