@@ -75,7 +75,7 @@ $ docker run --rm -it ghcr.io/oopsoverflow/katana:latest
 
 You can write your first program and run it using the following command:
 ```
-$ dune exec compilc <path-to-prog.kat-here> > <path-to-output-file.txt>
+$ dune exec compilc <path-to-prog.kat> -o <path-to-output-file.txt>
 ```
 For example running the `progs/gn.kat` program should give the following output:
 ```

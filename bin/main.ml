@@ -61,23 +61,27 @@ let table_parse (filename: string): Ast.prog option =
 
 (* -------------------------------------------------------------------------- *)
 
-let run ast = begin
-  Contextual.check_all ast;
-  Compil.compile ast;
-end
-
 let () = begin
-  let argc = Array.length Sys.argv
-  in if argc <> 2
-  then failwith ("Usage: " ^ Sys.argv.(0) ^ " <file-to-compile>");
+  let argc = Array.length Sys.argv in
+  
+  if argc <> 2 && (argc <> 4 || Sys.argv.(2) <> "-o")
+  then failwith ("Usage: " ^ Sys.argv.(0) ^ " <file-to-compile> -o <output-file>");
 
   let filename = Sys.argv.(1) in
-  let res = fast_parse filename in
+  let ast = fast_parse filename in
 
-  match res with
+  match ast with
   | Some(ast) -> 
-    run ast;
+    let buf = if argc = 4 then open_out Sys.argv.(3) else stdout in
+    Contextual.check_all ast;
+    Compil.chan := buf;
+    Compil.compile ast;
+    if argc = 4 then close_out buf;
+    exit 0;
+
   | None ->
     printf "Syntax error occured, running diagnostics...\n";
-    let _ast = table_parse filename in exit(1)
+    ignore @@ table_parse filename;
+    exit 1;
+  
 end
