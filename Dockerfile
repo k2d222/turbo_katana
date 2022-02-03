@@ -28,6 +28,6 @@ RUN set -x && \
 #SSH §
 EXPOSE 3000
 
-LABEL org.opencontainers.image.source="https://github.com/OopsOverflow/turbo_katana"
+LABEL org.opencontainers.image.source="https://github.com/k2d222/turbo_katana"
 
 # TODO : CMD [ "executable" ]
